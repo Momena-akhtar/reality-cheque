@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Kumbh_Sans } from "next/font/google";
 import "./globals.css";
 
-const kumbhSans = Kumbh_Sans({ subsets: ["latin"] });
+const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
   title: "MiniBots",
