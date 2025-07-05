@@ -17,7 +17,7 @@ export default function Theme() {
   return (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="px-4 py-2 text-sm border cursor-pointer border-border text-white rounded-xl hover:bg-primary-hover transition-colors"
+      className="px-4 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
     >
       {theme === "dark" ? (
         <Moon className="w-5 h-5" />
