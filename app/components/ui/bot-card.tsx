@@ -2,6 +2,7 @@ import { ExternalLink } from "lucide-react";
 import CategoryTag from "./category-tag";
 import PaidButton from "./paid-button";
 import FreeButton from "./free-button";
+import Link from "next/link";
 
 interface BotCardProps {
   name: string;
@@ -37,9 +38,9 @@ export default function BotCard({
                 <CategoryTag category={category} />
                 {version === "Free"? <FreeButton /> : <PaidButton />}
             </div>
-            <a href="#" target="_blank" rel="noopener noreferrer">
+            <Link href="/chat">
                 <ExternalLink size={16} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
-            </a>
+            </Link>
         </div>
     </div>
    </div>
