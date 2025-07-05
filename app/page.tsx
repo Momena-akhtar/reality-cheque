@@ -2,6 +2,7 @@ import Navigation from "./components/navigation";
 import Hero from "./components/hero";
 import SortBar from "./components/sort-bar";
 import Footer from "./components/footer";
+import BotGrid from "./components/bot-grid";
 export default function Home() {
   return (
     <>
@@ -12,6 +13,7 @@ export default function Home() {
       <div className="w-full max-w-7xl mx-auto px-4">
         <SortBar />
       </div>
+      <BotGrid />
       <Footer />
     </>
   );
