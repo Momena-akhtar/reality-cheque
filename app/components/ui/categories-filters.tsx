@@ -1,14 +1,20 @@
 import { categories } from '../utils/categories'
 
-export default function CategorySort() {
+interface CategorySortProps {
+    selectedCategory: string;
+    onCategoryChange: (category: string) => void;
+}
+
+export default function CategorySort({ selectedCategory, onCategoryChange }: CategorySortProps) {
     return (
         <div className="relative w-54">
             <select 
-                className="w-full px-4 text-sm py-2 bg-background cursor-pointer max-h-[200px] text-foreground border border-border rounded-lg appearance-none focus:border-transparent [&>*]:bg-background [&>*]:rounded-md overflow-y-auto"
-                defaultValue="All Categories"
+                className="w-full px-4 text-sm py-2 bg-background cursor-pointer max-h-[100px] text-foreground border border-border rounded-lg appearance-none focus:border-transparent [&>*]:bg-background [&>*]:rounded-md overflow-y-auto" 
+                value={selectedCategory}
+                onChange={(e) => onCategoryChange(e.target.value)}
             >
                 {categories.map((category, index) => (
-                    <option key={index} value={category}>
+                    <option key={index} value={category} className='text-sm text-foreground bg-background'>
                         {category}
                     </option>
                 ))}

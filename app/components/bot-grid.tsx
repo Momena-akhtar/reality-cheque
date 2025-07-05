@@ -4,22 +4,42 @@ import { useState } from "react";
 import BotCard from "./ui/bot-card";
 import { bots } from "./utils/bots";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import SortBar from "./sort-bar";
+import CategorySort from "./ui/categories-filters";
+import OtherFilters from "./ui/other-filters";
+
 export default function BotGrid() {
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedCategory, setSelectedCategory] = useState("All Categories");
     const botsPerPage = 9;
     
-    const totalPages = Math.ceil(bots.length / botsPerPage);
+    // Filter bots based on selected category
+    const filteredBots = selectedCategory === "All Categories" 
+        ? bots 
+        : bots.filter(bot => bot.category === selectedCategory);
+    
+    const totalPages = Math.ceil(filteredBots.length / botsPerPage);
     
     const indexOfLastBot = currentPage * botsPerPage;
     const indexOfFirstBot = indexOfLastBot - botsPerPage;
-    const currentBots = bots.slice(indexOfFirstBot, indexOfLastBot);
+    const currentBots = filteredBots.slice(indexOfFirstBot, indexOfLastBot);
 
     const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+    // Reset to first page when category changes
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        setCurrentPage(1);
+    };
+
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-8">
-            <SortBar />
+            <div className="flex gap-4 justify-end mb-8">
+                <CategorySort 
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={handleCategoryChange}
+                />
+                <OtherFilters />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentBots.map((bot, index) => (
                     <BotCard
