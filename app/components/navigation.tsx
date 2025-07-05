@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import SignIn from "./ui/signin";
+import SignIn from "./ui/signin-button";
 import Theme from "./ui/theme";
 import SignInPopup from "./signin-popup";
 import Portal from "./ui/portal";
