@@ -10,9 +10,6 @@ export default function Home() {
       <main className="min-h-screen flex flex-col items-center pt-24 p-8 animate-fade-in">
         <Hero />
       </main>
-      <div className="w-full max-w-7xl mx-auto px-4">
-        <SortBar />
-      </div>
       <BotGrid />
       <Footer />
     </>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import BotCard from "./ui/bot-card";
 import { bots } from "./utils/bots";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import SortBar from "./sort-bar";
 export default function BotGrid() {
     const [currentPage, setCurrentPage] = useState(1);
     const botsPerPage = 9;
@@ -18,7 +19,7 @@ export default function BotGrid() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-8">
-            {/* Grid Container */}
+            <SortBar />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {currentBots.map((bot, index) => (
                     <BotCard
