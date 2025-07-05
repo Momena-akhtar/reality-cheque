@@ -1,19 +1,30 @@
+"use client";
+
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
+
 export default function Theme() {
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
-    <button className="px-4 py-2 text-sm border cursor-pointer border-border text-white rounded-xl hover:bg-primary-hover transition-colors">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
-      </svg>
+    <button
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      className="px-4 py-2 text-sm border cursor-pointer border-border text-white rounded-xl hover:bg-primary-hover transition-colors"
+    >
+      {theme === "dark" ? (
+        <Moon className="w-5 h-5" />
+      ) : (
+        <Sun className="w-5 h-5" />
+          
+      )}
     </button>
   );
 }
