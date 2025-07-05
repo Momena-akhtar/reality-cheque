@@ -5,8 +5,8 @@
 :root {
   --background: #ffffff;
   --foreground: #181818;
-  --card: #ffffff;
-  --card-hover: #f5f5f5;
+  --card: #171717;
+  --card-hover: #262626;
   --primary: #1e1e1e;
   --primary-hover: #2a2a2a;
   --primary-text-faded: #757575;
@@ -18,7 +18,7 @@
   --background: #0a0a0a;
   --foreground: #ededed;
   --card: #171717;
-  --card-hover: #1e1e1e;
+  --card-hover: #262626;
   --primary: #181818;
   --primary-hover: #2a2a2a;
   --primary-text-faded: #757575;
@@ -29,8 +29,8 @@
 .light {
   --background: #ededed;
   --foreground: #171717;
-  --card: #ffffff;
-  --card-hover: #f5f5f5;
+  --card: #f5f5f5;
+  --card-hover: #ededed;
   --primary: #ededed;
   --primary-hover: #d6d6d6;
   --primary-text-faded: #757575;
