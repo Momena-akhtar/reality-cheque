@@ -1,27 +1,6 @@
-export default function CategorySort() {
-    const categories = [
-        "All Categories",
-        "Search Engine Optimization",
-        "AI Agennt Builders",
-        "Coding",
-        "Productivity",
-        "Personal Assistant",
-        "Finance",
-        "Generel Purpose",
-        "Research",
-        "Data Analysis",
-        "Marketing",
-        "Sales",
-        "Content Creation",
-        "Digital Workers",
-        "Design",
-        "Customer Service",
-        "Voice AI Agents",
-        "Business Intelligence",
-        "HR and Recruitment",
-        "Other"
-    ]
+import { categories } from '../utils/categories'
 
+export default function CategorySort() {
     return (
         <div className="relative w-54">
             <select 
