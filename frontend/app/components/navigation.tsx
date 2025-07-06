@@ -1,36 +1,20 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import SignIn from "./ui/signin-button";
 import Theme from "./ui/theme";
 import SignInPopup from "./signin-popup";
 import Portal from "./ui/portal";
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useState } from "react";
+import Logo from "./ui/logo";
 
 export default function Navigation() {
   const [showSignInPopup, setShowSignInPopup] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const { theme } = useTheme();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const logo = mounted && theme === "dark" ? (
-    <Image src="/dark.svg" alt="MiniBots Logo" width={18} height={18} key="dark-logo" />
-  ) : (
-    <Image src="/light.png" alt="MiniBots Logo" width={18} height={18} key="light-logo" />
-  );
 
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         {/* Logo and Brand */}
-        <Link href="/" className="flex items-center space-x-2">
-          {mounted ? logo : <div style={{ width: 18, height: 18 }} />}
-          <span className="text-xl font-bold">MiniBots</span>
-        </Link>
+        <Logo />
 
         {/* Main Navigation */}
         <div className="hidden md:flex items-center space-x-6">

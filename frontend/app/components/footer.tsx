@@ -1,22 +1,8 @@
 "use client";   
 import Link from "next/link";
-import Image from "next/image";
-import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import Logo from "./ui/logo";
 export default function Footer() {
-    const { theme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const logo = mounted && theme === "dark" ? (
-        <Image src="/dark.svg" alt="MiniBots Logo" width={18} height={18} key="dark-logo" />
-    ) : (
-        <Image src="/light.png" alt="MiniBots Logo" width={18} height={18} key="light-logo" />
-    );
-
+ 
     return (
         <footer className="mt-20 container mx-auto px-4">
             <hr className="border-border w-full" />
@@ -24,10 +10,7 @@ export default function Footer() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 py-12">
                 <div className="md:col-span-1">
                     <div className="flex items-center gap-2 mb-5">
-                        <Link href="/" className="flex items-center space-x-2">
-                            {mounted ? logo : <div style={{ width: 18, height: 18 }} />}
-                            <span className="text-xl font-bold">MiniBots</span>
-                        </Link>
+                        <Logo />
                     </div>
                     <p className="text-sm text-primary-text-faded">
                         Empowering your digital workflow with intelligent automation solutions.
