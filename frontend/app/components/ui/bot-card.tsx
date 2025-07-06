@@ -38,7 +38,7 @@ export default function BotCard({
                 <CategoryTag category={category} />
                 {version === "Free"? <FreeButton /> : <PaidButton />}
             </div>
-            <Link href="/chat">
+            <Link href={`/chat/${name.toLowerCase().replace(/\s+/g, '-')}?title=${name}&description=${description}&logo=${logo}`}>
                 <ExternalLink size={16} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
             </Link>
         </div>
