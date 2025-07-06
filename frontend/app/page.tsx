@@ -1,6 +1,5 @@
 import Navigation from "./components/navigation";
 import Hero from "./components/hero";
-import SortBar from "./components/sort-bar";
 import Footer from "./components/footer";
 import BotGrid from "./components/bot-grid";
 export default function Home() {
