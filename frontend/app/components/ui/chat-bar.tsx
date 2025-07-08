@@ -2,7 +2,7 @@ import { Mic, Plus, Send, Voicemail } from "lucide-react";
 
 export default function ChatBar() {
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border border-border mb-10 rounded-4xl border-border p-4 mx-auto max-w-4xl">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border border-border mb-4 sm:mb-6 md:mb-10 rounded-4xl border-border p-3 sm:p-3 md:p-4 mx-2 sm:mx-4 md:mx-auto max-w-4xl">
             <div className="flex items-center gap-2 mt-0 relative">
                 <input 
                     type="text"
