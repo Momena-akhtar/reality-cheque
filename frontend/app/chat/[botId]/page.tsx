@@ -28,7 +28,7 @@ export default async function ChatPage({ params, searchParams }: PageProps) {
               className="h-10 w-10 object-cover rounded-md shadow-lg ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300 hover:scale-105"
             />
             <h1 className="text-2xl font-bold">{title}</h1>
-            <p className="text-md text-foreground/30">{description}</p>
+            <p className="text-md text-foreground/30 text-center">{description}</p>
           </div>
         </div>
       </main>
