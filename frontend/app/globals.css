@@ -58,3 +58,12 @@ body {
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 500;
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
