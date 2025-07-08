@@ -12,7 +12,7 @@ export default function Hero() {
                 <p className="text-lg text-primary-text-faded max-w-lg mx-auto">
                     Explore a plug-and-play interface for in-context, prompt-engineered AI agents
                 </p>
-                <div className="flex gap-4 pt-10 justify-center">
+                <div className="flex flex-col sm:flex-col md:flex-row gap-4 pt-10 justify-center">
                     <GetStarted />
                     <ContactSales />
                 </div>
