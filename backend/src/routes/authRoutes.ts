@@ -3,6 +3,7 @@ import User from '../models/user';
 import Admin from '../models/admin';
 import { signToken } from '../services/authService';
 import { COOKIE_OPTIONS } from '../config/auth';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const authRouter: express.Router = express.Router();
 
@@ -69,5 +70,16 @@ const logoutHandler: express.RequestHandler = (req, res) => {
 };
 
 authRouter.post('/logout', logoutHandler);
+
+// Get current user info
+authRouter.get('/me', authMiddleware, (req, res) => {
+  // Only support users for now
+  if ((req as any).user) {
+    const { _id, email, username, picture, plan } = (req as any).user;
+    res.json({ id: _id, email, username, picture, plan });
+  } else {
+    res.status(401).json({ message: 'Not authenticated' });
+  }
+});
 
 export default authRouter; 
