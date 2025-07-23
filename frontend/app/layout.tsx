@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Kumbh_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className={`${kumbhSans.className} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true}>
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
