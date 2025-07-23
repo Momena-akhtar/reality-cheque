@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Settings, ArrowUpCircle, LogOut, Info } from 'lucide-react';
-
+import { toast } from 'sonner';
 interface UserMenuProps {
   name: string;
   email: string;
@@ -11,7 +12,13 @@ interface UserMenuProps {
 
 export default function UserMenu({ name, email, picture }: UserMenuProps) {
   const [open, setOpen] = useState(false);
+  const { logout } = useAuth();
 
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    setOpen(false);
+  }
   return (
     <div className="relative inline-block text-left">
       <button
@@ -48,7 +55,7 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
                 <Info className='inline mr-2 w-4 h-4' />
               Learn more
             </button>
-            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--card-hover)] transition-colors">
+            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--card-hover)] transition-colors" onClick={handleLogout}>
                 <LogOut className="inline mr-2 w-4 h-4" />
               Log out
             </button>
