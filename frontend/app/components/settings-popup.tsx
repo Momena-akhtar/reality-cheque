@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-
+import { toast } from 'sonner';
 const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
   const [editMode, setEditMode] = useState(false);
   const { user } = useAuth();
+  const { logout } = useAuth();
   const [userInfo, setUserInfo] = useState({
     username: '',
     email: '',
@@ -24,6 +25,11 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
+  };
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    setEditMode(false);
   };
 
   return (
@@ -85,7 +91,8 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
       <div className="space-y-4">
         <div className='flex justify-between items-center'>
           <p className='text-sm text-primary-text-faded'>Log out of all devices</p>
-        <button className="px-4 py-2 bg-primary text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit">
+        <button className="px-4 py-2 bg-primary text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit"
+        onClick={handleLogout}>
           Log out
         </button>
         </div>
