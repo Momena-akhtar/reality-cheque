@@ -13,7 +13,8 @@
       "declaration": true,
       "declarationMap": true,
       "sourceMap": true,
-      "isolatedModules": true
+      "isolatedModules": true,
+      "types": ["node", "express"],
   },
   "include": ["src/**/*", "server.ts", "scripts/**/*"],
   "exclude": ["node_modules", "dist", "tests"]
