@@ -42,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     fetchUser();
   }, []);
-  console.log(user);
   const logout = async () => {
     await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
       method: "POST",
@@ -50,7 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setUser(null);
   };
-
   return (
     <AuthContext.Provider value={{ user, setUser, logout, loading }}>
       {children}
