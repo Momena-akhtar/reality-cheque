@@ -16,12 +16,12 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
     <div className="relative inline-block text-left">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-2 bg-[var(--primary)] text-[var(--foreground)] hover:bg-[var(--primary-hover)] transition-colors"
+        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-2 border border-border bg-[var(--primary)] text-[var(--foreground)] hover:bg-[var(--primary-hover)] transition-colors"
       >
         {picture ? (
-          <img src={picture} alt={name} className="w-7 h-7 rounded-full border border-[var(--border)]" />
+          <img src={picture} alt={name} className="w-6 h-6 rounded-full border border-border" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center font-bold uppercase">
+          <div className="w-5 h-5 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center font-bold uppercase">
             {name?.charAt(0)}
           </div>
         )}
