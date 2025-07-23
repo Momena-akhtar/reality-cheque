@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectToDb } from "./src/config/db"; 
 import authRouter from './src/routes/authRoutes';
 import cors from "cors";
+import cookieParser from "cookie-parser";
 const nodeEnv = process.env.NODE_ENV || "development";
 dotenv.config({ path: `.env.${nodeEnv}` });
 
@@ -12,6 +13,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
+app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req: Request, res: Response) => {
