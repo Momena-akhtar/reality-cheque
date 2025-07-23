@@ -20,7 +20,7 @@ export default function Logo () {
         <>
         <Link href="/" className="flex items-center space-x-2">
           {mounted ? logo : <div style={{ width: 16, height: 16 }} />}
-          <span className="text-xl font-semibold">MiniBots</span>
+          <span className="text-xl font-semibold">MenuBot</span>
         </Link>
         </>
     )

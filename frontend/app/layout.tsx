@@ -6,7 +6,7 @@ import "./globals.css";
 const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
-  title: "MiniBots",
+  title: "MenuBot",
   description: "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
 };
 
