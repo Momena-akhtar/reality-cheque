@@ -1,17 +1,44 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import ContinueWithGoogle from './ui/continue-with-google';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function SignInPopup({ onClose }: { onClose: () => void }) {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log(isSignUp ? 'Sign up' : 'Sign in', { email, password, username });
+        setLoading(true);
+        try {
+            let url = `${API_BASE}/auth/${isSignUp ? 'register' : 'login'}`;
+            let body: any = isSignUp
+                ? { username, email, password, role: 'user' }
+                : { email, password, role: 'user' };
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                credentials: 'include',
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data.message || 'Something went wrong');
+            } else {
+                toast.success(isSignUp ? 'Registration successful!' : 'Login successful!');
+                onClose();
+            }
+        } catch (err) {
+            toast.error('Network error. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleGoogleSignIn = () => {
@@ -66,8 +93,8 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
                             required
                         />
                     </div>
-                    <button type="submit" className="w-full cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors">
-                        {isSignUp ? 'Sign Up' : 'Sign In'}
+                    <button type="submit" disabled={loading} className="w-full cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors">
+                        {loading ? (isSignUp ? 'Signing Up...' : 'Signing In...') : (isSignUp ? 'Sign Up' : 'Sign In')}
                     </button>
                 </form>
 
