@@ -1,9 +1,10 @@
 import React from 'react';
 import { User } from 'lucide-react';
+import UserMenu from './user-menu';
 
 interface SignInButtonProps {
   onSignInClick: () => void;
-  user?: { username: string; picture?: string } | null;
+  user?: { username: string; email:string; picture?: string } | null;
   loading?: boolean;
 }
 
@@ -13,13 +14,8 @@ export default function SignInButton({ onSignInClick, user, loading }: SignInBut
   }
   if (user) {
     return (
-      <div className="flex items-center space-x-2 px-4 py-2 cursor-pointer rounded-xl border border-border bg-background text-foreground hover:bg-primary-hover transition-colors">
-        {user.picture ? (
-          <img src={user.picture} alt={user.username} className="w-5 h-5 rounded-full border border-border" />
-        ) : (
-          <User className="w-5 h-5" />
-        )}
-        <span className="font-medium">{user.username}</span>
+      <div>
+        <UserMenu name={user.username} email={user.email} picture={user.picture} />
       </div>
     );
   }
