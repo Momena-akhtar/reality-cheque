@@ -1,14 +1,16 @@
 "use client";
 import Link from "next/link";
-import SignIn from "./ui/signin-button";
+import SignInButton from "./ui/signin-button";
 import Theme from "./ui/theme";
 import SignInPopup from "./signin-popup";
 import Portal from "./ui/portal";
 import { useState } from "react";
 import Logo from "./ui/logo";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navigation() {
   const [showSignInPopup, setShowSignInPopup] = useState(false);
+  const { user, loading } = useAuth();
 
   return (
     <>
@@ -61,11 +63,11 @@ export default function Navigation() {
 
         {/* User Actions */}
         <div className="flex items-center space-x-4">
-          <SignIn onSignInClick={() => setShowSignInPopup(true)} />
+          <SignInButton onSignInClick={() => setShowSignInPopup(true)} user={user} loading={loading} />
           <Theme />
         </div>  
       </nav>
-      {showSignInPopup && (
+      {showSignInPopup && !user && (
         <Portal>
           <SignInPopup onClose={() => setShowSignInPopup(false)} />
         </Portal>

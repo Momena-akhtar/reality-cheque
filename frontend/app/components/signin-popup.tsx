@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import ContinueWithGoogle from './ui/continue-with-google';
+import { useAuth } from "../context/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -12,6 +13,7 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
+    const { setUser } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,6 +34,7 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
                 toast.error(data.message || 'Something went wrong');
             } else {
                 toast.success(isSignUp ? 'Registration successful!' : 'Login successful!');
+                setUser(data.user || data); // data.user for register/login, data for /me
                 onClose();
             }
         } catch (err) {
