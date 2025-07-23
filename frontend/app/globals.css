@@ -67,3 +67,13 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+.toaster[data-theme='custom'] {
+  --toast-bg: var(--background);
+  --toast-text: var(--foreground);
+  --toast-border: var(--border);
+}
+.toaster[data-theme='custom'] .sonner-toast {
+  background: var(--toast-bg) !important;
+  color: var(--toast-text) !important;
+  border: 1px solid var(--toast-border) !important;
+}
