@@ -28,8 +28,8 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-      <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-[400px] shadow-lg relative [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold">&times;</button>
+      <div className="bg-background text-foreground border border-border rounded-lg p-8 w-[500px] shadow-lg relative [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
+        <button onClick={onClose} className="absolute cursor-pointer top-3 right-3 text-foreground hover:text-primary-hover text-xl font-bold">&times;</button>
         <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
 
       {/* User Info Section */}
@@ -39,7 +39,7 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
           <input
             type="text"
             name="username"
-            className="w-full px-3 py-2 bg-primary text-foreground border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary-hover"
+            className="w-full px-3 py-2  text-foreground border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
             disabled={!editMode}
             value={userInfo.username}
             onChange={handleInputChange}
@@ -51,7 +51,7 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
           <input
             type="email"
             name="email"
-            className="w-full px-3 py-2 bg-primary text-foreground border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary-hover"
+            className="w-full px-3 py-2 text-foreground border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
             disabled={!editMode}
             value={userInfo.email}
             onChange={handleInputChange}
@@ -63,7 +63,7 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
           <input
             type="password"
             name="password"
-            className="w-full px-3 py-2 bg-primary text-foreground border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary-hover"
+            className="w-full px-3 py-2  text-foreground border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
             disabled={!editMode}
             value={userInfo.password}
             onChange={handleInputChange}
@@ -71,7 +71,7 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         <button
-          className="mt-2 px-4 py-2 bg-primary hover:bg-primary-hover text-foreground rounded transition-all"
+          className="mt-2 px-4 py-2 text-sm hover:bg-primary-hover text-foreground rounded-lg border border-border cursor-pointer transition-all"
           onClick={() => setEditMode(!editMode)}
         >
           {editMode ? 'Save Changes' : 'Update Info'}
@@ -83,15 +83,18 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
 
       {/* Account Options */}
       <div className="space-y-4">
-        <button className="w-full text-left text-sm text-primary-text-faded hover:text-primary-text-hover">
-          Log out of all devices
-        </button>
-        <button className="px-4 py-2 bg-primary hover:bg-primary-hover text-foreground rounded w-fit">
+        <div className='flex justify-between items-center'>
+          <p className='text-sm text-primary-text-faded'>Log out of all devices</p>
+        <button className="px-4 py-2 bg-primary text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit">
           Log out
         </button>
-        <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded w-fit">
+        </div>
+          <div className='flex justify-between items-center'>
+        <p className='text-sm text-primary-text-faded'>Delete your account</p>
+        <button className="px-4 py-2 bg-red-600/30 hover:bg-red-600/40 cursor-pointer text-sm text-foreground rounded-lg w-fit">
           Delete account
         </button>
+        </div>
       </div>
       </div>
     </div>
