@@ -5,6 +5,7 @@ import SettingsPopup from '../settings-popup';
 import { useAuth } from '../../context/AuthContext';
 import { Settings, ArrowUpCircle, LogOut, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import ReactDOM from 'react-dom';
 interface UserMenuProps {
   name: string;
   email: string;
@@ -65,13 +66,9 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
           </div>
         </div>
       )}
-    {showSettings && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-        <SettingsPopup />
-        <button className="absolute top-4 right-4 text-2xl text-white" onClick={() => setShowSettings(false)}>
-          &times;
-        </button>
-      </div>
+    {showSettings && typeof window !== 'undefined' && ReactDOM.createPortal(
+      <SettingsPopup onClose={() => setShowSettings(false)} />,
+      document.body
     )}
   </div>
   );
