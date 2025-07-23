@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Settings, ArrowUpCircle, LogOut, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactDOM from 'react-dom';
+import { useRouter } from 'next/navigation';
+
 interface UserMenuProps {
   name: string;
   email: string;
@@ -16,6 +18,7 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { logout } = useAuth();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
@@ -51,7 +54,8 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
                 <Settings className="inline mr-2 w-4 h-4" />
               Settings
             </button>
-            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
+            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+            onClick={() => router.push('/upgrade')}>
                 <ArrowUpCircle className="inline mr-2 w-4 h-4" />
               Upgrade plan
             </button>
