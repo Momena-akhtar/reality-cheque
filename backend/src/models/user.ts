@@ -42,7 +42,7 @@ const userSchema = new Schema<IUser>({
 },
   creditsPerMonth: {
     type: Number,
-    default: 0,
+    default: 10,
 },
 }, {
   timestamps: true,
