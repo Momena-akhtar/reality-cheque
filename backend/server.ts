@@ -2,11 +2,15 @@ import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { connectToDb } from "./src/config/db"; 
 import authRouter from './src/routes/authRoutes';
-
+import cors from "cors";
 const nodeEnv = process.env.NODE_ENV || "development";
 dotenv.config({ path: `.env.${nodeEnv}` });
 
 const app = express();
+app.use(cors({
+    origin: process.env.FRONTEND_ORIGIN,
+    credentials: true,
+}));
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
