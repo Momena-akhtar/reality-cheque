@@ -1,11 +1,13 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { connectToDb } from "./src/config/db"; 
+import authRouter from './src/routes/authRoutes';
 
 const nodeEnv = process.env.NODE_ENV || "development";
 dotenv.config({ path: `.env.${nodeEnv}` });
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 app.get("/", (req: Request, res: Response) => {
@@ -24,6 +26,8 @@ app.get("/", (req: Request, res: Response) => {
         </body>
         </html>`);
 });
+
+app.use('/api/auth', authRouter);
 
 connectToDb(); 
 app.listen(PORT, () => {
