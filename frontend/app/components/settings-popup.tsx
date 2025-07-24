@@ -34,22 +34,22 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
     toast.success('Logged out successfully');
     setEditMode(false);
   };
+  const getPlanColor = (str: string | undefined | null ) => {
+    switch (str?.toLowerCase()) {
+      case "free":
+        return "text-green-700";
+      case "pro":
+        return "text-yellow-700";
+      case "enterprise":
+        return "text-blue-700";
+      default:
+        return "text-primary";
+    }
+  };
   const capitalize = (str: string | undefined | null) => {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1)
 };
-  const getPlanColor = (str: string | undefined | null ) => {
-    switch (str?.toLowerCase()){
-      case "free":
-        return <p className='text-green-700'>{capitalize(str)}</p>
-      case "pro":
-        return <p className='text-yellow-700'>{capitalize(str)}</p>
-      case "free":
-        return <p className='text-blue-700'>{capitalize(str)}</p>
-      default:
-        return <p className='text-primary'>{capitalize(str)}</p>
-    }
-  }
   return ( 
     <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
       <div className="bg-background text-foreground border border-border rounded-lg p-8 w-[570px] shadow-lg relative [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
@@ -108,7 +108,12 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
       {/*Account Details */}
       <div className='space-y-4'>
         <div className='flex justify-between items-center'>
-          <p className='flex gap-1 text-sm text-primary-text-faded'>Plan: <span>{" "}{getPlanColor(user?.plan)}</span></p>
+          <p className='flex gap-1 text-sm text-primary-text-faded'>
+  Plan:{" "}
+  <span className={getPlanColor(user?.plan)}>
+    {capitalize(user?.plan)}
+  </span>
+</p>
         <button className="flex text-sm hover:underline py-1 cursor-pointer text-foreground rounded-lg w-fit"
         onClick={() => router.push("/upgrade")}>
           Upgrade 
