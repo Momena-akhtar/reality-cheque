@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
 const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
   const [editMode, setEditMode] = useState(false);
   const { user } = useAuth();
   const { logout } = useAuth();
+  const router = useRouter()
+
   const [userInfo, setUserInfo] = useState({
     username: '',
     email: '',
@@ -22,7 +26,6 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
       });
     }
   }, [user]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
   };
@@ -31,10 +34,9 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
     toast.success('Logged out successfully');
     setEditMode(false);
   };
-
-  return (
+  return ( 
     <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-      <div className="bg-background text-foreground border border-border rounded-lg p-8 w-[500px] shadow-lg relative [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
+      <div className="bg-background text-foreground border border-border rounded-lg p-8 w-[570px] shadow-lg relative [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
         <button onClick={onClose} className="absolute cursor-pointer top-3 right-3 text-foreground hover:text-primary-hover text-xl font-bold">&times;</button>
         <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
 
@@ -87,18 +89,39 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
       {/* Divider */}
       <hr className="border-border my-4" />
 
+      {/*Account Details */}
+      <div className='space-y-4'>
+        <div className='flex justify-between items-center'>
+          <p className='text-sm text-primary-text-faded'>Plan: <span className='text-green-700'>{user?.plan}</span></p>
+        <button className="flex text-sm hover:underline py-1 cursor-pointer text-foreground rounded-lg w-fit"
+        onClick={() => router.push("/upgrade")}>
+          Upgrade 
+        </button>
+        </div>
+        <div className='flex justify-between items-center'>
+          <p className='text-sm text-primary-text-faded'>Remaining Credits</p>
+        <span className="text-sm"
+        >
+          ${(user?.creditsPerMonth)?.toString()}/mo
+        </span>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <hr className="border-border my-4" />
+
       {/* Account Options */}
       <div className="space-y-4">
         <div className='flex justify-between items-center'>
           <p className='text-sm text-primary-text-faded'>Log out of all devices</p>
-        <button className="px-4 py-2 bg-primary text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit"
+        <button className="px-3 py-2 border border-border text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit"
         onClick={handleLogout}>
           Log out
         </button>
         </div>
           <div className='flex justify-between items-center'>
         <p className='text-sm text-primary-text-faded'>Delete your account</p>
-        <button className="px-4 py-2 bg-red-600/30 hover:bg-red-600/40 cursor-pointer text-sm text-foreground rounded-lg w-fit">
+        <button className="px-3 py-2 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-sm text-foreground rounded-lg w-fit">
           Delete account
         </button>
         </div>
