@@ -75,8 +75,8 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, plan } = (req as any).user;
-    res.json({ id: _id, email, username, picture, plan });
+    const { _id, email, username, picture, plan, creditsPerMonth } = (req as any).user;
+    res.json({ id: _id, email, username, picture, plan, creditsPerMonth });
   } else {
     res.status(401).json({ message: 'Not authenticated' });
   }
