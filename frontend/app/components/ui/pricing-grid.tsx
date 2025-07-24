@@ -10,7 +10,7 @@ const PricingGrid = () => {
 
   return (
     <section className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="flex flex-col md:flex-row items-center justify-center gap-8 max-w-6xl w-full">
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-6xl w-full">
         {Object.values(plans).map((plan) => (
           <PricingCard
             key={plan.id}

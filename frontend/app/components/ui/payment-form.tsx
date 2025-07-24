@@ -146,7 +146,7 @@ const PaymentForm: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="w-full py-2 px-4 rounded-xl bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-white font-semibold transition-colors"
+          className="w-full py-2 px-4 rounded-xl bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors"
         >
           Subscribe
         </button>

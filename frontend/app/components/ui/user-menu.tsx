@@ -29,12 +29,12 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
     <div className="relative inline-block text-left">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-2 border border-border bg-[var(--primary)] text-[var(--foreground)] hover:bg-[var(--primary-hover)] transition-colors"
+        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-2 border border-border bg-primary text-foreground hover:bg-primary-hover transition-colors"
       >
         {picture ? (
           <img src={picture} alt={name} className="w-6 h-6 rounded-full border border-border" />
         ) : (
-          <div className="w-5 h-5 rounded-full bg-[var(--foreground)] text-[var(--background)] flex items-center justify-center font-bold uppercase">
+          <div className="w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center font-bold uppercase">
             {name?.charAt(0)}
           </div>
         )}
@@ -42,10 +42,10 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 origin-top-right rounded-md border border-[var(--border)] bg-[var(--card)] shadow-lg z-50">
+        <div className="absolute bg-card right-0 mt-2 w-64 origin-top-right rounded-lg border border-border bg-card shadow-lg z-50">
           <div className="p-4">
-            <p className="text-sm font-medium text-[var(--foreground)]">{name}</p>
-            <p className="text-xs text-[var(--primary-text-faded)]">{email}</p>
+            <p className="text-sm font-medium text-foreground">{name}</p>
+            <p className="text-xs text-primary-text-faded">{email}</p>
           </div>
 
           <div className="border-t border-[var(--border)]">
