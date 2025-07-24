@@ -7,6 +7,7 @@ interface User {
   username: string;
   picture?: string;
   plan?: string;
+  creditsPerMonth?: Number;
 }
 
 interface AuthContextType {
