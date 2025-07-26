@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from "../context/AuthContext";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import { ShieldIcon } from 'lucide-react';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -10,24 +10,24 @@ export default function AdminSignInPopup({ onClose }: { onClose: () => void }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { refreshUser } = useAuth();
+    const { refreshAdmin } = useAdminAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/auth/login`, {
+            const res = await fetch(`${API_BASE}/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role: 'admin' }),
-                credentials: 'include',
+                body: JSON.stringify({ email, password }),
             });
             const data = await res.json();
             if (!res.ok) {
                 toast.error(data.message || 'Invalid admin credentials');
             } else {
                 toast.success('Admin login successful!');
-                await refreshUser();
+                localStorage.setItem('adminToken', data.token);
+                await refreshAdmin();
                 onClose();
             }
         } catch (err) {
