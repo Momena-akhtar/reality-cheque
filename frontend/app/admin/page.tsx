@@ -9,13 +9,11 @@ export default function AdminPage() {
     const router = useRouter();
 
     useEffect(() => {
-        // If admin is logged in, redirect to panel
         if (!adminLoading && admin) {
             router.push('/admin/panel');
         }
     }, [admin, adminLoading, router]);
 
-    // Show loading while checking authentication
     if (adminLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -27,7 +25,10 @@ export default function AdminPage() {
         );
     }
 
-    // Show admin signin popup if not logged in
+    if (admin) {
+        return null;
+    }
+
     return (
         <div>
             <AdminSignInPopup onClose={() => {}} />

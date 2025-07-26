@@ -56,7 +56,7 @@ interface Stats {
 }
 
 export default function AdminPanel() {
-  const { admin, adminLogout } = useAdminAuth();
+  const { admin, adminLogout, adminLoading } = useAdminAuth();
   const [sessionWarning, setSessionWarning] = useState(false);
   const [showSessionTooltip, setShowSessionTooltip] = useState(false);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -276,11 +276,13 @@ export default function AdminPanel() {
     setShowVoucherModal(true);
   };
 
-  if (!admin) {
-    router.push('/admin');
-  }
+  useEffect(() => {
+    if (!adminLoading && !admin) {
+      router.push('/admin');
+    }
+  }, [admin, adminLoading, router]);
 
-  if (loading) {
+  if (adminLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -289,6 +291,9 @@ export default function AdminPanel() {
         </div>
       </div>
     );
+  }
+  if (!admin) {
+    return null;
   }
 
   return (
