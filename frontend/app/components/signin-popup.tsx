@@ -13,7 +13,7 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
-    const { setUser } = useAuth();
+    const { refreshUser } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,7 +34,8 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
                 toast.error(data.message || 'Something went wrong');
             } else {
                 toast.success(isSignUp ? 'Registration successful!' : 'Login successful!');
-                setUser(data.user || data); // data.user for register/login, data for /me
+                // Refresh user data from backend to get complete user info
+                await refreshUser();
                 onClose();
             }
         } catch (err) {
