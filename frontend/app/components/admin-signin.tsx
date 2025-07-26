@@ -10,7 +10,7 @@ export default function AdminSignInPopup({ onClose }: { onClose: () => void }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { refreshAdmin } = useAdminAuth();
+    const { setAdmin } = useAdminAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,8 +27,7 @@ export default function AdminSignInPopup({ onClose }: { onClose: () => void }) {
             } else {
                 toast.success('Admin login successful!');
                 localStorage.setItem('adminToken', data.token);
-                await refreshAdmin();
-                onClose();
+                setAdmin(data.admin);
             }
         } catch (err) {
             toast.error('Network error. Please try again.');
