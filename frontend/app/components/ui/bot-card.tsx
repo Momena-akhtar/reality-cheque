@@ -3,6 +3,10 @@ import CategoryTag from "./category-tag";
 import PaidButton from "./paid-button";
 import FreeButton from "./free-button";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext";
+import SignInPopup from "../signin-popup";
+import Portal from "./portal";
+import { useState } from "react";
 
 interface BotCardProps {
   name: string;
@@ -19,8 +23,11 @@ export default function BotCard({
   category,
   version,
 }: BotCardProps) {
-  return (
-    <div className="rounded-lg border border-border text-foreground shadow-sm bg-card transition-all duration-300 hover:scale-[1.02] hover:bg-card-hover">
+    const {user} = useAuth();
+        const [showSignInPopup, setShowSignInPopup] = useState(false);
+    return (
+      <>
+        <div className="rounded-lg border border-border text-foreground shadow-sm bg-card transition-all duration-300 hover:scale-[1.02] hover:bg-card-hover">
     <div className="flex flex-col space-y-1.5 p-6">
         <div className="flex justify-between">
             <img src={logo} alt={name} className="mb-2 h-10 w-10 rounded-md object-cover" />
@@ -38,11 +45,27 @@ export default function BotCard({
                 <CategoryTag category={category} />
                 {version === "Free"? <FreeButton /> : <PaidButton />}
             </div>
-            <Link href={`/chat/${name.toLowerCase().replace(/\s+/g, '-')}?title=${name}&description=${description}&logo=${logo}`}>
-                <ExternalLink size={16} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
-            </Link>
+            {user ? (
+                <Link href={`/chat/${name.toLowerCase().replace(/\s+/g, '-')}?title=${name}&description=${description}&logo=${logo}`}>
+                    <ExternalLink size={16} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
+                </Link>
+            ) : (
+                <button 
+                    onClick={() => setShowSignInPopup(true)}
+                    className="text-foreground hover:text-primary-text-hover transition-colors duration-150"
+                >
+                    <ExternalLink size={16} />
+                </button>
+            )}         
+            
         </div>
     </div>
    </div>
+   {showSignInPopup && !user && (
+     <Portal>
+       <SignInPopup onClose={() => setShowSignInPopup(false)} />
+     </Portal>
+   )}
+  </>
   );
 }
