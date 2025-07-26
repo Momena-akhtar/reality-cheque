@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect, useRef } from 'react';
+import { useAdminAuth } from '../../context/AdminAuthContext';
 import { 
   BarChart3, 
   Users, 
@@ -18,9 +18,11 @@ import {
   DollarSign,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -54,7 +56,10 @@ interface Stats {
 }
 
 export default function AdminPanel() {
-  const { user } = useAuth();
+  const { admin, adminLogout } = useAdminAuth();
+  const [sessionWarning, setSessionWarning] = useState(false);
+  const [showSessionTooltip, setShowSessionTooltip] = useState(false);
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [activeTab, setActiveTab] = useState<'stats' | 'prompts' | 'vouchers'>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -64,8 +69,8 @@ export default function AdminPanel() {
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
-
-  // Form states
+  const router = useRouter();
+  
   const [promptForm, setPromptForm] = useState({
     name: '',
     content: '',
@@ -83,15 +88,39 @@ export default function AdminPanel() {
   });
 
   useEffect(() => {
-    if (user) {
+    if (admin) {
       fetchData();
+  
+      const adminToken = localStorage.getItem('adminToken');
+      if (adminToken) {
+        try {
+          const tokenData = JSON.parse(atob(adminToken.split('.')[1]));
+          const currentTime = Math.floor(Date.now() / 1000);
+          const timeUntilExpiry = tokenData.exp - currentTime;
+          const warningTime = timeUntilExpiry - 300; // 5 minutes before expiry
+          
+          if (warningTime > 0) {
+            warningTimeoutRef.current = setTimeout(() => {
+              setSessionWarning(true);
+              toast.warning('Admin session will expire in 5 minutes. Please save your work.');
+            }, warningTime * 1000);
+          }
+        } catch (error) {
+          console.error('Error parsing admin token:', error);
+        }
+      }
     }
-  }, [user]);
+    
+    return () => {
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, [admin]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch stats
       const statsRes = await fetch(`${API_BASE}/admin/stats`, {
         credentials: 'include'
       });
@@ -100,7 +129,6 @@ export default function AdminPanel() {
         setStats(statsData);
       }
 
-      // Fetch prompts
       const promptsRes = await fetch(`${API_BASE}/admin/prompts`, {
         credentials: 'include'
       });
@@ -109,7 +137,6 @@ export default function AdminPanel() {
         setPrompts(promptsData);
       }
 
-      // Fetch vouchers
       const vouchersRes = await fetch(`${API_BASE}/admin/vouchers`, {
         credentials: 'include'
       });
@@ -173,7 +200,7 @@ export default function AdminPanel() {
 
       if (res.ok) {
         toast.success(editingVoucher ? 'Voucher updated!' : 'Voucher created!');
-        setShowVoucherModal(false);
+        setShowVoucherModal(false); 
         setEditingVoucher(null);
         setVoucherForm({ code: '', discount: 0, type: 'percentage', maxUses: 100, expiresAt: '', isActive: true });
         fetchData();
@@ -249,15 +276,8 @@ export default function AdminPanel() {
     setShowVoucherModal(true);
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
-          <p className="text-primary-text-faded">Please log in as an admin to access this panel.</p>
-        </div>
-      </div>
-    );
+  if (!admin) {
+    router.push('/admin');
   }
 
   if (loading) {
@@ -273,6 +293,26 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Session Warning Banner */}
+      {sessionWarning && (
+        <div className="bg-yellow-500/10 border-b border-yellow-500/20 p-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-yellow-500" />
+              <span className="text-yellow-700 dark:text-yellow-300 font-medium">
+                Admin session will expire in 5 minutes. Please save your work.
+              </span>
+            </div>
+            <button
+              onClick={() => setSessionWarning(false)}
+              className="text-yellow-700 dark:text-yellow-300 hover:text-yellow-800 dark:hover:text-yellow-200"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -282,7 +322,30 @@ export default function AdminPanel() {
               <h1 className="text-xl font-semibold text-foreground">Admin Panel</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-primary-text-faded">Welcome, {user.email}</span>
+              <span className="text-sm text-primary-text-faded">Welcome, {admin?.email}</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-primary-text-faded">Session Active</span>
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setShowSessionTooltip(true)}
+                  onMouseLeave={() => setShowSessionTooltip(false)}
+                >
+                  <Info className="w-3 h-3 cursor-pointer text-primary-text-faded hover:text-foreground transition-colors" />
+                  {showSessionTooltip && (
+                    <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-background border border-border rounded-lg shadow-lg text-xs text-primary-text-faded whitespace-nowrap z-10">
+                      Admin session expires in 30 minutes for security. Token will auto-refresh when needed.
+                      <div className="absolute bottom-full right-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-border"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={adminLogout}
+                className="px-3 py-1 text-sm border border-border rounded-lg text-foreground hover:bg-primary-hover transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
