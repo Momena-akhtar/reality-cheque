@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import SettingsPopup from '../settings-popup';
 import { useAuth } from '../../context/AuthContext';
-import { Settings, ArrowUpCircle, LogOut, Info } from 'lucide-react';
+import { Settings, ArrowUpCircle, LogOut, Info, History } from 'lucide-react';
 import { toast } from 'sonner';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/navigation';
+import UsageHistoryPopup from '../usage-history';
 
 interface UserMenuProps {
   name: string;
@@ -17,6 +18,7 @@ interface UserMenuProps {
 export default function UserMenu({ name, email, picture }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showUsageHistory, setShowUsageHistory] = useState(false);
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -59,6 +61,11 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
                 <ArrowUpCircle className="inline mr-2 w-4 h-4" />
               Upgrade plan
             </button>
+            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+            onClick={() => setShowUsageHistory(true)}>
+                <History className="inline mr-2 w-4 h-4" />
+              Usage History
+            </button>
             <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
                 <Info className='inline mr-2 w-4 h-4' />
               Learn more
@@ -72,6 +79,10 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
       )}
     {showSettings && typeof window !== 'undefined' && ReactDOM.createPortal(
       <SettingsPopup onClose={() => setShowSettings(false)} />,
+      document.body
+    )}
+    {showUsageHistory && typeof window !== 'undefined' && ReactDOM.createPortal(
+      <UsageHistoryPopup onClose={() => setShowUsageHistory(false)} />,
       document.body
     )}
   </div>
