@@ -17,6 +17,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   updateUser: (userId: string, updateData: Partial<User>) => Promise<boolean>;
+  updateUserPlan: (userId: string, plan: "free" | "pro" | "enterprise") => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   refreshUser: () => Promise<void>;
   loading: boolean;
@@ -93,6 +94,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateUserPlan = async (userId: string, plan: "free" | "pro" | "enterprise"): Promise<boolean> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/plan`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ plan }),
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        return true;
+      } else {
+        console.error("Failed to update user plan:", await res.text());
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating user plan:", error);
+      return false;
+    }
+  };
+
   const deleteUser = async (userId: string): Promise<boolean> => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}`, {
@@ -119,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser, 
       logout, 
       updateUser, 
+      updateUserPlan,
       deleteUser, 
       refreshUser, 
       loading 
