@@ -31,13 +31,28 @@ export class UserService {
       return null;
     }
   }
-    async deleteUser(userId: string): Promise<boolean> {
-        try {
-        await User.findByIdAndDelete(userId);
-        return true;
-        } catch (error) {
-        console.error('Error deleting user:', error);
-        return false;
-        }
+
+  async updateUserPlan(userId: string, plan: "free" | "pro" | "enterprise"): Promise<IUser | null> {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId, 
+        { plan }, 
+        { new: true }
+      );
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user plan:', error);
+      return null;
     }
+  }
+
+  async deleteUser(userId: string): Promise<boolean> {
+    try {
+      await User.findByIdAndDelete(userId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return false;
+    }
+  }
 }
