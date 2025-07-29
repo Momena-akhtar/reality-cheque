@@ -4,6 +4,7 @@ import SignInButton from "./ui/signin-button";
 import Theme from "./ui/theme";
 import SignInPopup from "./signin-popup";
 import Portal from "./ui/portal";
+import Logo from "./ui/logo";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { SidebarTrigger, useSidebar } from "./ui/sidebar";
@@ -17,13 +18,12 @@ export default function Navigation() {
   return (
     <>
       <nav 
-        className="fixed m-auto top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300"
+        className="fixed h-16 m-auto top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300"
       >
         {/* Logo and Brand */}
         <div className="flex items-center space-x-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-
+        <Logo />
         </div>
 
         {/* Main Navigation */}
