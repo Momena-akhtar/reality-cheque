@@ -11,10 +11,7 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Eye,
-  TrendingUp,
   Activity,
-  Calendar,
   DollarSign,
   CheckCircle,
   XCircle,
@@ -292,8 +289,19 @@ export default function AdminPanel() {
     }
   };
 
+  const [showDeleteVoucherModal, setShowDeleteVoucherModal] = useState(false);
+  const [voucherToDelete, setVoucherToDelete] = useState<Voucher | null>(null);
+
   const deleteVoucher = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this voucher?')) return;
+    const voucher = vouchers.find(v => v._id === id);
+    if (voucher) {
+      setVoucherToDelete(voucher);
+      setShowDeleteVoucherModal(true);
+    }
+  };
+
+  const confirmDeleteVoucher = async () => {
+    if (!voucherToDelete) return;
     
     try {
       const adminToken = localStorage.getItem('adminToken');
@@ -302,7 +310,7 @@ export default function AdminPanel() {
         return;
       }
 
-      const res = await fetch(`${API_BASE}/admin/vouchers/${id}`, {
+      const res = await fetch(`${API_BASE}/admin/vouchers/${voucherToDelete._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`
@@ -318,7 +326,15 @@ export default function AdminPanel() {
       }
     } catch (error) {
       toast.error('Network error');
+    } finally {
+      setShowDeleteVoucherModal(false);
+      setVoucherToDelete(null);
     }
+  };
+
+  const cancelDeleteVoucher = () => {
+    setShowDeleteVoucherModal(false);
+    setVoucherToDelete(null);
   };
 
   const editPrompt = (prompt: Prompt) => {
@@ -1033,6 +1049,51 @@ export default function AdminPanel() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Voucher Confirmation Modal */}
+      {showDeleteVoucherModal && voucherToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Delete Voucher</h3>
+                <p className="text-sm text-primary-text-faded">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-foreground mb-2">
+                Are you sure you want to delete the voucher <span className="font-semibold">{voucherToDelete.code}</span>?
+              </p>
+              <div className="bg-card border border-border rounded-lg p-3">
+                <div className="text-xs text-primary-text-faded space-y-1">
+                  <p><span className="font-medium">Type:</span> {voucherToDelete.voucherType === 'percentage' ? `${voucherToDelete.value}% discount` : `$${voucherToDelete.value} credits`}</p>
+                  <p><span className="font-medium">Usage:</span> {voucherToDelete.usedCount} / {voucherToDelete.maxUses}</p>
+                  <p><span className="font-medium">Valid until:</span> {new Date(voucherToDelete.validUntil).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={cancelDeleteVoucher}
+                className="flex-1 py-2 px-4 rounded-lg cursor-pointer border border-border text-foreground hover:bg-card-hover transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteVoucher}
+                className="flex-1 py-2 px-4 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-foreground rounded-lg transition-colors"
+              >
+                Delete Voucher
+              </button>
+            </div>
           </div>
         </div>
       )}
