@@ -10,7 +10,7 @@ import {
   SidebarGroupLabel,
 } from "@/app/components/ui/sidebar"
 import Logo from "./ui/logo"
-import { ChevronRight, ChevronDown, Dot } from "lucide-react"
+import { ChevronRight, ChevronDown, ExternalLink } from "lucide-react"
 
 const sidebarData = [
   {
@@ -58,7 +58,7 @@ const sidebarData = [
     ]
   },
   {
-    title: "Email Marketing (Ignore for now)",
+    title: "Email Marketing",
     children: [
       "Newsletter Draft AI",
       "Promo Campaign Wizard",
@@ -82,7 +82,7 @@ const sidebarData = [
     ]
   },
   {
-    title: "Ad / Landing Creative Vault (Ignore for now)",
+    title: "Ad / Landing Creative Vault",
     children: [
       "Swipeable Hook Library",
       "Winning copy examples"
@@ -107,7 +107,7 @@ const sidebarData = [
     ]
   },
   {
-    title: "Resources & Leaderboard (Ignore for now)",
+    title: "Resources & Leaderboard",
     children: [
       "Best-Practice Guides",
       "Community Template Gallery",
@@ -128,17 +128,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-border scrollbar-hide">
-      <SidebarHeader>
-        <Logo />
-      </SidebarHeader>
-      <SidebarHeader>
-        <div className="flex items-center p-2">
-          <span className="text-lg font-semibold">Playground</span>
-        </div>
-      </SidebarHeader>
       <SidebarContent className="overflow-y-auto scrollbar-hide">
         <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
+          <SidebarGroupLabel className="mt-1">Tools</SidebarGroupLabel>
           <SidebarGroupContent>
             {sidebarData.map((section, index) => (
               <div key={index} className="px-4">
@@ -158,11 +150,11 @@ export function AppSidebar() {
                 {openSections[section.title] && (
                   <ul className="ml-4 text-sm text-muted-foreground space-y-1 mt-1">
                     {section.children.map((child, i) => (
-                      <li key={i} className="py-1.5 px-2 rounded-md hover:bg-accent/30 transition-all duration-200 flex items-center gap-2 group">
-                        <Dot className="h-2 w-2" />
+                      <li key={i} className="py-1.5 px-2 rounded-md hover:bg-accent/30 transition-all duration-200 flex items-center justify-between group cursor-pointer">
                         <span className="group-hover:text-foreground transition-colors duration-200">
                           {child}
                         </span>
+                        <ExternalLink className="h-2 w-2" />
                       </li>
                     ))}
                   </ul>

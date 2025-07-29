@@ -14,9 +14,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="">
         <Navigation />  
-        </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           {children}
         </div>
