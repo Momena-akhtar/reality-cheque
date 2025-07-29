@@ -15,8 +15,8 @@ export const plans: Record<string, PlanDetails> = {
   pro: {
     id: "pro",
     title: "Pro",
-  price: "$20.00",
-  billingInfo: "$16.67 when billed annually",
+  price: "$10.00",
+  billingInfo: "$8.33 when billed annually",
   features: [
     "10x citations in answers",
     "Access to Labs",
@@ -29,8 +29,8 @@ export const plans: Record<string, PlanDetails> = {
   enterprise: {
     id: "enterprise",
     title: "Enterprise",
-    price: "$200.00",
-    billingInfo: "$166.67 when billed annually",
+    price: "$100.00",
+    billingInfo: "$83.33 when billed annually",
     features: [
       "Everything in Pro",
       "Early access to new products",
