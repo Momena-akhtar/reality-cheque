@@ -1,14 +1,30 @@
 "use client"
-import React from "react";
+import React, { useState } from "react";
 import PlanSummary from "../components/ui/plan-summary";
 import PaymentForm from "../components/ui/payment-form";
 import { plans } from "../types/plans";
 import { useSearchParams } from "next/navigation";
 
+interface VoucherData {
+  id: string;
+  code: string;
+  voucherType: 'percentage' | 'credits';
+  value: number;
+  maxUses: number;
+  description?: string;
+}
+
 const PaymentPage = () => {
   const searchParams = useSearchParams();
   const planId = searchParams.get("plan") || "";
   const plan = plans[planId];
+  const [appliedVoucher, setAppliedVoucher] = useState<VoucherData | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  const handleVoucherApplied = (voucher: VoucherData | null, discount: number) => {
+    setAppliedVoucher(voucher);
+    setDiscountAmount(discount);
+  };
 
   if (!plan) {
     return (
@@ -24,8 +40,16 @@ const PaymentPage = () => {
   return (
     <main className="min-h-screen bg-background text-foreground px-4 py-16 flex justify-center items-start">
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-5xl">
-        <PlanSummary plan={plan} />
-        <PaymentForm />
+        <PlanSummary 
+          plan={plan} 
+          appliedVoucher={appliedVoucher}
+          discountAmount={discountAmount}
+        />
+        <PaymentForm 
+          planPrice={plan.price}
+          planTitle={plan.title}
+          onVoucherApplied={handleVoucherApplied}
+        />
       </div>
     </main>
   );
