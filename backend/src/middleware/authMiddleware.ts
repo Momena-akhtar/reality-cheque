@@ -3,7 +3,17 @@ import { verifyToken, getUserOrAdminById } from '../services/authService';
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const token = req.cookies?.token;
+    // Try to get token from multiple sources
+    let token = req.cookies?.token; // For users (cookie-based)
+    
+    //Authorization header (for admins)
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      }
+    }
+
     if (!token) {
       res.status(401).json({ message: 'No token provided' });
       return;
@@ -31,6 +41,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 }
