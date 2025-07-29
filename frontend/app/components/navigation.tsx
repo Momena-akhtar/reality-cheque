@@ -5,22 +5,30 @@ import Theme from "./ui/theme";
 import SignInPopup from "./signin-popup";
 import Portal from "./ui/portal";
 import { useState } from "react";
-import Logo from "./ui/logo";
 import { useAuth } from "../context/AuthContext";
+import { SidebarTrigger, useSidebar } from "./ui/sidebar";
+import { Separator } from "./ui/separator";
 
 export default function Navigation() {
   const [showSignInPopup, setShowSignInPopup] = useState(false);
   const { user, loading } = useAuth();
+  const { state } = useSidebar();
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <nav 
+        className="fixed m-auto top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300"
+      >
         {/* Logo and Brand */}
-        <Logo />
+        <div className="flex items-center space-x-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+
+        </div>
 
         {/* Main Navigation */}
         <div className="hidden md:flex items-center space-x-6">
-          <Link href="/marketplace" className="hover:text-primar  y-text-hover transition-colors">
+          <Link href="/marketplace" className="hover:text-primary-text-hover transition-colors">
             Marketplace
           </Link>
           <div className="relative group">
