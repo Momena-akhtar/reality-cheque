@@ -5,6 +5,7 @@ import authRouter from './src/routes/authRoutes';
 import userRouter from './src/routes/userRoutes';
 import adminRouter from './src/routes/adminRoutes';
 import stripeRouter from './src/routes/stripeRoutes';
+import voucherRouter from './src/routes/voucherRoutes';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -39,7 +40,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);
-app.use('/api/stripe', stripeRouter);
+// app.use('/api/stripe', stripeRouter);
+app.use('/api', voucherRouter);
 connectToDb(); 
 app.listen(PORT, () => {
     console.log(`[${nodeEnv}] Server is running on port ${PORT}`);
