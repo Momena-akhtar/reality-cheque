@@ -19,7 +19,7 @@ const DowngradeConfirmation: React.FC<DowngradeConfirmationProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-semibold text-foreground mb-4">
           Confirm Plan Change
@@ -34,7 +34,7 @@ const DowngradeConfirmation: React.FC<DowngradeConfirmationProps> = ({
           <button
             onClick={onClose}
             className={cn(
-              "flex-1 py-2 px-4 rounded-lg border border-border text-foreground hover:bg-card-hover transition-colors"
+              "w-1/3 py-2 px-4 rounded-lg cursor-pointer border border-border text-foreground hover:bg-card-hover transition-colors"
             )}
           >
             Cancel
@@ -42,7 +42,7 @@ const DowngradeConfirmation: React.FC<DowngradeConfirmationProps> = ({
           <button
             onClick={onConfirm}
             className={cn(
-              "flex-1 py-2 px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+              "w-2/3 py-2 px-4 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-foreground rounded-lg transition-colors"
             )}
           >
             Confirm Downgrade
