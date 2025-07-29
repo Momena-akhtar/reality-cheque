@@ -36,14 +36,25 @@ interface Prompt {
 }
 
 interface Voucher {
-  id: string;
+  _id: string;
   code: string;
-  discount: number;
-  type: 'percentage' | 'fixed';
+  voucherType: 'percentage' | 'credits';
+  value: number;
   maxUses: number;
   usedCount: number;
-  expiresAt: string;
+  usedBy: string[];
+  validFrom: string;
+  validUntil: string;
   isActive: boolean;
+  description?: string;
+  applicablePlans: string[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    _id: string;
+    username: string;
+    email: string;
+  };
 }
 
 interface Stats {
@@ -80,10 +91,13 @@ export default function AdminPanel() {
 
   const [voucherForm, setVoucherForm] = useState({
     code: '',
-    discount: 0,
-    type: 'percentage' as 'percentage' | 'fixed',
+    voucherType: 'percentage' as 'percentage' | 'credits',
+    value: 0,
     maxUses: 100,
-    expiresAt: '',
+    validFrom: new Date().toISOString().split('T')[0],
+    validUntil: '',
+    description: '',
+    applicablePlans: ['pro'] as string[],
     isActive: true
   });
 
@@ -121,8 +135,19 @@ export default function AdminPanel() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${adminToken}`,
+        'Content-Type': 'application/json'
+      };
+
       const statsRes = await fetch(`${API_BASE}/admin/stats`, {
-        credentials: 'include'
+        headers
       });
       if (statsRes.ok) {
         const statsData = await statsRes.json();
@@ -130,7 +155,7 @@ export default function AdminPanel() {
       }
 
       const promptsRes = await fetch(`${API_BASE}/admin/prompts`, {
-        credentials: 'include'
+        headers
       });
       if (promptsRes.ok) {
         const promptsData = await promptsRes.json();
@@ -138,7 +163,7 @@ export default function AdminPanel() {
       }
 
       const vouchersRes = await fetch(`${API_BASE}/admin/vouchers`, {
-        credentials: 'include'
+        headers
       });
       if (vouchersRes.ok) {
         const vouchersData = await vouchersRes.json();
@@ -155,6 +180,12 @@ export default function AdminPanel() {
   const handlePromptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
       const url = editingPrompt 
         ? `${API_BASE}/admin/prompts/${editingPrompt.id}`
         : `${API_BASE}/admin/prompts`;
@@ -163,8 +194,10 @@ export default function AdminPanel() {
       
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
         body: JSON.stringify(promptForm)
       });
 
@@ -185,27 +218,46 @@ export default function AdminPanel() {
   const handleVoucherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
       const url = editingVoucher 
-        ? `${API_BASE}/admin/vouchers/${editingVoucher.id}`
+        ? `${API_BASE}/admin/vouchers/${editingVoucher._id}`
         : `${API_BASE}/admin/vouchers`;
       
       const method = editingVoucher ? 'PUT' : 'POST';
       
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
         body: JSON.stringify(voucherForm)
       });
 
       if (res.ok) {
-        toast.success(editingVoucher ? 'Voucher updated!' : 'Voucher created!');
+        toast.success(editingVoucher ? 'Voucher updated Successfully!' : 'Voucher created Successfully!');
         setShowVoucherModal(false); 
         setEditingVoucher(null);
-        setVoucherForm({ code: '', discount: 0, type: 'percentage', maxUses: 100, expiresAt: '', isActive: true });
+        setVoucherForm({ 
+          code: '', 
+          voucherType: 'percentage', 
+          value: 0, 
+          maxUses: 100, 
+          validFrom: new Date().toISOString().split('T')[0],
+          validUntil: '',
+          description: '',
+          applicablePlans: ['pro'],
+          isActive: true 
+        });
         fetchData();
       } else {
-        toast.error('Failed to save voucher');
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to save voucher');
       }
     } catch (error) {
       toast.error('Network error');
@@ -216,9 +268,17 @@ export default function AdminPanel() {
     if (!confirm('Are you sure you want to delete this prompt?')) return;
     
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/admin/prompts/${id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       if (res.ok) {
@@ -236,16 +296,25 @@ export default function AdminPanel() {
     if (!confirm('Are you sure you want to delete this voucher?')) return;
     
     try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/admin/vouchers/${id}`, {
         method: 'DELETE',
-        credentials: 'include'
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       if (res.ok) {
         toast.success('Voucher deleted!');
         fetchData();
       } else {
-        toast.error('Failed to delete voucher');
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to delete voucher');
       }
     } catch (error) {
       toast.error('Network error');
@@ -267,10 +336,13 @@ export default function AdminPanel() {
     setEditingVoucher(voucher);
     setVoucherForm({
       code: voucher.code,
-      discount: voucher.discount,
-      type: voucher.type,
+      voucherType: voucher.voucherType,
+      value: voucher.value,
       maxUses: voucher.maxUses,
-      expiresAt: voucher.expiresAt.split('T')[0],
+      validFrom: voucher.validFrom.split('T')[0],
+      validUntil: voucher.validUntil.split('T')[0],
+      description: voucher.description || '',
+      applicablePlans: voucher.applicablePlans,
       isActive: voucher.isActive
     });
     setShowVoucherModal(true);
@@ -577,7 +649,17 @@ export default function AdminPanel() {
               <button
                 onClick={() => {
                   setEditingVoucher(null);
-                  setVoucherForm({ code: '', discount: 0, type: 'percentage', maxUses: 100, expiresAt: '', isActive: true });
+                  setVoucherForm({ 
+                    code: '', 
+                    voucherType: 'percentage', 
+                    value: 0, 
+                    maxUses: 100, 
+                    validFrom: new Date().toISOString().split('T')[0],
+                    validUntil: '',
+                    description: '',
+                    applicablePlans: ['pro'],
+                    isActive: true 
+                  });
                   setShowVoucherModal(true);
                 }}
                 className="flex items-center space-x-2 px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
@@ -593,36 +675,51 @@ export default function AdminPanel() {
                   <thead className="bg-primary border-b border-border">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Code</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Discount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Value</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Usage</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Expires</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Valid Until</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Plans</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {vouchers.map((voucher) => (
-                      <tr key={voucher.id} className="hover:bg-primary-hover transition-colors">
+                      <tr key={voucher._id} className="hover:bg-primary-hover transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-foreground">{voucher.code}</div>
+                          {voucher.description && (
+                            <div className="text-xs text-primary-text-faded truncate max-w-xs">{voucher.description}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                          {voucher.type === 'percentage' ? `${voucher.discount}%` : `$${voucher.discount}`}
+                          <div>
+                            {voucher.voucherType === 'percentage' ? `${voucher.value}%` : `$${voucher.value} credits`}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {voucher.usedCount} / {voucher.maxUses}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
-                          {new Date(voucher.expiresAt).toLocaleDateString()}
+                          {new Date(voucher.validUntil).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                          <div className="flex flex-wrap gap-1">
+                            {voucher.applicablePlans.map((plan) => (
+                              <span key={plan} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-700/20 text-foreground border border-green-700">
+                                {plan}
+                              </span>
+                            ))}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {voucher.isActive ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-700/20 border border-green-700 text-foreground">
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-700/20 border border-red-700 text-foreground">
                               <XCircle className="w-3 h-3 mr-1" />
                               Inactive
                             </span>
@@ -632,13 +729,13 @@ export default function AdminPanel() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => editVoucher(voucher)}
-                              className="text-blue-600 hover:text-blue-900"
+                              className="text-blue-600 hover:text-blue-900 p-1 cursor-pointer"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => deleteVoucher(voucher.id)}
-                              className="text-red-600 hover:text-red-900"
+                              onClick={() => deleteVoucher(voucher._id)}
+                              className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -737,8 +834,8 @@ export default function AdminPanel() {
 
       {/* Voucher Modal */}
       {showVoucherModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100] p-4">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-foreground">
                 {editingVoucher ? 'Edit Voucher' : 'Add New Voucher'}
@@ -751,76 +848,173 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            <form onSubmit={handleVoucherSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Code</label>
+            <form onSubmit={handleVoucherSubmit} className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Code (6-8 characters, letters & numbers)</label>
                 <input
                   type="text"
                   value={voucherForm.code}
                   onChange={(e) => setVoucherForm({ ...voucherForm, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                  required
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                  placeholder="e.g., SAVE20 or WELCOME50"
+                  maxLength={8}
+                  pattern="[A-Z0-9]*"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Discount</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Description</label>
                   <input
-                    type="number"
-                    value={voucherForm.discount}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, discount: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                    required
+                    type="text"
+                    value={voucherForm.description}
+                    onChange={(e) => setVoucherForm({ ...voucherForm, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                    placeholder="Optional description"
                   />
                 </div>
+              </div>
 
+              {/* Voucher Configuration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Type</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Voucher Type</label>
                   <select
-                    value={voucherForm.type}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, type: e.target.value as 'percentage' | 'fixed' })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                    value={voucherForm.voucherType}
+                    onChange={(e) => setVoucherForm({ ...voucherForm, voucherType: e.target.value as 'percentage' | 'credits' })}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                   >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
+                    <option value="percentage">Percentage Discount (%)</option>
+                    <option value="credits">Dollar Credits ($)</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Max Uses</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {voucherForm.voucherType === 'percentage' ? 'Percentage (%)' : 'Credit Amount ($)'}
+                  </label>
                   <input
                     type="number"
-                    value={voucherForm.maxUses}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, maxUses: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                    value={voucherForm.value === 0 ? '' : voucherForm.value}
+                    onChange={(e) => {
+                      const inputValue = e.target.value;
+                      const numValue = inputValue === '' ? 0 : Number(inputValue);
+                      setVoucherForm({ ...voucherForm, value: numValue });
+                    }}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                    required
+                    min="0"
+                    step="0.01"
+                    max={voucherForm.voucherType === 'percentage' ? '100' : undefined}
+                    placeholder={voucherForm.voucherType === 'percentage' ? 'e.g., 20 for 20%' : 'e.g., 50 for $50 credits'}
+                  />
+                </div>
+              </div>
+
+              {/* Usage Limits */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Max Uses</label>
+                <input
+                  type="number"
+                  value={voucherForm.maxUses === 0 ? '' : voucherForm.maxUses}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    const numValue = inputValue === '' ? 0 : Number(inputValue);
+                    setVoucherForm({ ...voucherForm, maxUses: numValue });
+                  }}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                  required
+                  min="1"
+                  placeholder="e.g., 100"
+                />
+              </div>
+
+              {/* Validity Period */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Valid From</label>
+                  <input
+                    type="date"
+                    value={voucherForm.validFrom}
+                    onChange={(e) => setVoucherForm({ ...voucherForm, validFrom: e.target.value })} 
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Expires At</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Valid Until</label>
                   <input
                     type="date"
-                    value={voucherForm.expiresAt}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, expiresAt: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                    value={voucherForm.validUntil}
+                    onChange={(e) => setVoucherForm({ ...voucherForm, validUntil: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="voucherActive"
-                  checked={voucherForm.isActive}
-                  onChange={(e) => setVoucherForm({ ...voucherForm, isActive: e.target.checked })}
-                  className="mr-2"
-                />
-                <label htmlFor="voucherActive" className="text-sm text-foreground">Active</label>
+              {/* Plans and Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Applicable Plans</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={voucherForm.applicablePlans.includes('pro')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setVoucherForm({ 
+                              ...voucherForm, 
+                              applicablePlans: [...voucherForm.applicablePlans, 'pro'] 
+                            });
+                          } else {
+                            setVoucherForm({ 
+                              ...voucherForm, 
+                              applicablePlans: voucherForm.applicablePlans.filter(p => p !== 'pro') 
+                            });
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      Pro Plan
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={voucherForm.applicablePlans.includes('enterprise')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setVoucherForm({ 
+                              ...voucherForm, 
+                              applicablePlans: [...voucherForm.applicablePlans, 'enterprise'] 
+                            });
+                          } else {
+                            setVoucherForm({ 
+                              ...voucherForm, 
+                              applicablePlans: voucherForm.applicablePlans.filter(p => p !== 'enterprise') 
+                            });
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      Enterprise Plan
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="voucherActive"
+                    checked={voucherForm.isActive}
+                    onChange={(e) => setVoucherForm({ ...voucherForm, isActive: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label htmlFor="voucherActive" className="text-sm text-foreground">Active</label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
