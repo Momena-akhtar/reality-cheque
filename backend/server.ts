@@ -41,7 +41,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 app.use('/api/admin', adminRouter);
 // app.use('/api/stripe', stripeRouter);
-app.use('/api', voucherRouter);
+app.use('/api/voucher', voucherRouter);
 connectToDb(); 
 app.listen(PORT, () => {
     console.log(`[${nodeEnv}] Server is running on port ${PORT}`);
