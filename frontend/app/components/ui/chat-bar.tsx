@@ -41,10 +41,6 @@ export default function ChatBar({ onSendMessage }: ChatBarProps) {
                     <Send width={18} height={18} />
                 </button>
             </div>
-            <div className="flex justify-start gap-2 relative mt-2 px-1">
-                <Plus className="text-foreground/80 hover:text-foreground rounded-xl transition-colors cursor-pointer" width={18} height={18}/>
-                <Mic className="text-foreground/80 hover:text-foreground rounded-xl transition-colors cursor-pointer" width={18} height={18}/>
-            </div>
         </div>
     )
 }
