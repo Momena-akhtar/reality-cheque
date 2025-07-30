@@ -28,45 +28,30 @@ export default function Navigation() {
 
         {/* Main Navigation */}
         <div className="hidden md:flex items-center space-x-6">
-          <Link href="/marketplace" className="hover:text-primary-text-hover transition-colors">
-            Marketplace
-          </Link>
-          <div className="relative group">
-            <button className="flex items-center cursor-pointer space-x-1 hover:text-primary-text-hover transition-colors">
-              <span>Categories</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            <div className="absolute top-full left-0 mt-2 w-48 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/40 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <div className="py-2">
-                <Link href="/bots/sales-crm" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  Sales & CRM
-                </Link>
-                <Link href="/bots/marketing" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  Marketing
-                </Link>
-                <Link href="/bots/customer-support" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  Customer Support
-                </Link>
-                <Link href="/bots/hr" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  HR & Recruitment
-                </Link>
-                <Link href="/bots/finance" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  Finance & Accounting
-                </Link>
-                <Link href="/bots/development" className="block px-4 py-2 hover:bg-primary/10 transition-colors">
-                  Development
-                </Link>
-              </div>
-            </div>
-          </div>
-          <Link href="/create" className="hover:text-primary-text-hover transition-colors">
-            Create Bot
-          </Link>
-          <Link href="/community" className="hover:text-primary-text-hover transition-colors">
-            Community
-          </Link>
+          <button 
+            onClick={() => {
+              document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-primary-text-hover transition-colors cursor-pointer"
+          >
+            Home
+          </button>
+          <button 
+            onClick={() => {
+              document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-primary-text-hover transition-colors cursor-pointer"
+          >
+            Explore
+          </button>
+          <button 
+            onClick={() => {
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-primary-text-hover transition-colors cursor-pointer"
+          >
+            Contact
+          </button>
         </div>
 
         {/* User Actions */}
