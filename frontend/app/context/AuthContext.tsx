@@ -8,6 +8,10 @@ interface User {
   picture?: string;
   plan?: "free" | "pro" | "enterprise";
   creditsPerMonth?: number;
+  agencyName?: string;
+  offer?: string;
+  caseStudies?: string;
+  servicePricing?: string;
   createdAt?: string;
   updatedAt?: string;
 }
