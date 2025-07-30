@@ -8,7 +8,7 @@ import Logo from "./ui/logo";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { SidebarTrigger, useSidebar } from "./ui/sidebar";
-import { Separator } from "./ui/separator";
+import { ArrowLeftRight } from "lucide-react";
 
 export default function Navigation() {
   const [showSignInPopup, setShowSignInPopup] = useState(false);

@@ -127,3 +127,34 @@ body {
   top: 4rem !important;
   height: calc(100vh - 4rem) !important;
 }
+
+/* Mobile sidebar improvements */
+[data-mobile="true"] {
+  background: var(--background) !important;
+  backdrop-filter: none !important;
+  border-right: 1px solid var(--sidebar-border) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-mobile="true"] [data-slot="sidebar-inner"] {
+  background: var(--background) !important;
+  border-right: 1px solid var(--sidebar-border) !important;
+}
+
+/* Ensure mobile sidebar content is visible */
+[data-mobile="true"] .bg-sidebar {
+  background: var(--background) !important;
+  color: var(--sidebar-foreground) !important;
+}
+
+/* Mobile sidebar transitions */
+[data-mobile="true"] {
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Ensure mobile sidebar has same hover effects as desktop */
+[data-mobile="true"] button:hover {
+  background-color: var(--sidebar-accent) !important;
+  color: var(--sidebar-accent-foreground) !important;
+  transition: all 0.2s ease-in-out !important;
+}
