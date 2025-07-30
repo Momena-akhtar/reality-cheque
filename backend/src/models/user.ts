@@ -9,41 +9,66 @@ export interface IUser extends Document {
   picture: string;
   plan: "free" | "pro" | "enterprise";
   creditsPerMonth?: number;
+  agencyName?: string;
+  offer?: string;
+  caseStudies?: string;
+  servicePricing?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
+
 const userSchema = new Schema<IUser>({
   username: { 
     type: String, 
     required: true, 
     unique: true, 
     trim: true 
- },
+  },
   password: { 
     type: String, 
     required: true
- },
+  },
   email: { 
     type: String, 
     required: true, 
     unique: true, 
     lowercase: true, 
     trim: true 
- },
+  },
   picture: { 
     type: String, 
     default: "" 
- },
+  },
   plan: { 
     type: String, 
     enum: ["free", "pro", "enterprise"], 
     default: "free" 
-},
+  },
   creditsPerMonth: {
     type: Number,
     default: 10,
-},
+  },
+  agencyName: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  offer: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  caseStudies: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  servicePricing: {
+    type: String,
+    trim: true,
+    default: ""
+  }
 }, {
   timestamps: true,
 });
@@ -65,5 +90,6 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
+
 export default mongoose.models.User || mongoose.model<IUser>("User", userSchema);
 

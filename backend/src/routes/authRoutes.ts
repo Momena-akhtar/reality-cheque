@@ -11,7 +11,7 @@ const FIXED_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, sameSite: 'lax' as const };
 
 // Register handler
 const registerHandler: express.RequestHandler = async (req, res) => {
-  const { username, email, password, role } = req.body;
+  const { username, email, password, role, agencyName, offer, caseStudies, servicePricing } = req.body;
   if (!email || !password || !role) {
     res.status(400).json({ message: 'Email, password, and role are required' });
     return;
@@ -26,12 +26,34 @@ const registerHandler: express.RequestHandler = async (req, res) => {
       user = new Admin({ email, password });
       await user.save();
     } else {
-      user = new User({ username, email, password });
+      user = new User({ 
+        username, 
+        email, 
+        password, 
+        agencyName: agencyName || '', 
+        offer: offer || '', 
+        caseStudies: caseStudies || '', 
+        servicePricing: servicePricing || '' 
+      });
       await user.save();
     }
     const token = signToken({ id: user._id, role });
     res.cookie('token', token, FIXED_COOKIE_OPTIONS);
-    res.status(201).json({ message: 'Registered successfully', user: { id: user._id, email, role, ...(role === 'user' ? { username } : {}) } });
+    res.status(201).json({ 
+      message: 'Registered successfully', 
+      user: { 
+        id: user._id, 
+        email, 
+        role, 
+        ...(role === 'user' ? { 
+          username,
+          agencyName: user.agencyName,
+          offer: user.offer,
+          caseStudies: user.caseStudies,
+          servicePricing: user.servicePricing
+        } : {}) 
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Registration failed', error: err });
   }
@@ -55,7 +77,21 @@ const loginHandler: express.RequestHandler = async (req, res) => {
     }
     const token = signToken({ id: user._id, role });
     res.cookie('token', token, FIXED_COOKIE_OPTIONS);
-    res.json({ message: 'Login successful', user: { id: user._id, email, role, ...(role === 'user' ? { username: user.username } : {}) } });
+    res.json({ 
+      message: 'Login successful', 
+      user: { 
+        id: user._id, 
+        email, 
+        role, 
+        ...(role === 'user' ? { 
+          username: user.username,
+          agencyName: user.agencyName,
+          offer: user.offer,
+          caseStudies: user.caseStudies,
+          servicePricing: user.servicePricing
+        } : {}) 
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Login failed', error: err });
   }
@@ -75,8 +111,19 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, plan, creditsPerMonth } = (req as any).user;
-    res.json({ id: _id, email, username, picture, plan, creditsPerMonth });
+    const { _id, email, username, picture, plan, creditsPerMonth, agencyName, offer, caseStudies, servicePricing } = (req as any).user;
+    res.json({ 
+      id: _id, 
+      email, 
+      username, 
+      picture, 
+      plan, 
+      creditsPerMonth,
+      agencyName,
+      offer,
+      caseStudies,
+      servicePricing
+    });
   } else {
     res.status(401).json({ message: 'Not authenticated' });
   }
