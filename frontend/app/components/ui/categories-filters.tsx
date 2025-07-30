@@ -1,33 +1,10 @@
-import { useCategories } from '../../hooks/useCategories'
-
 interface CategorySortProps {
     selectedCategory: string;
     onCategoryChange: (category: string) => void;
+    categories: string[];
 }
 
-export default function CategorySort({ selectedCategory, onCategoryChange }: CategorySortProps) {
-    const { categories, loading, error } = useCategories();
-
-    if (loading) {
-        return (
-            <div className="relative w-54">
-                <div className="w-full px-4 text-sm py-2 bg-background border border-border rounded-lg animate-pulse">
-                    <div className="h-4 bg-gray-300 rounded"></div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="relative w-54">
-                <div className="w-full px-4 text-sm py-2 bg-background border border-red-300 rounded-lg text-red-600">
-                    Error loading categories
-                </div>
-            </div>
-        );
-    }
-
+export default function CategorySort({ selectedCategory, onCategoryChange, categories }: CategorySortProps) {
     return (
         <div className="relative w-54">
             <select 
@@ -35,12 +12,9 @@ export default function CategorySort({ selectedCategory, onCategoryChange }: Cat
                 value={selectedCategory}
                 onChange={(e) => onCategoryChange(e.target.value)}
             >
-                <option value="All Categories" className='text-sm text-foreground bg-background'>
-                    All Categories
-                </option>
                 {categories.map((category) => (
-                    <option key={category._id} value={category.name} className='text-sm text-foreground bg-background'>
-                        {category.name}
+                    <option key={category} value={category} className='text-sm text-foreground bg-background'>
+                        {category}
                     </option>
                 ))}
             </select>
