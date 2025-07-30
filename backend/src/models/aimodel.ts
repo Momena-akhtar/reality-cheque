@@ -16,14 +16,14 @@ export interface AIModel extends Document {
 
 // Model Schema
 const modelSchema = new Schema<AIModel>({
-    name: {
+    name: { 
         type: String,
         required: true,
         trim: true
     },
-    description: {
-        type: String,
-        required: true,
+    description: { 
+        type: String, 
+        required: true, 
         trim: true
     },
     categoryId: {

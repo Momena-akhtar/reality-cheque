@@ -52,18 +52,20 @@ export class AIModelService {
         try {
             const categories = await Category.find({ isActive: true });
             
-            const models = await AIModel.find({ isActive: true })
-                .populate('categoryId')
-                .populate('featureIds')
-                .sort({ createdAt: 1 });
-
-            // Group models by category
-            const categoriesWithModels = categories.map(category => ({
-                ...category.toObject(),
-                models: models.filter(model => 
-                    model.categoryId.toString() === category._id.toString()
-                )
-            }));
+            // For each category, fetch its models
+            const categoriesWithModels = await Promise.all(
+                categories.map(async (category) => {
+                    const models = await AIModel.find({ 
+                        categoryId: category._id, 
+                        isActive: true 
+                    }).populate('featureIds');
+                    
+                    return {
+                        ...category.toObject(),
+                        models: models
+                    };
+                })
+            );
 
             return categoriesWithModels;
         } catch (error) {
