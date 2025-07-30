@@ -7,7 +7,8 @@
     "dev": "cross-env NODE_ENV=development nodemon --exec ts-node server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "prod": "npm run build && cross-env NODE_ENV=production npm start"
+    "prod": "npm run build && cross-env NODE_ENV=production npm start",
+    "populate-db": "cross-env NODE_ENV=development ts-node src/scripts/populateDatabase.ts"
   },
   "keywords": [],
   "author": "",
