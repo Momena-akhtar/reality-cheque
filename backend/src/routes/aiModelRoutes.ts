@@ -26,7 +26,16 @@ router.get('/categories/:categoryId/models', async (req, res) => {
         res.status(500).json({ success: false, error: message });
     }
 });
-
+//Get all models
+router.get('/models', async (req, res) => {
+    try {
+        const models = await aiModelService.getAllModels();
+        res.json({ success: true, data: models})
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Internal server error';
+        res.status(500).json({ success: false, error: message }); 
+    }
+} )
 // Get specific model with features
 router.get('/models/:modelId', async (req, res) => {
     try {

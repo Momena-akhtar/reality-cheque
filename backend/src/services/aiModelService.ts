@@ -72,7 +72,22 @@ export class AIModelService {
             throw new Error(`Failed to get categories with models: ${error}`);
         }
     }
+    //Get all models
+    async getAllModels(){
+        try {
+            const models = await AIModel.find().
+            populate('categoryId').
+            populate('featureIds')
 
+            if (models.length === 0){
+                throw new Error('No models found')
+            }
+            return models
+        }
+        catch (error){
+            throw new Error('Failed to get models')
+        }
+    }
     // Get a specific model with its features
     async getModelById(modelId: string) {
         try {
