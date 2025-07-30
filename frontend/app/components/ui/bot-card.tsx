@@ -1,7 +1,5 @@
 import { ExternalLink } from "lucide-react";
 import CategoryTag from "./category-tag";
-import PaidButton from "./paid-button";
-import FreeButton from "./free-button";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
 import SignInPopup from "../signin-popup";
@@ -9,63 +7,53 @@ import Portal from "./portal";
 import { useState } from "react";
 
 interface BotCardProps {
+  id: string;
   name: string;
   description: string;
-  logo: string;
   category: string;
-  version: "Free" | "Paid";
 }
 
 export default function BotCard({
+  id,
   name,
   description,
-  logo,
   category,
-  version,
 }: BotCardProps) {
     const {user} = useAuth();
-        const [showSignInPopup, setShowSignInPopup] = useState(false);
+    const [showSignInPopup, setShowSignInPopup] = useState(false);
+    
     return (
       <>
-        <div className="rounded-lg border border-border text-foreground shadow-sm bg-card transition-all duration-300 hover:scale-[1.02] hover:bg-card-hover">
-    <div className="flex flex-col space-y-1.5 p-6">
-        <div className="flex justify-between">
-            <img src={logo} alt={name} className="mb-2 h-10 w-10 rounded-md object-cover" />
-        </div>
-        <div role="heading" aria-level={3} className="font-semibold leading-none tracking-tight">
-            {name}
-        </div>
-        <p className="text-sm text-primary-text-faded line-clamp-2 h-10">
-            {description}
-        </p>
-    </div>
-    <div className="flex items-center border-t border-border p-4">
-        <div className="flex w-full items-center justify-between gap-2 text-muted-foreground">
-            <div className="flex items-center gap-2">
-                <CategoryTag category={category} />
-                {version === "Free"? <FreeButton /> : <PaidButton />}
+        <div className="rounded-2xl border border-border text-foreground shadow-sm bg-card transition-all duration-300 hover:scale-[1.02] hover:bg-card-hover">
+          <div className="flex flex-col space-y-3 p-6">
+            <div role="heading" aria-level={3} className="font-semibold leading-none tracking-tight text-lg">
+              {name}
             </div>
-            {user ? (
-                <Link href={`/chat/${name.toLowerCase().replace(/\s+/g, '-')}?title=${name}&description=${description}&logo=${logo}`}>
-                    <ExternalLink size={16} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
+            <p className="text-sm text-primary-text-faded line-clamp-2 h-10">
+              {description}
+            </p>
+            <div className="flex items-center justify-between">
+              <CategoryTag category={category} />
+              {user ? (
+                <Link href={`/chat?id=${id}`}>
+                  <ExternalLink size={18} className="text-foreground hover:text-primary-text-hover transition-colors duration-150" />
                 </Link>
-            ) : (
+              ) : (
                 <button 
-                    onClick={() => setShowSignInPopup(true)}
-                    className="text-foreground hover:text-primary-text-hover transition-colors duration-150"
+                  onClick={() => setShowSignInPopup(true)}
+                  className="text-foreground hover:text-primary-text-hover transition-colors duration-150"
                 >
-                    <ExternalLink size={16} />
+                  <ExternalLink size={18} />
                 </button>
-            )}         
-            
+              )}
+            </div>
+          </div>
         </div>
-    </div>
-   </div>
-   {showSignInPopup && !user && (
-     <Portal>
-       <SignInPopup onClose={() => setShowSignInPopup(false)} />
-     </Portal>
-   )}
-  </>
-  );
+        {showSignInPopup && !user && (
+          <Portal>
+            <SignInPopup onClose={() => setShowSignInPopup(false)} />
+          </Portal>
+        )}
+      </>
+    );
 }
