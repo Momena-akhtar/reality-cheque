@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -14,17 +14,23 @@ import { ChevronRight, ChevronDown, ExternalLink, X, Loader2 } from "lucide-reac
 import { useSidebar } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useAIModels } from "../hooks/useAIModels"
+import { useRouter } from "next/navigation"
 
 export function AppSidebar() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const { isMobile, setOpenMobile } = useSidebar()
   const { sidebarData, loading, error } = useAIModels()
+  const router = useRouter()
 
   const toggleSection = (title: string) => {
     setOpenSections(prev => ({
       ...prev,
       [title]: !prev[title]
     }))
+  }
+
+  const handleModelClick = (modelId: string) => {
+    router.push(`/chat?id=${modelId}`);
   }
 
   if (loading) {
@@ -95,10 +101,11 @@ export function AppSidebar() {
                     {section.children.map((child, i) => (
                       <button
                         key={i}
-                        className="w-full text-left py-1.5 px-2 text-sm rounded-md transition-all duration-200 hover:translate-x-1 flex items-center justify-between group cursor-pointer"
+                        onClick={() => handleModelClick(child._id)}
+                        className="w-full text-left py-1.5 px-2 text-sm rounded-md transition-all duration-200 hover:translate-x-1 flex items-center justify-between group cursor-pointer hover:bg-muted/50"
                       >
                         <span className="group-hover:text-foreground transition-colors duration-200">
-                          {child}
+                          {child.name}
                         </span>
                         <ChevronRight className="h-3 w-3 transition-colors duration-200" />
                       </button>
