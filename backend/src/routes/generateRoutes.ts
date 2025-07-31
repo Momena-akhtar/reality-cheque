@@ -60,52 +60,7 @@ router.post('/generate', authMiddleware, checkCredits, async (req, res): Promise
   }
 });
 
-// Streaming generate response endpoint
-router.post('/generate/stream', authMiddleware, checkCredits, async (req, res): Promise<any> => {
-  try {
-    const { modelId, userInput, sessionId } = req.body;
-    const userId = (req as any).user.id;
 
-    // Validate required fields
-    if (!modelId || !userInput) {
-      return res.status(400).json({ 
-        message: 'Model ID and user input are required' 
-      });
-    }
-
-    // Set headers for streaming
-    res.setHeader('Content-Type', 'text/plain');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    // Generate streaming response
-    const result = await generateService.generateStreamingResponse({
-      modelId,
-      userInput,
-      userId,
-      sessionId,
-      res
-    });
-
-    // Deduct credits based on actual cost
-    await generateService.updateUserCredits(userId, result.cost || 0);
-
-    // Send metadata and end marker
-    res.write(`\n[METADATA]${JSON.stringify({
-      chatId: result.chatId,
-      cost: result.cost,
-      inputTokens: result.inputTokens,
-      outputTokens: result.outputTokens
-    })}`);
-    res.write('\n[DONE]');
-    res.end();
-
-  } catch (error) {
-    console.error('Error in streaming generate endpoint:', error);
-    res.write(`\n[ERROR] ${error instanceof Error ? error.message : 'Internal server error'}`);
-    res.end();
-  }
-});
 
 // Get session history
 router.get('/session/:sessionId/history', authMiddleware, async (req, res): Promise<any> => {
