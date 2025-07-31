@@ -29,6 +29,15 @@ interface Model {
   outputCostPer1KTokens?: number;
 }
 
+interface Feature {
+  _id: string;
+  name: string;
+  description: string;
+  prompt: string;
+  order: number;
+  isOptional: boolean;
+}
+
 interface ChatSession {
   id: string;
   title: string;
@@ -52,6 +61,7 @@ export default function ChatPage() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [userCredits, setUserCredits] = useState<number>(0);
   const [showHistory, setShowHistory] = useState(false);
+  const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -77,6 +87,29 @@ export default function ChatPage() {
         
         if (data.success) {
           setModel(data.data);
+          
+          // Fetch model features if the model has featureIds
+          if (data.data.featureIds && data.data.featureIds.length > 0) {
+            try {
+              const featuresResponse = await fetch(`${API_BASE}/ai-models/features`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: "include",
+                body: JSON.stringify({ featureIds: data.data.featureIds })
+              });
+              
+              if (featuresResponse.ok) {
+                const featuresData = await featuresResponse.json();
+                if (featuresData.success) {
+                  setModelFeatures(featuresData.data);
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching model features:', error);
+            }
+          }
         } else {
           throw new Error(data.error || 'Failed to fetch model');
         }
@@ -286,6 +319,7 @@ export default function ChatPage() {
         <ChatHeader 
           onShowHistory={handleShowHistory}
           hasHistory={user !== null}
+          modelFeatures={modelFeatures}
         />
       </div>
       
