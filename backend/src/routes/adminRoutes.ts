@@ -332,10 +332,21 @@ const getAllChats: express.RequestHandler = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
+    // Get message counts for each chat
+    const chatsWithMessageCounts = await Promise.all(
+      chats.map(async (chat) => {
+        const messageCount = await Message.countDocuments({ chatId: chat._id });
+        return {
+          ...chat.toObject(),
+          messageCount
+        };
+      })
+    );
+
     const total = await Chat.countDocuments(query);
 
     res.json({
-      chats,
+      chats: chatsWithMessageCounts,
       pagination: {
         page: Number(page),
         limit: Number(limit),

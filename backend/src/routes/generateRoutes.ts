@@ -1,6 +1,7 @@
 import express from 'express';
 import generateService from '../services/generateService';
 import { authMiddleware } from '../middleware/authMiddleware';
+import Message from '../models/message';
 
 const router = express.Router();
 
@@ -275,9 +276,20 @@ router.get('/chats', authMiddleware, async (req, res): Promise<any> => {
     const userId = (req as any).user.id;
     const chats = await generateService.getUserChats(userId);
 
+    // Get message counts for each chat
+    const chatsWithMessageCounts = await Promise.all(
+      chats.map(async (chat: any) => {
+        const messageCount = await Message.countDocuments({ chatId: chat._id });
+        return {
+          ...chat,
+          messageCount
+        };
+      })
+    );
+
     res.json({
       success: true,
-      data: chats,
+      data: chatsWithMessageCounts,
       message: 'User chats retrieved successfully'
     });
 
