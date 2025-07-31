@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import ContinueWithGoogle from './ui/continue-with-google';
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -12,6 +11,10 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
+    const [agencyName, setAgencyName] = useState('');
+    const [offer, setOffer] = useState('');
+    const [caseStudies, setCaseStudies] = useState('');
+    const [servicePricing, setServicePricing] = useState('');
     const [loading, setLoading] = useState(false);
     const { refreshUser } = useAuth();
 
@@ -21,7 +24,16 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
         try {
             let url = `${API_BASE}/auth/${isSignUp ? 'register' : 'login'}`;
             let body: any = isSignUp
-                ? { username, email, password, role: 'user' }
+                ? { 
+                    username, 
+                    email, 
+                    password, 
+                    role: 'user',
+                    agencyName,
+                    offer,
+                    caseStudies,
+                    servicePricing
+                  }
                 : { email, password, role: 'user' };
             const res = await fetch(url, {
                 method: 'POST',
@@ -51,7 +63,7 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-            <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-[400px] shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
+            <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-[500px] max-h-[90vh] overflow-y-auto scrollbar-thin shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer">
@@ -63,18 +75,78 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {isSignUp && (
-                        <div>
-                            <label htmlFor="username" className="block text-sm font-medium mb-1">Username</label>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                                required
-                            />
-                        </div>
+                        <>
+                            <div>
+                                <label htmlFor="username" className="block text-sm font-medium mb-1">Username</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="agencyName" className="block text-sm font-medium mb-1">
+                                    1. What is your agency's name?
+                                </label>
+                                <input
+                                    type="text"
+                                    id="agencyName"
+                                    value={agencyName}
+                                    onChange={(e) => setAgencyName(e.target.value)}
+                                    placeholder="Enter your name if you don't have an agency"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="offer" className="block text-sm font-medium mb-1">
+                                    2. What is your offer?
+                                </label>
+                                <input
+                                    type="text"
+                                    id="offer"
+                                    value={offer}
+                                    onChange={(e) => setOffer(e.target.value)}
+                                    placeholder="Only enter if you have an offer in place"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="caseStudies" className="block text-sm font-medium mb-1">
+                                    3. List a few case studies and testimonials
+                                </label>
+                                <textarea
+                                    id="caseStudies"
+                                    value={caseStudies}
+                                    onChange={(e) => setCaseStudies(e.target.value)}
+                                    placeholder="Leave blank if you don't have any"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="servicePricing" className="block text-sm font-medium mb-1">
+                                    4. What are your services priced at?
+                                </label>
+                                <input
+                                    type="text"
+                                    id="servicePricing"
+                                    value={servicePricing}
+                                    onChange={(e) => setServicePricing(e.target.value)}
+                                    placeholder="Leave blank if you are new"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                />
+                            </div>
+                        </>
                     )}
+                    
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
                         <input
@@ -107,10 +179,6 @@ export default function SignInPopup({ onClose }: { onClose: () => void }) {
                         {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
                     </button>
                 </div>
-                <div className="mt-4 text-center text-sm">
-                    <span className="text-primary-text-faded">Or</span>
-                </div>
-                <ContinueWithGoogle handleGoogleSignIn={handleGoogleSignIn} />
             </div>
         </div>
     );
