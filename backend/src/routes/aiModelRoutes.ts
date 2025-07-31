@@ -59,6 +59,25 @@ router.get('/features', async (req, res) => {
     }
 });
 
+// Get features by IDs
+router.post('/features', async (req, res) : Promise<any> => {
+    try {
+        const { featureIds } = req.body;
+        if (!featureIds || !Array.isArray(featureIds)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Feature IDs array is required' 
+            });
+        }
+        
+        const features = await aiModelService.getFeaturesByIds(featureIds);
+        res.json({ success: true, data: features });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Internal server error';
+        res.status(500).json({ success: false, error: message });
+    }
+});
+
 // Create new category (admin only)
 router.post('/categories', authMiddleware, async (req, res) => {
     try {

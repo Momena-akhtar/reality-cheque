@@ -132,6 +132,18 @@ export class AIModelService {
         }
     }
 
+    // Get features by IDs
+    async getFeaturesByIds(featureIds: string[]) {
+        try {
+            const features = await Feature.find({ 
+                _id: { $in: featureIds }
+            }).sort({ order: 1 });
+            return features;
+        } catch (error) {
+            throw new Error(`Failed to get features by IDs: ${error}`);
+        }
+    }
+
     // Generate master prompt from features
     generateMasterPrompt(basePrompt: string, features: Feature[]): string {
         const featurePrompts = features
