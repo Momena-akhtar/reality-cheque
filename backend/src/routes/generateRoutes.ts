@@ -70,7 +70,7 @@ router.get('/session/:sessionId/history', authMiddleware, async (req, res): Prom
     const userId = (req as any).user.id;
 
     // Validate session ownership (basic check - you might want to enhance this)
-    if (!sessionId.startsWith(userId)) {
+    if (!sessionId.startsWith(userId)) {  
       return res.status(403).json({ 
         message: 'Access denied to this session' 
       });
@@ -279,7 +279,7 @@ router.get('/chats', authMiddleware, async (req, res): Promise<any> => {
     // Get message counts for each chat
     const chatsWithMessageCounts = await Promise.all(
       chats.map(async (chat: any) => {
-        const messageCount = await Message.countDocuments({ chatId: chat._id });
+        const messageCount = await Message.countDocuments({ chatId: chat.id });
         return {
           ...chat,
           messageCount
