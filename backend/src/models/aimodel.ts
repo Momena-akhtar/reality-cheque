@@ -10,6 +10,8 @@ export interface AIModel extends Document {
     masterPrompt: string;
     featureIds: mongoose.Types.ObjectId[]; // References to features
     isActive: boolean;
+    inputCostPer1KTokens?: number; // Cost per 1K input tokens in dollars
+    outputCostPer1KTokens?: number; // Cost per 1K output tokens in dollars
     createdAt: Date;
     updatedAt: Date;
 }
@@ -43,6 +45,14 @@ const modelSchema = new Schema<AIModel>({
     isActive: {
         type: Boolean,
         default: true
+    },
+    inputCostPer1KTokens: {
+        type: Number,
+        default: 0.005, // Default O3 input cost: $0.005 per 1K tokens
+    },
+    outputCostPer1KTokens: {
+        type: Number,
+        default: 0.015, // Default O3 output cost: $0.015 per 1K tokens
     }
 }, {
     timestamps: true
