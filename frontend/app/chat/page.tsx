@@ -349,7 +349,17 @@ export default function ChatPage() {
               </motion.div>
             ) : (
               <div className="h-full overflow-y-auto scrollbar-hide px-4">
-                <div className="max-w-4xl mx-auto space-y-4 py-4">
+                {/* Small Model Info Card - only when chat has messages */}
+                <div className="max-w-4xl mx-auto pt-2 pb-1">
+                  <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border border-border/30 w-fit">
+                    <div className="h-5 w-5 bg-primary rounded-sm flex items-center justify-center">
+                      <span className="text-primary-foreground font-bold text-xs">AI</span>
+                    </div>
+                    <span className="text-xs font-medium text-foreground">{model.name}</span>
+                  </div>
+                </div>
+                
+                <div className="max-w-4xl mx-auto space-y-4 py-2">
                   {messages.map((message, index) => (
                     <motion.div
                       key={message.id}
