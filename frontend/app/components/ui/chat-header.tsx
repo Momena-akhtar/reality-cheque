@@ -4,6 +4,7 @@ import Logo from "./logo";
 import Customize from "./customize";
 import { MessageSquare, Star, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import UserIcon from "./user-icon";
 
 interface Feature {
   _id: string;
@@ -48,11 +49,10 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowFeatures(!showFeatures)}
-              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors flex items-center gap-1"
+              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
               title="Model Features"
             >
               <Star className="h-4 w-4 text-yellow-500" />
-              <ChevronDown className={`h-3 w-3 transition-transform ${showFeatures ? 'rotate-180' : ''}`} />
             </button>
             
             {showFeatures && (
@@ -76,6 +76,7 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
             )}
           </div>
         )}
+        <UserIcon />
           {hasHistory && onShowHistory && (
           <button
             onClick={onShowHistory}
