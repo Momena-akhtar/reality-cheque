@@ -247,7 +247,7 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
               <p className='text-sm text-primary-text-faded'>Remaining Credits</p>
               <div className='flex items-center gap-1 relative'>
                 <span className="text-sm">
-                  ${user?.creditsPerMonth || 10}/mo
+                  ${(user?.creditsPerMonth !== undefined ? user.creditsPerMonth : 10).toFixed(2)}/mo
                 </span>
                 <div 
                   className="relative"

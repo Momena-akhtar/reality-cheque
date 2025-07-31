@@ -3,6 +3,7 @@
 import ChatBar from "../components/ui/chat-bar";
 import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
+import TypingIndicator from "../components/ui/typing-indicator";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -187,17 +188,6 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMessage]);
     setSending(true);
 
-    // Add initial AI message for streaming
-    const aiMessageId = (Date.now() + 1).toString();
-    const aiMessage: Message = {
-      id: aiMessageId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, aiMessage]);
-
     try {
       // Prepare request payload
       const payload = {
@@ -207,7 +197,7 @@ export default function ChatPage() {
         ...(currentChatId && { sessionId: currentChatId })
       };
 
-      const response = await fetch(`${API_BASE}/generate/stream`, {
+      const response = await fetch(`${API_BASE}/generate/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,73 +207,42 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Failed to send message');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send message');
       }
 
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedContent = '';
-      let metadata: any = null;
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) break;
-          
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line === '[DONE]') {
-              // Streaming complete
-              break;
-            } else if (line.startsWith('[ERROR]')) {
-              throw new Error(line.substring(8));
-            } else if (line.startsWith('[METADATA]')) {
-              try {
-                metadata = JSON.parse(line.substring(10));
-              } catch (e) {
-                console.error('Error parsing metadata:', e);
-              }
-            } else if (line.trim()) {
-              accumulatedContent += line;
-              
-              // Update the AI message with accumulated content
-              setMessages(prev => prev.map(msg => 
-                msg.id === aiMessageId 
-                  ? { ...msg, content: accumulatedContent }
-                  : msg
-              ));
-            }
-          }
-        }
-      }
-
-      // Set chat ID for future messages
-      if (metadata?.chatId) {
-        setCurrentChatId(metadata.chatId);
-      } else if (!currentChatId) {
-        setCurrentChatId(aiMessageId);
-      }
+      const data = await response.json();
       
-      // Update user credits with actual cost
-      if (metadata?.cost) {
-        setUserCredits(prev => Math.max(0, prev - metadata.cost));
+      if (data.success) {
+        // Add AI response
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.data.response,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiMessage]);
+        
+        // Set chat ID for future messages
+        if (data.data.chatId) {
+          setCurrentChatId(data.data.chatId);
+        }
+        
+        // Update user credits
+        if (data.data.cost) {
+          setUserCredits(prev => Math.max(0, prev - data.data.cost));
+        }
       } else {
-        // Fallback estimate
-        const estimatedCost = (accumulatedContent.length / 1000) * 0.015;
-        setUserCredits(prev => Math.max(0, prev - estimatedCost));
+        throw new Error(data.message || 'Failed to get response');
       }
 
     } catch (error) {
       console.error('Error sending message:', error);
       setError(error instanceof Error ? error.message : 'Failed to send message');
       
-      // Remove both messages if there was an error
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id && msg.id !== aiMessageId));
+      // Remove the user message if there was an error
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
     } finally {
       setSending(false);
     }
@@ -353,21 +312,20 @@ export default function ChatPage() {
                 </div>
                 <h1 className="text-2xl font-bold">{model.name}</h1>
                 <p className="text-md text-foreground/30 text-center">{model.description}</p>
-                {user && (
-                  <div className="text-sm text-muted-foreground">
-                    Credits remaining: ${userCredits.toFixed(2)}
-                  </div>
-                )}
               </motion.div>
             ) : (
               <div className="h-full overflow-y-auto scrollbar-hide px-4">
                 <div className="max-w-4xl mx-auto space-y-4 py-4">
-                  {messages.map((message) => (
+                  {messages.map((message, index) => (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
+                      transition={{ 
+                        duration: 0.3, 
+                        delay: message.role === 'assistant' ? 0.1 : 0 
+                      }}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 
@@ -388,9 +346,7 @@ export default function ChatPage() {
                       className="flex justify-start"
                     >
                       <div className="bg-muted border border-border max-w-[80%] p-4 rounded-3xl">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-4 bg-primary animate-pulse"></div>
-                        </div>
+                        <TypingIndicator />
                       </div>
                     </motion.div>
                   )}

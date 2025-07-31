@@ -17,7 +17,7 @@ export default function ChatHeader({ onShowHistory, hasHistory = false }: ChatHe
         {hasHistory && onShowHistory && (
           <button
             onClick={onShowHistory}
-            className="p-2 text-foreground/80 border border-border rounded-xl cursor-pointer hover:text-foreground transition-colors"
+            className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
             title="Chat History"
           >
             <MessageSquare className="h-4 w-4" />
