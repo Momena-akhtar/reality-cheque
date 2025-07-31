@@ -16,20 +16,74 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Info
+  Info,
+  Bot,
+  History,
+  Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-interface Prompt {
-  id: string;
+interface AIModel {
+  _id: string;
   name: string;
-  content: string;
-  modelId: string;
+  description: string;
+  categoryId: {
+    _id: string;
+    name: string;
+  };
+  masterPrompt: string;
+  featureIds: Feature[];
   isActive: boolean;
+  inputCostPer1KTokens: number;
+  outputCostPer1KTokens: number;
   createdAt: string;
+  updatedAt: string;
+}
+
+interface Feature {
+  _id: string;
+  name: string;
+  description: string;
+  prompt: string;
+  order: number;
+  isOptional: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ChatSession {
+  _id: string;
+  userId: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  modelId: {
+    _id: string;
+    name: string;
+    description: string;
+  };
+  title: string;
+  totalTokens: number;
+  messageCount: number;
+  lastActivity: string;
+  createdAt: string;
+}
+
+interface ChatMessage {
+  _id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  tokenCount: number;
+}
+
+interface ChatDetails {
+  chat: ChatSession;
+  messages: ChatMessage[];
 }
 
 interface Voucher {
@@ -68,22 +122,33 @@ export default function AdminPanel() {
   const [sessionWarning, setSessionWarning] = useState(false);
   const [showSessionTooltip, setShowSessionTooltip] = useState(false);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'prompts' | 'vouchers'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'prompts' | 'chats' | 'vouchers'>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [models, setModels] = useState<AIModel[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [chats, setChats] = useState<ChatSession[]>([]);
+  const [chatDetails, setChatDetails] = useState<ChatDetails | null>(null);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
-  const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [editingModel, setEditingModel] = useState<AIModel | null>(null);
+  const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
+  const [selectedChat, setSelectedChat] = useState<ChatSession | null>(null);
   const router = useRouter();
   
-  const [promptForm, setPromptForm] = useState({
+  const [modelForm, setModelForm] = useState({
+    masterPrompt: ''
+  });
+
+  const [featureForm, setFeatureForm] = useState({
     name: '',
-    content: '',
-    modelId: '',
-    isActive: true
+    description: '',
+    prompt: '',
+    order: 0,
+    isOptional: false
   });
 
   const [voucherForm, setVoucherForm] = useState({
@@ -151,12 +216,28 @@ export default function AdminPanel() {
         setStats(statsData);
       }
 
-      const promptsRes = await fetch(`${API_BASE}/admin/prompts`, {
+      const modelsRes = await fetch(`${API_BASE}/admin/models`, {
         headers
       });
-      if (promptsRes.ok) {
-        const promptsData = await promptsRes.json();
-        setPrompts(promptsData);
+      if (modelsRes.ok) {
+        const modelsData = await modelsRes.json();
+        setModels(modelsData);
+      }
+
+      const featuresRes = await fetch(`${API_BASE}/admin/features`, {
+        headers
+      });
+      if (featuresRes.ok) {
+        const featuresData = await featuresRes.json();
+        setFeatures(featuresData);
+      }
+
+      const chatsRes = await fetch(`${API_BASE}/admin/chats`, {
+        headers
+      });
+      if (chatsRes.ok) {
+        const chatsData = await chatsRes.json();
+        setChats(chatsData.chats || []);
       }
 
       const vouchersRes = await fetch(`${API_BASE}/admin/vouchers`, {
@@ -174,7 +255,7 @@ export default function AdminPanel() {
     }
   };
 
-  const handlePromptSubmit = async (e: React.FormEvent) => {
+  const handleModelPromptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const adminToken = localStorage.getItem('adminToken');
@@ -183,11 +264,46 @@ export default function AdminPanel() {
         return;
       }
 
-      const url = editingPrompt 
-        ? `${API_BASE}/admin/prompts/${editingPrompt.id}`
-        : `${API_BASE}/admin/prompts`;
+      const res = await fetch(`${API_BASE}/admin/models/prompt`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          modelId: editingModel?._id,
+          masterPrompt: modelForm.masterPrompt
+        })
+      });
+
+      if (res.ok) {
+        toast.success('Model prompt updated!');
+        setShowPromptModal(false);
+        setEditingModel(null);
+        setModelForm({ masterPrompt: '' });
+        fetchData();
+      } else {
+        toast.error('Failed to update model prompt');
+      }
+    } catch (error) {
+      toast.error('Network error');
+    }
+  };
+
+  const handleFeatureSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
+      const url = editingFeature 
+        ? `${API_BASE}/admin/features/${editingFeature._id}`
+        : `${API_BASE}/admin/features`;
       
-      const method = editingPrompt ? 'PUT' : 'POST';
+      const method = editingFeature ? 'PUT' : 'POST';
       
       const res = await fetch(url, {
         method,
@@ -195,17 +311,72 @@ export default function AdminPanel() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`
         },
-        body: JSON.stringify(promptForm)
+        body: JSON.stringify(featureForm)
       });
 
       if (res.ok) {
-        toast.success(editingPrompt ? 'Prompt updated!' : 'Prompt created!');
+        toast.success(editingFeature ? 'Feature updated!' : 'Feature created!');
         setShowPromptModal(false);
-        setEditingPrompt(null);
-        setPromptForm({ name: '', content: '', modelId: '', isActive: true });
+        setEditingFeature(null);
+        setFeatureForm({ name: '', description: '', prompt: '', order: 0, isOptional: false });
         fetchData();
       } else {
-        toast.error('Failed to save prompt');
+        toast.error('Failed to save feature');
+      }
+    } catch (error) {
+      toast.error('Network error');
+    }
+  };
+
+  const deleteFeature = async (featureId: string) => {
+    if (!confirm('Are you sure you want to delete this feature?')) return;
+    
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/admin/features/${featureId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (res.ok) {
+        toast.success('Feature deleted!');
+        fetchData();
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to delete feature');
+      }
+    } catch (error) {
+      toast.error('Network error');
+    }
+  };
+
+  const viewChatDetails = async (chatId: string) => {
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        toast.error('Admin token not found');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/admin/chats/${chatId}`, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setChatDetails(data);
+        setShowChatModal(true);
+      } else {
+        toast.error('Failed to fetch chat details');
       }
     } catch (error) {
       toast.error('Network error');
@@ -261,34 +432,6 @@ export default function AdminPanel() {
     }
   };
 
-  const deletePrompt = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this prompt?')) return;
-    
-    try {
-      const adminToken = localStorage.getItem('adminToken');
-      if (!adminToken) {
-        toast.error('Admin token not found');
-        return;
-      }
-
-      const res = await fetch(`${API_BASE}/admin/prompts/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      if (res.ok) {
-        toast.success('Prompt deleted!');
-        fetchData();
-      } else {
-        toast.error('Failed to delete prompt');
-      }
-    } catch (error) {
-      toast.error('Network error');
-    }
-  };
-
   const [showDeleteVoucherModal, setShowDeleteVoucherModal] = useState(false);
   const [voucherToDelete, setVoucherToDelete] = useState<Voucher | null>(null);
 
@@ -337,16 +480,7 @@ export default function AdminPanel() {
     setVoucherToDelete(null);
   };
 
-  const editPrompt = (prompt: Prompt) => {
-    setEditingPrompt(prompt);
-    setPromptForm({
-      name: prompt.name,
-      content: prompt.content,
-      modelId: prompt.modelId,
-      isActive: prompt.isActive
-    });
-    setShowPromptModal(true);
-  };
+
 
   const editVoucher = (voucher: Voucher) => {
     setEditingVoucher(voucher);
@@ -450,7 +584,8 @@ export default function AdminPanel() {
           <nav className="flex space-x-8">
             {[
               { id: 'stats', label: 'Dashboard', icon: BarChart3 },
-              { id: 'prompts', label: 'Prompts', icon: MessageSquare },
+              { id: 'prompts', label: 'AI Models & Features', icon: Bot },
+              { id: 'chats', label: 'Chat History', icon: History },
               { id: 'vouchers', label: 'Vouchers', icon: CreditCard }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -583,18 +718,147 @@ export default function AdminPanel() {
         {activeTab === 'prompts' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-foreground">Manage Prompts</h2>
+              <h2 className="text-2xl font-bold text-foreground">AI Models & Features</h2>
               <button
                 onClick={() => {
-                  setEditingPrompt(null);
-                  setPromptForm({ name: '', content: '', modelId: '', isActive: true });
+                  setEditingFeature(null);
+                  setFeatureForm({ name: '', description: '', prompt: '', order: 0, isOptional: false });
                   setShowPromptModal(true);
                 }}
-                className="flex items-center space-x-2 px-4 py-2 border border-border text-foreground cursor-pointer  rounded-lg hover:bg-primary-hover transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Prompt</span>
+                <span>Add Feature</span>
               </button>
+            </div>
+
+            {/* Models Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">AI Models</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {models.map((model) => (
+                  <div key={model._id} className="bg-card border border-border rounded-lg p-4 hover:bg-card-hover transition-colors">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold text-foreground">{model.name}</h4>
+                        <p className="text-sm text-primary-text-faded">{model.categoryId.name}</p>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        model.isActive 
+                          ? 'bg-green-700/20 border border-green-700 text-foreground' 
+                          : 'bg-red-700/20 border border-red-700 text-foreground'
+                      }`}>
+                        {model.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground mb-3 line-clamp-2">{model.description}</p>
+                    <div className="space-y-2">
+                      <div className="text-xs text-primary-text-faded">
+                        <strong>Master Prompt:</strong>
+                        <div className="mt-1 p-2 bg-muted rounded text-xs font-mono line-clamp-3">
+                          {model.masterPrompt}
+                        </div>
+                      </div>
+                      <div className="text-xs text-primary-text-faded">
+                        <strong>Features:</strong> {model.featureIds.length}
+                      </div>
+                      <div className="text-xs text-primary-text-faded">
+                        <strong>Cost:</strong> ${model.inputCostPer1KTokens}/1K input, ${model.outputCostPer1KTokens}/1K output
+                      </div>
+                    </div>
+                    <div className="mt-3 flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setEditingModel(model);
+                          setModelForm({ masterPrompt: model.masterPrompt });
+                          setShowPromptModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 cursor-pointer text-sm"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-foreground">Features</h3>
+              <div className="bg-card border border-border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-primary border-b border-border">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Description</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Order</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Optional</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {features.map((feature) => (
+                        <tr key={feature._id} className="hover:bg-primary-hover transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-foreground">{feature.name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-primary-text-faded max-w-xs truncate">{feature.description}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{feature.order}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {feature.isOptional ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-700/20 text-foreground border border-blue-700">
+                                Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-700/20 border border-red-700 text-foreground">
+                                No
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => {
+                                  setEditingFeature(feature);
+                                  setFeatureForm({
+                                    name: feature.name,
+                                    description: feature.description,
+                                    prompt: feature.prompt,
+                                    order: feature.order,
+                                    isOptional: feature.isOptional
+                                  });
+                                  setShowPromptModal(true);
+                                }}
+                                className="p-2 text-blue-600 cursor-pointer hover:text-blue-900"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteFeature(feature._id)}
+                                className="p-2 text-red-600 cursor-pointer hover:text-red-900"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'chats' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-foreground">Chat History</h2>
             </div>
 
             <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -602,52 +866,42 @@ export default function AdminPanel() {
                 <table className="w-full">
                   <thead className="bg-primary border-b border-border">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">User</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Model</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Messages</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Tokens</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Last Activity</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {prompts.map((prompt) => (
-                      <tr key={prompt.id} className="hover:bg-primary-hover transition-colors">
+                    {chats.map((chat) => (
+                      <tr key={chat._id} className="hover:bg-primary-hover transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-foreground">{prompt.name}</div>
-                          <div className="text-sm text-primary-text-faded truncate max-w-xs">{prompt.content}</div>
+                          <div className="text-sm font-medium text-foreground">{chat.userId.username}</div>
+                          <div className="text-xs text-primary-text-faded">{chat.userId.email}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{prompt.modelId}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {prompt.isActive ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Inactive
-                            </span>
-                          )}
+                          <div className="text-sm font-medium text-foreground">{chat.modelId.name}</div>
+                          <div className="text-xs text-primary-text-faded">{chat.modelId.description}</div>
                         </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-foreground max-w-xs truncate">{chat.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{chat.messageCount}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{chat.totalTokens}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
-                          {new Date(prompt.createdAt).toLocaleDateString()}
+                          {new Date(chat.lastActivity).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => editPrompt(prompt)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => deletePrompt(prompt.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => viewChatDetails(chat._id)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Chat Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -767,13 +1021,13 @@ export default function AdminPanel() {
         )}
       </div>
 
-      {/* Prompt Modal */}
+      {/* Model/Feature Modal */}
       {showPromptModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-2xl mx-4">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-foreground">
-                {editingPrompt ? 'Edit Prompt' : 'Add New Prompt'}
+                {editingModel ? 'Edit Model Prompt' : editingFeature ? (editingFeature._id ? 'Edit Feature' : 'Add New Feature') : 'Add New Feature'}
               </h3>
               <button
                 onClick={() => setShowPromptModal(false)}
@@ -783,67 +1037,120 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            <form onSubmit={handlePromptSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Name</label>
-                <input
-                  type="text"
-                  value={promptForm.name}
-                  onChange={(e) => setPromptForm({ ...promptForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                  required
-                />
-              </div>
+            {editingModel ? (
+              <form onSubmit={handleModelPromptSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Model: {editingModel.name}</label>
+                  <div className="text-sm text-primary-text-faded mb-4">{editingModel.description}</div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Content</label>
-                <textarea
-                  value={promptForm.content}
-                  onChange={(e) => setPromptForm({ ...promptForm, content: e.target.value })}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Master Prompt</label>
+                  <textarea
+                    value={modelForm.masterPrompt}
+                    onChange={(e) => setModelForm({ ...modelForm, masterPrompt: e.target.value })}
+                    rows={8}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover font-mono text-sm"
+                    required
+                    placeholder="Enter the master prompt for this AI model..."
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Model ID</label>
-                <input
-                  type="text"
-                  value={promptForm.modelId}
-                  onChange={(e) => setPromptForm({ ...promptForm, modelId: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                  required
-                />
-              </div>
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptModal(false)}
+                    className="px-4 py-2 border border-border cursor-pointer rounded-lg text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-foreground border border-border cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    Update Model Prompt
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleFeatureSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Feature Name</label>
+                    <input
+                      type="text"
+                      value={featureForm.name}
+                      onChange={(e) => setFeatureForm({ ...featureForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                      required
+                      placeholder="e.g., Code Generation, Text Analysis"
+                    />
+                  </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={promptForm.isActive}
-                  onChange={(e) => setPromptForm({ ...promptForm, isActive: e.target.checked })}
-                  className="mr-2"
-                />
-                <label htmlFor="isActive" className="text-sm text-foreground">Active</label>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Order</label>
+                    <input
+                      type="number"
+                      value={featureForm.order}
+                      onChange={(e) => setFeatureForm({ ...featureForm, order: Number(e.target.value) })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                      min="0"
+                    />
+                  </div>
+                </div>
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPromptModal(false)}
-                  className="px-4 py-2 border border-border cursor-pointer rounded-lg text-foreground"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-foreground border border-border cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
-                >
-                  {editingPrompt ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+                  <textarea
+                    value={featureForm.description}
+                    onChange={(e) => setFeatureForm({ ...featureForm, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                    required
+                    placeholder="Describe what this feature does..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Feature Prompt</label>
+                  <textarea
+                    value={featureForm.prompt}
+                    onChange={(e) => setFeatureForm({ ...featureForm, prompt: e.target.value })}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:border-primary-hover focus:ring-1 focus:ring-primary-hover font-mono text-sm"
+                    required
+                    placeholder="Enter the prompt for this feature..."
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isOptional"
+                    checked={featureForm.isOptional}
+                    onChange={(e) => setFeatureForm({ ...featureForm, isOptional: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label htmlFor="isOptional" className="text-sm text-foreground">Optional Feature</label>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptModal(false)}
+                    className="px-4 py-2 border border-border cursor-pointer rounded-lg text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-foreground border border-border cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    {editingFeature ? (editingFeature._id ? 'Update Feature' : 'Create Feature') : 'Create Feature'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -1092,6 +1399,86 @@ export default function AdminPanel() {
                 className="flex-1 py-2 px-4 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-foreground rounded-lg transition-colors"
               >
                 Delete Voucher
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Details Modal */}
+      {showChatModal && chatDetails && (
+        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100] p-4">
+          <div className="bg-background border border-border rounded-lg p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Chat Details</h3>
+                <p className="text-sm text-primary-text-faded">
+                  {chatDetails.chat.userId.username} • {chatDetails.chat.modelId.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowChatModal(false)}
+                className="text-primary-text-faded hover:text-foreground cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Chat Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-muted rounded-lg">
+              <div>
+                <h4 className="font-medium text-foreground">User</h4>
+                <p className="text-sm text-primary-text-faded">{chatDetails.chat.userId.username}</p>
+                <p className="text-xs text-primary-text-faded">{chatDetails.chat.userId.email}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground">Model</h4>
+                <p className="text-sm text-primary-text-faded">{chatDetails.chat.modelId.name}</p>
+                <p className="text-xs text-primary-text-faded">{chatDetails.chat.modelId.description}</p>
+              </div>
+              <div>
+                <h4 className="font-medium text-foreground">Stats</h4>
+                <p className="text-sm text-primary-text-faded">{chatDetails.chat.messageCount} messages</p>
+                <p className="text-xs text-primary-text-faded">{chatDetails.chat.totalTokens} tokens</p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-foreground">Conversation</h4>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {chatDetails.messages.map((message, index) => (
+                  <div
+                    key={message._id}
+                    className={`p-3 rounded-lg border ${
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground border-primary/30 ml-8'
+                        : 'bg-muted border-border mr-8'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-medium">
+                        {message.role === 'user' ? 'User' : 'AI Assistant'}
+                      </span>
+                      <span className="text-xs text-primary-text-faded">
+                        {new Date(message.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                    <div className="text-xs text-primary-text-faded mt-2">
+                      Tokens: {message.tokenCount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowChatModal(false)}
+                className="px-4 py-2 border border-border cursor-pointer rounded-lg text-foreground hover:bg-primary-hover transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>
