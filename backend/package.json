@@ -15,6 +15,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/core": "^0.3.66",
+    "@langchain/openai": "^0.6.3",
     "@types/cookie-parser": "^1.4.9",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.2",
@@ -23,6 +25,7 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.30",
     "mongoose": "^8.16.4",
     "stripe": "^18.3.0"
   },
