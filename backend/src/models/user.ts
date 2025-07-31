@@ -47,7 +47,7 @@ const userSchema = new Schema<IUser>({
   },
   creditsPerMonth: {
     type: Number,
-    default: 10,
+    default: 10.00, // $10.00 worth of credits
   },
   agencyName: {
     type: String,
