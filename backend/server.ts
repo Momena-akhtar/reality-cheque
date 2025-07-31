@@ -7,6 +7,7 @@ import adminRouter from './src/routes/adminRoutes';
 import stripeRouter from './src/routes/stripeRoutes';
 import voucherRouter from './src/routes/voucherRoutes';
 import aiModelRouter from './src/routes/aiModelRoutes';
+import generateRouter from './src/routes/generateRoutes';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 const nodeEnv = process.env.NODE_ENV || "development";
@@ -44,6 +45,7 @@ app.use('/api/admin', adminRouter);
 // app.use('/api/stripe', stripeRouter);
 app.use('/api/voucher', voucherRouter);
 app.use('/api/ai-models', aiModelRouter);
+app.use('/api/generate', generateRouter);
 connectToDb(); 
 app.listen(PORT, () => {
     console.log(`[${nodeEnv}] Server is running on port ${PORT}`);
