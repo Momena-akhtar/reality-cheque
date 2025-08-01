@@ -6,6 +6,8 @@ export interface IMessage extends Document {
     chatId: mongoose.Types.ObjectId;
     timestamp: Date;
     tokenCount: number;
+    structuredResponse?: { [key: string]: string }; // For feature-based responses
+    hasFeatures?: boolean;
 }
 
 const messageSchema = new Schema<IMessage>({
@@ -33,6 +35,14 @@ const messageSchema = new Schema<IMessage>({
   tokenCount: { 
     type: Number, 
     default: 0 
+  },
+  structuredResponse: {
+    type: Schema.Types.Mixed, // Store JSON object for feature responses
+    default: undefined
+  },
+  hasFeatures: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true,
