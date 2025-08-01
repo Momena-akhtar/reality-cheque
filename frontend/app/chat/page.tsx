@@ -424,29 +424,66 @@ export default function ChatPage() {
       <div className="flex-1 overflow-hidden pt-15">
         <div className="h-full relative">
           <AnimatePresence>
-            {messages.length === 0 ? (
+            {messages.length === 0 && currentChatId === null ? (
               <motion.div
                 initial={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="flex items-center justify-center h-full text-foreground flex-col gap-4 px-4"
+                className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
               >
-                <div className="h-10 w-10 bg-primary rounded-md shadow-lg ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300 hover:scale-105 flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold">AI</span>
+                {/* Main Container with Gradient Background */}
+                <div className="relative max-w-md w-full">
+                  {/* Gradient Background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl blur-xl"></div>
+                  
+                  {/* Content Card */}
+                  <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-8 shadow-xl">
+                    {/* AI Icon with Glow */}
+                    <div className="flex justify-center mb-6">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-primary/30 rounded-xl blur-lg animate-pulse"></div>
+                        <div className="relative h-16 w-16 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300 hover:scale-105 flex items-center justify-center">
+                          <span className="text-primary-foreground font-bold text-xl">AI</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Model Name */}
+                    <h1 className="text-3xl font-bold text-center mb-3 relative">
+                      <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
+                        {model.name}
+                      </span>
+                    </h1>
+
+                    {/* Model Description */}
+                    <p className="text-sm text-muted-foreground text-center leading-relaxed mb-6">
+                      {model.description}
+                    </p>
+
+                    {/* Features Badge if model has features */}
+                    {modelFeatures.length > 0 && (
+                      <div className="flex justify-center mb-4">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-foreground text-xs font-medium rounded-full border border-green-700/20">
+                          <div className="w-1.5 h-1.5 bg-green-700 rounded-full"></div>
+                          {modelFeatures.length} Features Available
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <h1 className="text-2xl font-bold">{model.name}</h1>
-                <p className="text-md text-foreground/30 text-center">{model.description}</p>
               </motion.div>
             ) : (
               <div className="h-full overflow-y-auto scrollbar-hide px-4">
-                {/* Small Model Info Card - only when chat has messages */}
-                <div className="max-w-4xl mx-auto pt-2 pb-1">
-                  <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border border-border/30 w-fit">
-                    <div className="h-5 w-5 bg-primary rounded-sm flex items-center justify-center">
-                      <span className="text-primary-foreground font-bold text-xs">AI</span>
+                {/* Small Model Info Card - only when chat has messages AND it's not a history conversation */}
+                {currentChatId === null && (
+                  <div className="max-w-4xl mx-auto pt-2 pb-1">
+                    <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border border-border/30 w-fit">
+                      <div className="h-5 w-5 bg-primary rounded-sm flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-xs">AI</span>
+                      </div>
+                      <span className="text-xs font-medium text-foreground">{model.name}</span>
                     </div>
-                    <span className="text-xs font-medium text-foreground">{model.name}</span>
                   </div>
-                </div>
+                )}
                 
                 <div className="max-w-4xl mx-auto space-y-4 py-2">
                   {messages.map((message) => (

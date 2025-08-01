@@ -128,7 +128,9 @@ export default function ChatSessions({ onSelectChat, onClearChat, currentChatId 
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <h4 className="font-medium text-sm truncate">{session.title}</h4>
-                <p className="text-xs text-muted-foreground truncate">{session.modelName}</p>
+                <div className="flex items-center gap-2 border border-border rounded-lg cursor-pointer my-1 p-1 w-fit">
+                  <p className="text-xs text-muted-foreground truncate">{session.modelName}</p>
+                </div>
                 <div className="flex items-center gap-4 mt-1">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
@@ -147,7 +149,7 @@ export default function ChatSessions({ onSelectChat, onClearChat, currentChatId 
                   e.stopPropagation();
                   handleClearChat(session.id);
                 }}
-                className="ml-2 p-1 text-muted-foreground hover:text-red-500 transition-colors"
+                className="ml-2 p-1 cursor-pointer text-muted-foreground hover:text-red-500 transition-colors"
                 title="Clear chat"
               >
                 <Trash2 className="h-4 w-4" />
