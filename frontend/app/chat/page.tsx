@@ -4,6 +4,7 @@ import ChatBar from "../components/ui/chat-bar";
 import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
+import FeatureSections from "../components/ui/feature-sections";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -15,6 +16,8 @@ interface Message {
   content: string;
   timestamp: Date;
   tokenCount?: number;
+  structuredResponse?: { [key: string]: string };
+  hasFeatures?: boolean;
 }
 
 interface Model {
@@ -38,14 +41,25 @@ interface Feature {
   isOptional: boolean;
 }
 
-interface ChatSession {
-  id: string;
-  title: string;
-  modelName: string;
-  lastActivity: Date;
-  totalTokens: number;
-  messageCount: number;
-}
+// Function to clean up markdown formatting
+const cleanMarkdown = (text: string): string => {
+  return text
+    // Remove bold markdown (**text** -> text)
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic markdown (*text* -> text)
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove code markdown (`text` -> text)
+    .replace(/`(.*?)`/g, '$1')
+    // Remove heading markdown (# Heading -> Heading)
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove list markdown (- item -> item)
+    .replace(/^[-*+]\s+/gm, '')
+    // Remove numbered list markdown (1. item -> item)
+    .replace(/^\d+\.\s+/gm, '')
+    // Clean up extra whitespace
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .trim();
+};
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
@@ -62,6 +76,7 @@ export default function ChatPage() {
   const [userCredits, setUserCredits] = useState<number>(0);
   const [showHistory, setShowHistory] = useState(false);
   const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
+  const [regeneratingFeature, setRegeneratingFeature] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -162,12 +177,22 @@ export default function ChatPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            setMessages(data.data.messages.map((msg: any) => ({
+            setMessages(data.data.messages.map((msg: {
+              id: string;
+              role: 'user' | 'assistant';
+              content: string;
+              timestamp: string;
+              tokenCount: number;
+              structuredResponse?: { [key: string]: string };
+              hasFeatures?: boolean;
+            }) => ({
               id: msg.id,
               role: msg.role,
               content: msg.content,
               timestamp: new Date(msg.timestamp),
-              tokenCount: msg.tokenCount
+              tokenCount: msg.tokenCount,
+              structuredResponse: msg.structuredResponse,
+              hasFeatures: msg.hasFeatures
             })));
             setCurrentChatId(chatId);
           }
@@ -205,6 +230,68 @@ export default function ChatPage() {
 
   const handleShowHistory = () => {
     setShowHistory(true);
+  };
+
+  const handleRegenerateFeature = async (featureName: string, feedback: string) => {
+    if (!user || !model || !currentChatId || regeneratingFeature) return;
+
+    setRegeneratingFeature(true);
+    try {
+      // Find the last assistant message with structured response
+      const lastAssistantMessage = messages
+        .filter(msg => msg.role === 'assistant' && msg.structuredResponse)
+        .pop();
+
+      if (!lastAssistantMessage || !lastAssistantMessage.structuredResponse) {
+        throw new Error('No structured response found to regenerate');
+      }
+
+      const payload = {
+        modelId: model._id,
+        featureName,
+        userFeedback: feedback,
+        currentResponse: lastAssistantMessage.structuredResponse,
+        chatId: currentChatId
+      };
+
+      const response = await fetch(`${API_BASE}/generate/regenerate-feature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to regenerate feature');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the last assistant message with the new structured response
+        setMessages(prev => prev.map(msg => 
+          msg.id === lastAssistantMessage.id 
+            ? { ...msg, structuredResponse: data.data.updatedResponse }
+            : msg
+        ));
+        
+        // Update user credits
+        if (data.data.cost) {
+          setUserCredits(prev => Math.max(0, prev - data.data.cost));
+        }
+      } else {
+        throw new Error(data.message || 'Failed to regenerate feature');
+      }
+
+    } catch (error) {
+      console.error('Error regenerating feature:', error);
+      setError(error instanceof Error ? error.message : 'Failed to regenerate feature');
+    } finally {
+      setRegeneratingFeature(false);
+    }
   };
 
   const handleSendMessage = async (text: string) => {
@@ -252,7 +339,9 @@ export default function ChatPage() {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: data.data.response,
-          timestamp: new Date()
+          timestamp: new Date(),
+          structuredResponse: data.data.structuredResponse,
+          hasFeatures: data.data.hasFeatures
         };
         
         setMessages(prev => [...prev, aiMessage]);
@@ -360,7 +449,7 @@ export default function ChatPage() {
                 </div>
                 
                 <div className="max-w-4xl mx-auto space-y-4 py-2">
-                  {messages.map((message, index) => (
+                  {messages.map((message) => (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -379,7 +468,18 @@ export default function ChatPage() {
                             : 'bg-muted border-border'
                         }`}
                       >
-                        <div className="whitespace-pre-wrap">{message.content}</div>
+                        {message.role === 'assistant' && message.hasFeatures && message.structuredResponse ? (
+                          <FeatureSections
+                            features={modelFeatures}
+                            structuredResponse={message.structuredResponse}
+                            onRegenerateFeature={handleRegenerateFeature}
+                            isRegenerating={regeneratingFeature}
+                          />
+                        ) : (
+                          <div className="whitespace-pre-wrap">
+                            {message.role === 'assistant' ? cleanMarkdown(message.content) : message.content}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   ))}
