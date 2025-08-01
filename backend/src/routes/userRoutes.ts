@@ -1,10 +1,55 @@
-import { authMiddleware } from "../middleware/authMiddleware";
-import { UserService } from "../services/userService";
-import { Router, Request, Response } from "express";
+import express from 'express';
+import { UserService } from '../services/userService';
+import { authMiddleware } from '../middleware/authMiddleware';
 
-const router: Router = Router();
+const router = express.Router();
+const userService = UserService.getInstance();
 
-router.get("/:id", authMiddleware, async (req: Request, res: Response) : Promise<any> => {
+// New routes for usage history - MUST be before /:id route
+router.get('/usage-stats', authMiddleware, async (req, res): Promise<any> => {
+  try {
+    const userId = (req as any).user?.id;
+    const timeRange = req.query.timeRange as '7d' | '30d' | '90d' || '30d';
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const result = await userService.getUserUsageStats(userId, timeRange);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error fetching usage stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get('/recent-activity', authMiddleware, async (req, res): Promise<any> => {
+  try {
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const result = await userService.getUserRecentActivity(userId);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error fetching recent activity:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+router.get("/:id", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   try {
     const authenticatedUser = (req as any).user;
@@ -12,7 +57,7 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) : Promise
       return res.status(403).json({ message: "Access denied" });
     }
     
-    const user = await UserService.getInstance().getUserById(userId);
+    const user = await userService.getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -24,7 +69,7 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) : Promise
     res.status(500).json({ message: "Internal server error" });
   }
 });
-router.put("/:id", authMiddleware, async (req: Request, res: Response) : Promise<any> => {
+router.put("/:id", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   const updateData = req.body;
   try {
@@ -33,7 +78,7 @@ router.put("/:id", authMiddleware, async (req: Request, res: Response) : Promise
       return res.status(403).json({ message: "Access denied" });
     }
     
-    const updatedUser = await UserService.getInstance().updateUser(userId, updateData);
+    const updatedUser = await userService.updateUser(userId, updateData);
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found or update failed" });
     }
@@ -45,7 +90,7 @@ router.put("/:id", authMiddleware, async (req: Request, res: Response) : Promise
     res.status(500).json({ message: "Internal server error" });
   }
 });
-router.delete("/:id", authMiddleware, async (req: Request, res: Response) : Promise<any> => {
+router.delete("/:id", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   try {
     const authenticatedUser = (req as any).user;
@@ -53,7 +98,7 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) : Prom
       return res.status(403).json({ message: "Access denied" });
     }
     
-    const success = await UserService.getInstance().deleteUser(userId);
+    const success = await userService.deleteUser(userId);
     if (!success) {
       return res.status(404).json({ message: "User not found or deletion failed" });
     }
@@ -64,7 +109,7 @@ router.delete("/:id", authMiddleware, async (req: Request, res: Response) : Prom
   }
 });
 
-router.put("/:id/plan", authMiddleware, async (req: Request, res: Response) : Promise<any> => {
+router.put("/:id/plan", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   const { plan } = req.body;
   
@@ -78,7 +123,7 @@ router.put("/:id/plan", authMiddleware, async (req: Request, res: Response) : Pr
       return res.status(400).json({ message: "Invalid plan" });
     }
     
-    const updatedUser = await UserService.getInstance().updateUserPlan(userId, plan);
+    const updatedUser = await userService.updateUserPlan(userId, plan);
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found or update failed" });
     }
