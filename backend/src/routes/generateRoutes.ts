@@ -372,3 +372,44 @@ router.get('/chat/:chatId/stats', authMiddleware, async (req, res): Promise<any>
     });
   }
 }); 
+
+// Regenerate specific feature
+router.post('/regenerate-feature', authMiddleware, checkCredits, async (req, res): Promise<any> => {
+  try {
+    const { modelId, featureName, userFeedback, currentResponse, chatId } = req.body;
+    const userId = (req as any).user.id;
+
+    // Validate required fields
+    if (!modelId || !featureName || !userFeedback || !currentResponse || !chatId) {
+      return res.status(400).json({ 
+        message: 'Model ID, feature name, user feedback, current response, and chat ID are required' 
+      });
+    }
+
+    // Regenerate feature
+    const result = await generateService.regenerateFeature({
+      modelId,
+      featureName,
+      userFeedback,
+      currentResponse,
+      chatId,
+      userId
+    });
+
+    // Deduct credits based on actual cost
+    await generateService.updateUserCredits(userId, result.cost || 0);
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Feature regenerated successfully'
+    });
+
+  } catch (error) {
+    console.error('Error in regenerate feature endpoint:', error);
+    res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Internal server error',
+      error: 'FEATURE_REGENERATION_FAILED'
+    });
+  }
+}); 

@@ -11,7 +11,9 @@ import {
   GenerateResponse,
   FeaturePrompt,
   UserContext,
-  GenerateServiceConfig
+  GenerateServiceConfig,
+  RegenerateFeatureRequest,
+  RegenerateFeatureResponse
 } from "../types/generate";
 
 class GenerateService {
@@ -74,13 +76,22 @@ class GenerateService {
   }
 
   // Save message to database
-  private async saveMessage(chatId: string, role: "user" | "assistant", content: string, tokenCount: number): Promise<void> {
+  private async saveMessage(
+    chatId: string, 
+    role: "user" | "assistant", 
+    content: string, 
+    tokenCount: number,
+    structuredResponse?: { [key: string]: string },
+    hasFeatures?: boolean
+  ): Promise<void> {
     const message = new Message({
       role,
       content,
       chatId,
       timestamp: new Date(),
-      tokenCount
+      tokenCount,
+      structuredResponse,
+      hasFeatures
     });
 
     await message.save();
@@ -178,7 +189,33 @@ class GenerateService {
     prompt += `Please generate a response based on the user's input and the available features. `;
     prompt += `Use the user's agency information to personalize the response. `;
     prompt += `If the user is asking for specific content generation, use the appropriate feature prompts to guide your response.\n\n`;
-    prompt += `Response:`;
+    prompt += `IMPORTANT: Your response must be a valid JSON object where each key is a feature name and each value is the generated content for that feature. `;
+    prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here"}\n\n`;
+    prompt += `Response (JSON only):`;
+
+    return prompt;
+  }
+
+  private async buildRegenerateFeaturePrompt(
+    model: any,
+    featureName: string,
+    userFeedback: string,
+    currentResponse: any,
+    userContext: string
+  ): Promise<string> {
+    let prompt = `Model Information:\n`;
+    prompt += `- Name: ${model.name}\n`;
+    prompt += `- Description: ${model.description}\n\n`;
+    
+    prompt += `User Context:\n${userContext}\n`;
+    
+    prompt += `Current Response:\n${JSON.stringify(currentResponse, null, 2)}\n\n`;
+    
+    prompt += `User wants to regenerate ONLY the "${featureName}" section with this feedback: "${userFeedback}"\n\n`;
+    prompt += `Please regenerate ONLY the "${featureName}" section while keeping ALL other sections exactly the same. `;
+    prompt += `Your response must be a valid JSON object with the same structure as the current response, `;
+    prompt += `but with only the "${featureName}" section updated based on the user's feedback.\n\n`;
+    prompt += `Response (JSON only):`;
 
     return prompt;
   }
@@ -232,12 +269,14 @@ class GenerateService {
       
       let prompt: string;
       let features: Feature[] = [];
+      let hasFeatures = false;
 
       // Check if model has features
       if (model.featureIds && model.featureIds.length > 0) {
         // Fetch features
         features = await Feature.find({ _id: { $in: model.featureIds } });
         prompt = await this.buildPromptWithFeatures(model, features, userContext, userInput);
+        hasFeatures = true;
       } else {
         // Use master prompt
         prompt = await this.buildPromptWithoutFeatures(model, userContext, userInput);
@@ -261,11 +300,30 @@ class GenerateService {
 
       const responseText = response.response as string;
 
+      // Parse structured response if model has features
+      let structuredResponse = undefined;
+      if (hasFeatures) {
+        try {
+          // Try to extract JSON from the response
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            structuredResponse = JSON.parse(jsonMatch[0]);
+          } else {
+            // Fallback: create a simple structure with the full response
+            structuredResponse = { "Complete Response": responseText };
+          }
+        } catch (error) {
+          console.error('Error parsing structured response:', error);
+          // Fallback: create a simple structure with the full response
+          structuredResponse = { "Complete Response": responseText };
+        }
+      }
+
       // Save user message to database
       await this.saveMessage(chat._id, "user", userInput, inputTokens);
 
       // Save assistant response to database
-      await this.saveMessage(chat._id, "assistant", responseText, outputTokens);
+      await this.saveMessage(chat._id, "assistant", responseText, outputTokens, structuredResponse, hasFeatures);
 
       // Update chat title with first message if this is a new chat
       if (chat.title === "New Conversation") {
@@ -281,6 +339,8 @@ class GenerateService {
         cost: cost,
         inputTokens: inputTokens,
         outputTokens: outputTokens,
+        structuredResponse,
+        hasFeatures,
       };
 
     } catch (error) {
@@ -289,7 +349,75 @@ class GenerateService {
     }
   }
 
+  async regenerateFeature(request: RegenerateFeatureRequest): Promise<RegenerateFeatureResponse> {
+    try {
+      const { modelId, featureName, userFeedback, currentResponse, chatId, userId } = request;
+      
+      // Fetch model and user data
+      const model = await AIModel.findById(modelId).populate('categoryId');
+      if (!model) {
+        throw new Error('Model not found');
+      }
 
+      const User = mongoose.model('User');
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Build user context
+      const userContext = this.buildUserContext(user);
+      
+      // Build regeneration prompt
+      const prompt = await this.buildRegenerateFeaturePrompt(
+        model, 
+        featureName, 
+        userFeedback, 
+        currentResponse, 
+        userContext
+      );
+
+      // Generate response without memory (standalone)
+      const response = await this.openai.invoke(prompt);
+
+      // Get token usage
+      const inputTokens = this.lastTokenUsage.inputTokens;
+      const outputTokens = this.lastTokenUsage.outputTokens;
+      const cost = this.calculateCost(inputTokens, outputTokens, model);
+
+      const responseText = response.content as string;
+
+      // Parse the updated response
+      let updatedResponse: any;
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          updatedResponse = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Invalid JSON response');
+        }
+      } catch (error) {
+        console.error('Error parsing regeneration response:', error);
+        throw new Error('Failed to parse regeneration response');
+      }
+
+      // Save the regeneration as a new message
+      const regenerationMessage = `Regenerated "${featureName}" with feedback: "${userFeedback}"`;
+      await this.saveMessage(chatId, "user", regenerationMessage, inputTokens);
+      await this.saveMessage(chatId, "assistant", responseText, outputTokens, updatedResponse, true);
+
+      return {
+        updatedResponse,
+        cost,
+        inputTokens,
+        outputTokens,
+      };
+
+    } catch (error) {
+      console.error('Error in regenerateFeature:', error);
+      throw new Error(`Feature regeneration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 
   async clearSession(sessionId: string): Promise<void> {
     this.memoryStore.delete(sessionId);
@@ -375,7 +503,9 @@ class GenerateService {
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp,
-        tokenCount: msg.tokenCount
+        tokenCount: msg.tokenCount,
+        structuredResponse: msg.structuredResponse,
+        hasFeatures: msg.hasFeatures
       }));
     } catch (error) {
       console.error('Error getting chat history:', error);
