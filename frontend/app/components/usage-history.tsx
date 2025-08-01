@@ -21,9 +21,21 @@ interface UsageStats {
   remainingCredits: number;
 }
 
+interface RecentActivity {
+  type: 'chat_started' | 'message_sent';
+  title: string;
+  description: string;
+  timestamp: string;
+  modelName?: string;
+  tokens?: number;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
   const { user } = useAuth();
   const [usageData, setUsageData] = useState<UsageData[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [stats, setStats] = useState<UsageStats>({
     totalCreditsUsed: 0,
     totalApiCalls: 0,
@@ -35,54 +47,57 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const generateMockData = () => {
-      const data: UsageData[] = [];
-      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+  const fetchUsageData = async () => {
+    try {
+      setLoading(true);
       
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        
-        data.push({
-          date: date.toISOString().split('T')[0],
-          creditsUsed: Math.floor(Math.random() * 50) + 10,
-          apiCalls: Math.floor(Math.random() * 200) + 50,
-          cost: Math.floor(Math.random() * 5) + 1
-        });
+      if (!user) {
+        toast.error('Authentication required');
+        return;
       }
-      
-      return data;
-    };
 
-    const mockData = generateMockData();
-    setUsageData(mockData);
-    
-    // Calculate stats
-    const totalCreditsUsed = mockData.reduce((sum, day) => sum + day.creditsUsed, 0);
-    const totalApiCalls = mockData.reduce((sum, day) => sum + day.apiCalls, 0);
-    const totalCost = mockData.reduce((sum, day) => sum + day.cost, 0);
-    const averageDailyUsage = totalCreditsUsed / mockData.length;
-    
-    // Determine trend (simple logic - compare first and last week)
-    const firstWeek = mockData.slice(0, 7).reduce((sum, day) => sum + day.creditsUsed, 0);
-    const lastWeek = mockData.slice(-7).reduce((sum, day) => sum + day.creditsUsed, 0);
-    let trend: 'up' | 'down' | 'stable' = 'stable';
-    if (lastWeek > firstWeek * 1.1) trend = 'up';
-    else if (lastWeek < firstWeek * 0.9) trend = 'down';
-    
-    setStats({
-      totalCreditsUsed,
-      totalApiCalls,
-      totalCost,
-      averageDailyUsage: Math.round(averageDailyUsage * 100) / 100,
-      trend,
-      remainingCredits: user?.creditsPerMonth || 10
-    });
-    
-    setLoading(false);
-  }, [timeRange, user?.creditsPerMonth]);
+      const [usageRes, activityRes] = await Promise.all([
+        fetch(`${API_BASE}/user/usage-stats?timeRange=${timeRange}`, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }),
+        fetch(`${API_BASE}/user/recent-activity`, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        })
+      ]);
+
+      if (usageRes.ok) {
+        const usageResult = await usageRes.json();
+        setUsageData(usageResult.usageData || []);
+        setStats(usageResult.stats || stats);
+      } else {
+        toast.error('Failed to load usage data');
+      }
+
+      if (activityRes.ok) {
+        const activityResult = await activityRes.json();
+        setRecentActivity(activityResult || []);
+      } else {
+        toast.error('Failed to load recent activity');
+      }
+    } catch (error) {
+      console.error('Error fetching usage data:', error);
+      toast.error('Failed to load usage information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUsageData();
+    }
+  }, [timeRange, user]);
 
   const getTrendIcon = () => {
     switch (stats.trend) {
@@ -115,7 +130,7 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
   };
 
   const getMaxValue = (data: UsageData[], key: keyof UsageData) => {
-    return Math.max(...data.map(item => item[key] as number));
+    return Math.max(...data.map(item => item[key] as number), 1);
   };
 
   const renderBarChart = () => {
@@ -138,6 +153,17 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
         })}
       </div>
     );
+  };
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
   if (!user) {
@@ -241,10 +267,10 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
                   <p className="text-sm text-primary-text-faded">Remaining Credits</p>
                   <DollarSign className="w-5 h-5 text-primary-text-faded" />
                 </div>
-                <p className="text-lg font-semibold">${stats.remainingCredits}/mo</p>
+                <p className="text-lg font-semibold">${stats.remainingCredits.toFixed(2)}/mo</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
-                    className="bg-primary rounded-full h-2 transition-all duration-300"
+                    className="bg-green-700 rounded-full h-2 transition-all duration-300"
                     style={{ 
                       width: `${Math.min((stats.remainingCredits / 10) * 100, 100)}%` 
                     }}
@@ -254,31 +280,47 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
             </div>
 
             {/* Usage Chart */}
-            <div className="bg-card border border-border rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-semibold mb-4">Daily Usage (Last 10 Days)</h3>
-              {renderBarChart()}
-              <div className="flex justify-between text-xs text-primary-text-faded mt-2">
-                <span>{usageData[usageData.length - 10]?.date}</span>
-                <span>{usageData[usageData.length - 1]?.date}</span>
+            {usageData.length > 0 && (
+              <div className="bg-card border border-border rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold mb-4">Daily Usage (Last 10 Days)</h3>
+                {renderBarChart()}
+                <div className="flex justify-between text-xs text-primary-text-faded mt-2">
+                  <span>{usageData[usageData.length - 10]?.date}</span>
+                  <span>{usageData[usageData.length - 1]?.date}</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Recent Activity */}
             <div className="bg-card border border-border rounded-lg p-4">
               <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
               <div className="space-y-3 max-h-48 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-primary-text-faded">
-                {usageData.slice(-5).reverse().map((day) => (
-                  <div key={day.date} className="flex justify-between items-center py-2 border-b border-border/50 last:border-b-0">
-                    <div>
-                      <p className="text-sm font-medium">{new Date(day.date).toLocaleDateString()}</p>
-                      <p className="text-xs text-primary-text-faded">{day.apiCalls} API calls</p>
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity, index) => (
+                    <div key={index} className="flex justify-between items-start py-2 border-b border-border/50 last:border-b-0">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.title}</p>
+                        <p className="text-xs text-primary-text-faded">{activity.description}</p>
+                        {activity.modelName && (
+                          <span className="inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full mt-1">
+                            {activity.modelName}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-xs text-primary-text-faded">{formatTimeAgo(activity.timestamp)}</p>
+                        {activity.tokens && (
+                          <p className="text-xs text-primary-text-faded">{activity.tokens} tokens</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right mr-2">
-                      <p className="text-sm font-medium">{day.creditsUsed} credits</p>
-                      <p className="text-xs text-primary-text-faded">{formatCurrency(day.cost)}</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-primary-text-faded">
+                    <p className="text-sm">No recent activity</p>
+                    <p className="text-xs">Start chatting to see your activity here</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </>
