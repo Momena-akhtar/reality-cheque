@@ -1,8 +1,8 @@
 {
-  "name": "minibots",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
+  "scripts": {  
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
