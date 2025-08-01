@@ -16,6 +16,30 @@ export interface GenerateResponse {
   cost?: number; // Cost in dollars
   inputTokens?: number; // Number of input tokens used
   outputTokens?: number; // Number of output tokens used
+  // New fields for structured responses
+  structuredResponse?: StructuredFeatureResponse;
+  hasFeatures?: boolean;
+}
+
+// New types for structured feature responses
+export interface StructuredFeatureResponse {
+  [featureName: string]: string; // Feature name -> content
+}
+
+export interface RegenerateFeatureRequest {
+  modelId: string;
+  featureName: string;
+  userFeedback: string;
+  currentResponse: StructuredFeatureResponse;
+  chatId: string;
+  userId: string;
+}
+
+export interface RegenerateFeatureResponse {
+  updatedResponse: StructuredFeatureResponse;
+  cost?: number;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 // Chat Management Types
