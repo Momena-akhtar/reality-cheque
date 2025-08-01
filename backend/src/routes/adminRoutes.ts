@@ -8,6 +8,7 @@ import { AIModel, Feature } from '../models/aimodel';
 import { Category } from '../models/category';
 
 const adminRouter: express.Router = express.Router();
+const adminService = AdminService.getInstance();
 
 const adminLoginHandler: express.RequestHandler = async (req, res) => {
   const { email, password } = req.body;
@@ -607,6 +608,37 @@ const generateVoucherCode: express.RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// New routes for admin dashboard
+adminRouter.get('/dashboard-stats', authMiddleware, async (req, res) => {
+  try {
+    const result = await adminService.getDashboardStats();
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+adminRouter.get('/recent-activity', authMiddleware, async (req, res) => {
+  try {
+    const result = await adminService.getRecentActivity();
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error fetching recent activity:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 // Admin routes (protected by global auth middleware)
 adminRouter.post('/login', adminLoginHandler);
