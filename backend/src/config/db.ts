@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/menubot';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/menubot';
 console.log('Connecting to MongoDB at:', MONGO_URI);
 
 export const connectToDb = async () => {
