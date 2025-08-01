@@ -58,7 +58,7 @@ export default function Footer() {
 
             <div className="py-6 flex flex-col md:flex-row justify-between items-center">
                 <p className="text-sm text-primary-text-faded">
-                    &copy; {new Date().getFullYear()} MiniBots. All rights reserved.
+                    &copy; {new Date().getFullYear()} Reality Cheque. All rights reserved.
                 </p>
                 <div className="flex gap-4 mt-4 md:mt-0">
                     <Link href="/privacy" className="text-sm text-primary-text-faded hover:text-foreground">Privacy Policy</Link>

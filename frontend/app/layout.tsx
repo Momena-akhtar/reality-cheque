@@ -9,7 +9,7 @@ import { AdminAuthProvider } from "./context/AdminAuthContext";
 const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
 
 export const metadata: Metadata = {
-  title: "MenuBot",
+  title: "Reality Cheque",
   description: "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
 };
 
