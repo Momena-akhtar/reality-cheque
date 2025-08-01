@@ -117,11 +117,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="px-4 py-2">
-          <p className="text-xs text-muted-foreground">Footer content</p>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   )
 }

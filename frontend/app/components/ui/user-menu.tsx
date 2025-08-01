@@ -31,7 +31,7 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
     <div className="relative inline-block text-left">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-2 border border-border bg-primary text-foreground hover:bg-primary-hover transition-colors"
+        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-1.5 border border-border bg-primary text-foreground hover:bg-primary-hover transition-colors"
       >
         {picture ? (
           <img src={picture} alt={name} className="w-6 h-6 rounded-full border border-border" />
