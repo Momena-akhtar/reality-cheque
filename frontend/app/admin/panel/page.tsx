@@ -117,6 +117,21 @@ interface Stats {
   newUsersThisMonth: number;
 }
 
+interface RecentActivity {
+  type: 'user_registered' | 'chat_started' | 'message_sent';
+  title: string;
+  description: string;
+  timestamp: string;
+  user?: {
+    username: string;
+    email: string;
+  };
+  model?: {
+    name: string;
+  };
+  tokens?: number;
+}
+
 export default function AdminPanel() {
   const { admin, adminLogout, adminLoading } = useAdminAuth();
   const [sessionWarning, setSessionWarning] = useState(false);
@@ -129,6 +144,7 @@ export default function AdminPanel() {
   const [chats, setChats] = useState<ChatSession[]>([]);
   const [chatDetails, setChatDetails] = useState<ChatDetails | null>(null);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
@@ -208,44 +224,50 @@ export default function AdminPanel() {
         'Content-Type': 'application/json'
       };
 
-      const statsRes = await fetch(`${API_BASE}/admin/stats`, {
-        headers
-      });
+      const [statsRes, modelsRes, featuresRes, chatsRes, vouchersRes, dashboardStatsRes, recentActivityRes] = await Promise.all([
+        fetch(`${API_BASE}/admin/stats`, { headers }),
+        fetch(`${API_BASE}/admin/models`, { headers }),
+        fetch(`${API_BASE}/admin/features`, { headers }),
+        fetch(`${API_BASE}/admin/chats`, { headers }),
+        fetch(`${API_BASE}/admin/vouchers`, { headers }),
+        fetch(`${API_BASE}/admin/dashboard-stats`, { headers }),
+        fetch(`${API_BASE}/admin/recent-activity`, { headers })
+      ]);
+
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
       }
 
-      const modelsRes = await fetch(`${API_BASE}/admin/models`, {
-        headers
-      });
       if (modelsRes.ok) {
         const modelsData = await modelsRes.json();
         setModels(modelsData);
       }
 
-      const featuresRes = await fetch(`${API_BASE}/admin/features`, {
-        headers
-      });
       if (featuresRes.ok) {
         const featuresData = await featuresRes.json();
         setFeatures(featuresData);
       }
 
-      const chatsRes = await fetch(`${API_BASE}/admin/chats`, {
-        headers
-      });
       if (chatsRes.ok) {
         const chatsData = await chatsRes.json();
         setChats(chatsData.chats || []);
       }
 
-      const vouchersRes = await fetch(`${API_BASE}/admin/vouchers`, {
-        headers
-      });
       if (vouchersRes.ok) {
         const vouchersData = await vouchersRes.json();
         setVouchers(vouchersData);
+      }
+
+      if (dashboardStatsRes.ok) {
+        const dashboardStatsData = await dashboardStatsRes.json();
+        setStats(dashboardStatsData);
+      }
+
+      // Store recent activity for later use
+      if (recentActivityRes.ok) {
+        const recentActivityData = await recentActivityRes.json();
+        setRecentActivity(recentActivityData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -670,21 +692,50 @@ export default function AdminPanel() {
               <div className="bg-card border border-border rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-foreground">New user registered</span>
-                    <span className="text-xs text-primary-text-faded ml-auto">2 min ago</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm text-foreground">Chat session started</span>
-                    <span className="text-xs text-primary-text-faded ml-auto">5 min ago</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm text-foreground">Payment processed</span>
-                    <span className="text-xs text-primary-text-faded ml-auto">10 min ago</span>
-                  </div>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.slice(0, 5).map((activity, index) => {
+                      const getActivityIcon = () => {
+                        switch (activity.type) {
+                          case 'user_registered':
+                            return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
+                          case 'chat_started':
+                            return <div className="w-2 h-2 bg-blue-500 rounded-full"></div>;
+                          case 'message_sent':
+                            return <div className="w-2 h-2 bg-purple-500 rounded-full"></div>;
+                          default:
+                            return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
+                        }
+                      };
+
+                      const formatTimeAgo = (timestamp: string) => {
+                        const now = new Date();
+                        const time = new Date(timestamp);
+                        const diffInMinutes = Math.floor((now.getTime() - time.getTime()) / (1000 * 60));
+                        
+                        if (diffInMinutes < 1) return 'Just now';
+                        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+                        if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+                        return `${Math.floor(diffInMinutes / 1440)}d ago`;
+                      };
+
+                      return (
+                        <div key={index} className="flex items-center space-x-3">
+                          {getActivityIcon()}
+                          <div className="flex-1">
+                            <span className="text-sm text-foreground">{activity.title}</span>
+                            {activity.description && (
+                              <p className="text-xs text-primary-text-faded">{activity.description}</p>
+                            )}
+                          </div>
+                          <span className="text-xs text-primary-text-faded ml-auto">{formatTimeAgo(activity.timestamp)}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-4 text-primary-text-faded">
+                      <p className="text-sm">No recent activity</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -693,7 +744,7 @@ export default function AdminPanel() {
                 <div className="space-y-3">
                   <button
                     onClick={() => setActiveTab('prompts')}
-                    className="w-full text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                    className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
                   >
                     <div className="flex items-center space-x-3 cursor-pointer">
                       <MessageSquare className="w-5 h-5 text-foreground" />
@@ -702,11 +753,20 @@ export default function AdminPanel() {
                   </button>
                   <button
                     onClick={() => setActiveTab('vouchers')}
-                    className="w-full text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                    className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
                   >
                     <div className="flex items-center space-x-3 cursor-pointer">
                       <CreditCard className="w-5 h-5 text-foreground" />
                       <span className="text-foreground">Create Voucher</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('chats')}
+                    className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                  >
+                    <div className="flex items-center space-x-3 cursor-pointer">
+                      <History className="w-5 h-5 text-foreground" />
+                      <span className="text-foreground">View Chat History</span>
                     </div>
                   </button>
                 </div>
