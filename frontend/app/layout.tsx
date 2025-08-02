@@ -11,6 +11,11 @@ const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600',
 export const metadata: Metadata = {
   title: "Reality Cheque",
   description: "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

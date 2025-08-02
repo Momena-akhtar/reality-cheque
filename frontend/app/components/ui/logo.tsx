@@ -12,15 +12,14 @@ export default function Logo () {
     }, [])
 
     const logo = mounted && theme === "dark" ? (
-        <Image src="/dark.svg" alt="MiniBots Logo" width={16} height={16} key="dark-logo" />
+        <Image src="/namewithlogo.png" alt="RealityCheque" key="dark-logo" width={100} height={45}/>
       ) : (
-        <Image src="/light.png" alt="MiniBots Logo" width={16} height={16} key="light-logo" />
+        <Image src="/namewithlogo.png" alt="RealityCheque" key="light-logo" width={100} height={45}/>
       );
     return(
         <>
         <Link href="/" className="flex items-center space-x-2">
-          {mounted ? logo : <div style={{ width: 16, height: 16 }} />}
-          <span className="text-lg font-semibold">Reality Cheque</span>
+          {mounted ? logo : <div style={{ width: 100, height: 45 }} />}
         </Link>
         </>
     )
