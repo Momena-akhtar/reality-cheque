@@ -10,8 +10,8 @@
     "prod": "npm run build && cross-env NODE_ENV=production npm start",
     "populate-db": "cross-env NODE_ENV=development ts-node src/scripts/populateDatabase.ts",
     "create-admin": "cross-env NODE_ENV=development ts-node src/scripts/createAdmin.ts",
-    "create-admin:prod": "cross-env NODE_ENV=production node dist/scripts/createAdmin.ts",
-    "populate-db:prod": "cross-env NODE_ENV=production node dist/scripts/populateDatabase.ts"
+    "create-admin:prod": "npm run build && cross-env NODE_ENV=production node dist/scripts/createAdmin.js",
+    "populate-db:prod": "npm run build && cross-env NODE_ENV=production node dist/scripts/populateDatabase.js"
   },
   "keywords": [],
   "author": "",
