@@ -5,7 +5,7 @@ import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
 import FeatureSections from "../components/ui/feature-sections";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
@@ -61,7 +61,7 @@ const cleanMarkdown = (text: string): string => {
     .trim();
 };
 
-export default function ChatPage() {
+function ChatPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const botId = searchParams.get('id');
@@ -552,5 +552,25 @@ export default function ChatPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-none">
+          <ChatHeader />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ChatPageContent />
+    </Suspense>
   );
 } 

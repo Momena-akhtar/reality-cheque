@@ -1,5 +1,4 @@
 import React from 'react';
-import { User } from 'lucide-react';
 import UserMenu from './user-menu';
 
 interface SignInButtonProps {

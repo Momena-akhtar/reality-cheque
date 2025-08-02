@@ -1,6 +1,6 @@
 "use client";
 
-import { User, ChevronDown, Building2, Target, FileText, DollarSign } from "lucide-react";
+import { User, Building2, Target, FileText, DollarSign } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 

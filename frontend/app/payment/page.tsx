@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import PlanSummary from "../components/ui/plan-summary";
 import PaymentForm from "../components/ui/payment-form";
 import { plans } from "../types/plans";
@@ -14,7 +14,7 @@ interface VoucherData {
   description?: string;
 }
 
-const PaymentPage = () => {
+const PaymentPageContent = () => {
   const searchParams = useSearchParams();
   const planId = searchParams.get("plan") || "";
   const plan = plans[planId];
@@ -52,6 +52,21 @@ const PaymentPage = () => {
         />
       </div>
     </main>
+  );
+};
+
+const PaymentPage = () => {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </main>
+    }>
+      <PaymentPageContent />
+    </Suspense>
   );
 };
 

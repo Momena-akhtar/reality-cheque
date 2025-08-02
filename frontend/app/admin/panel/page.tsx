@@ -152,7 +152,6 @@ export default function AdminPanel() {
   const [editingModel, setEditingModel] = useState<AIModel | null>(null);
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
-  const [selectedChat, setSelectedChat] = useState<ChatSession | null>(null);
   const router = useRouter();
   
   const [modelForm, setModelForm] = useState({
@@ -197,8 +196,8 @@ export default function AdminPanel() {
               toast.warning('Admin session will expire in 5 minutes. Please save your work.');
             }, warningTime * 1000);
           }
-        } catch (error) {
-          console.error('Error parsing admin token:', error);
+        } catch (_error) {
+          console.error('Error parsing admin token:', _error);
         }
       }
     }
@@ -269,8 +268,8 @@ export default function AdminPanel() {
         const recentActivityData = await recentActivityRes.json();
         setRecentActivity(recentActivityData);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch (_error) {
+      console.error('Error fetching data:', _error);
       toast.error('Failed to load admin data');
     } finally {
       setLoading(false);
@@ -307,7 +306,7 @@ export default function AdminPanel() {
       } else {
         toast.error('Failed to update model prompt');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Network error');
     }
   };
@@ -345,7 +344,7 @@ export default function AdminPanel() {
       } else {
         toast.error('Failed to save feature');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Network error');
     }
   };
@@ -374,7 +373,7 @@ export default function AdminPanel() {
         const errorData = await res.json();
         toast.error(errorData.message || 'Failed to delete feature');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Network error');
     }
   };
@@ -400,7 +399,7 @@ export default function AdminPanel() {
       } else {
         toast.error('Failed to fetch chat details');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Network error');
     }
   };

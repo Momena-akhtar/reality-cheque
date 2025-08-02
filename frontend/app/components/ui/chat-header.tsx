@@ -1,8 +1,7 @@
 "use client"
 import Theme from "./theme";
 import Logo from "./logo";
-import Customize from "./customize";
-import { MessageSquare, Star, ChevronDown } from "lucide-react";
+import { MessageSquare, Star } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import UserIcon from "./user-icon";
 

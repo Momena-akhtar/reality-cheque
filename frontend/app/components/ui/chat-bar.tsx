@@ -1,4 +1,4 @@
-import { Mic, Plus, Send, Voicemail } from "lucide-react";
+import { Send } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 
 interface ChatBarProps {
