@@ -49,7 +49,6 @@ export const customGPTData = {
             description: "Best practices and community resources"
         }
     ],
-    
     models: [
         // 1. Website Builder
         {

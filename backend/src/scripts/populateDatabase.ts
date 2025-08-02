@@ -5,16 +5,17 @@ import { Category, Feature, AIModel } from '../models/aimodel';
 
 // Load environment variables
 const nodeEnv = process.env.NODE_ENV || "development";
-dotenv.config({ path: `.env.${nodeEnv}` });
+const envPath = `.env.${nodeEnv}`;
+dotenv.config({ path: envPath });
 
 // Database connection function
 async function connectToDb() {
     try {
-        const mongoUri = "mongodb://localhost:27017/menubot";
+        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/realitycheque';
         await mongoose.connect(mongoUri);
-        console.log('✅ Connected to MongoDB');
+        console.log('Connected to MongoDB'); 
     } catch (error) {
-        console.error('❌ Failed to connect to MongoDB:', error);
+        console.error('Failed to connect to MongoDB:', error);
         process.exit(1);
     }
 }
@@ -23,33 +24,33 @@ async function connectToDb() {
 async function disconnectFromDb() {
     try {
         await mongoose.disconnect();
-        console.log('✅ Disconnected from MongoDB');
+        console.log('Disconnected from MongoDB');
     } catch (error) {
-        console.error('❌ Error disconnecting from MongoDB:', error);
+        console.error('Error disconnecting from MongoDB:', error);
     }
 }
 
 // Main population function
 async function populateDatabase() {
     try {
-        console.log('🚀 Starting database population...');
+        console.log('Starting database population...');
         
         // Clear existing data
-        console.log('🗑️  Clearing existing data...');
+        console.log('Clearing existing data...');
         await Category.deleteMany({});
         await Feature.deleteMany({});
         await AIModel.deleteMany({});
-        console.log('✅ Cleared existing data');
+        console.log('Cleared existing data');
 
         // Create categories
-        console.log('📂 Creating categories...');
+        console.log('Creating categories...');
         const categories = customGPTData.categories.map(cat => ({
             name: cat.name,
             description: cat.description
         }));
 
         const createdCategories = await Category.insertMany(categories);
-        console.log(`✅ Created ${createdCategories.length} categories`);
+        console.log(`Created ${createdCategories.length} categories`);
 
         // Create a map for quick category lookup
         const categoryMap = new Map(createdCategories.map(cat => [cat.name, cat._id]));
@@ -58,10 +59,10 @@ async function populateDatabase() {
         let totalFeaturesCreated = 0;
         let totalModelsCreated = 0;
 
-        console.log('🔧 Processing models and features...');
+        console.log('Processing models and features...');
         
         for (const modelData of customGPTData.models) {
-            console.log(`\n📝 Processing model: ${modelData.name}`);
+            console.log(`\nProcessing model: ${modelData.name}`);
             
             // Create features for this model (only if features exist)
             let createdFeatures = [];
@@ -76,15 +77,15 @@ async function populateDatabase() {
 
                 createdFeatures = await Feature.insertMany(features);
                 totalFeaturesCreated += createdFeatures.length;
-                console.log(`  ✅ Created ${createdFeatures.length} features`);
+                console.log(`  Created ${createdFeatures.length} features`);
             } else {
-                console.log(`  ℹ️  No features for this model`);
+                console.log(`  No features for this model`);
             }
 
             // Create the model
             const categoryId = categoryMap.get(modelData.categoryName);
             if (!categoryId) {
-                console.warn(`⚠️  Category not found for model: ${modelData.name}`);
+                console.warn(`  Category not found for model: ${modelData.name}`);
                 continue;
             }
 
@@ -97,18 +98,18 @@ async function populateDatabase() {
             });
 
             totalModelsCreated++;
-            console.log(`  ✅ Created model: ${model.name}`);
+            console.log(`   Created model: ${model.name}`);
         }
 
         // Summary
-        console.log('\n🎉 Database population completed successfully!');
-        console.log('📊 Summary:');
+        console.log('\n Database population completed successfully!');
+        console.log(' Summary:');
         console.log(`  • Categories created: ${createdCategories.length}`);
         console.log(`  • Features created: ${totalFeaturesCreated}`);
         console.log(`  • Models created: ${totalModelsCreated}`);
         
         // Show some sample data
-        console.log('\n📋 Sample data:');
+        console.log('\n Sample data:');
         const sampleCategories = await Category.find().limit(3);
         console.log('  Categories:', sampleCategories.map(c => c.name));
         
@@ -116,7 +117,7 @@ async function populateDatabase() {
         console.log('  Models:', sampleModels.map(m => `${m.name} (${m.categoryId.name})`));
 
     } catch (error) {
-        console.error('❌ Error populating database:', error);
+        console.error(' Error populating database:', error);
         throw error;
     }
 }
@@ -126,9 +127,9 @@ async function main() {
     try {
         await connectToDb();
         await populateDatabase();
-        console.log('\n✅ Database population script completed successfully!');
+        console.log('\n Database population script completed successfully!');
     } catch (error) {
-        console.error('❌ Database population script failed:', error);
+        console.error(' Database population script failed:', error);
         process.exit(1);
     } finally {
         await disconnectFromDb();
