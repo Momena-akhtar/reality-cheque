@@ -16,6 +16,6 @@
       "isolatedModules": true,
       "types": ["node", "express"],
   },
-  "include": ["src/**/*", "server.ts", "scripts/**/*"],
+  "include": ["src/**/*", "server.ts"],
   "exclude": ["node_modules", "dist", "tests"]
 }

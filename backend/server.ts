@@ -26,7 +26,7 @@ app.get("/", (req: Request, res: Response) => {
     res.send(`<!DOCTYPE html>
         <html>
         <head>
-            <title>MenuBot</title>
+            <title>Reality Cheque</title>
             <meta charset="utf-8">
         </head>
             <body style="font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;">
