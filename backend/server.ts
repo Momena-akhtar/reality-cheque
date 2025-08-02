@@ -30,7 +30,7 @@ app.get("/", (req: Request, res: Response) => {
             <meta charset="utf-8">
         </head>
             <body style="font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;">
-            <h1>MenuBot</h1>
+            <h1>Reality Cheque</h1>
             <p>Version: 1.0.0 (Initial Release)</p>
             <p>© Momena Akhtar - 2025</p>
             <p><strong>Environment:</strong> ${nodeEnv}</p>
