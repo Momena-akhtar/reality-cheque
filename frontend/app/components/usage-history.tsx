@@ -21,6 +21,15 @@ interface UsageStats {
   remainingCredits: number;
 }
 
+interface TokenInfo {
+  totalTokens: number;
+  usedTokens: number;
+  remainingTokens: number;
+  usagePercentage: number;
+  remainingCreditsInDollars: number;
+  usedCreditsInDollars: number;
+}
+
 interface RecentActivity {
   type: 'chat_started' | 'message_sent';
   title: string;
@@ -36,6 +45,14 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
   const { user } = useAuth();
   const [usageData, setUsageData] = useState<UsageData[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo>({
+    totalTokens: 1000000,
+    usedTokens: 0,
+    remainingTokens: 1000000,
+    usagePercentage: 0,
+    remainingCreditsInDollars: 10,
+    usedCreditsInDollars: 0
+  });
   const [stats, setStats] = useState<UsageStats>({
     totalCreditsUsed: 0,
     totalApiCalls: 0,
@@ -56,7 +73,7 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
         return;
       }
 
-      const [usageRes, activityRes] = await Promise.all([
+      const [usageRes, activityRes, tokenRes] = await Promise.all([
         fetch(`${API_BASE}/user/usage-stats?timeRange=${timeRange}`, {
           headers: {
             'Content-Type': 'application/json'
@@ -64,6 +81,12 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
           credentials: 'include'
         }),
         fetch(`${API_BASE}/user/recent-activity`, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }),
+        fetch(`${API_BASE}/user/token-info`, {
           headers: {
             'Content-Type': 'application/json'
           },
@@ -84,6 +107,13 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
         setRecentActivity(activityResult || []);
       } else {
         toast.error('Failed to load recent activity');
+      }
+
+      if (tokenRes.ok) {
+        const tokenResult = await tokenRes.json();
+        setTokenInfo(tokenResult || tokenInfo);
+      } else {
+        toast.error('Failed to load token information');
       }
     } catch (error) {
       console.error('Error fetching usage data:', error);
@@ -127,6 +157,57 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
       currency: 'USD',
       minimumFractionDigits: 2
     }).format(amount);
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+  };
+
+  const CircularProgress = ({ percentage, size = 80, strokeWidth = 8 }: { percentage: number; size?: number; strokeWidth?: number }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="relative inline-flex items-center justify-center">
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={percentage > 80 ? "#ef4444" : percentage > 60 ? "#f59e0b" : "#10b981"}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-300"
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-lg font-bold">{Math.round(percentage)}%</div>
+            <div className="text-xs text-primary-text-faded">used</div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const getMaxValue = (data: UsageData[], key: keyof UsageData) => {
@@ -252,7 +333,7 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
               </div>
             </div>
 
-            {/* Trend and Remaining Credits */}
+            {/* Trend and Token Usage */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-card border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -263,18 +344,23 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
               </div>
 
               <div className="bg-card border border-border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-primary-text-faded">Remaining Credits</p>
-                  <DollarSign className="w-5 h-5 text-primary-text-faded" />
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-primary-text-faded">Token Usage</p>
+                  <Activity className="w-5 h-5 text-primary-text-faded" />
                 </div>
-                <p className="text-lg font-semibold">${stats.remainingCredits.toFixed(2)}/mo</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-green-700 rounded-full h-2 transition-all duration-300"
-                    style={{ 
-                      width: `${Math.min((stats.remainingCredits / 10) * 100, 100)}%` 
-                    }}
-                  ></div>
+                <div className="flex items-center justify-center mb-3">
+                  <CircularProgress percentage={tokenInfo.usagePercentage} />
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium">
+                    {formatNumber(tokenInfo.remainingTokens)} tokens remaining
+                  </p>
+                  <p className="text-xs text-primary-text-faded">
+                    {formatNumber(tokenInfo.usedTokens)} used of {formatNumber(tokenInfo.totalTokens)} total
+                  </p>
+                  <p className="text-xs text-primary-text-faded">
+                    ${tokenInfo.remainingCreditsInDollars.toFixed(2)} remaining
+                  </p>
                 </div>
               </div>
             </div>

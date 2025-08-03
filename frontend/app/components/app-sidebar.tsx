@@ -1,25 +1,118 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
 } from "@/app/components/ui/sidebar"
 import Logo from "./ui/logo"
-import { ChevronRight, ChevronDown, ExternalLink, X, Loader2 } from "lucide-react"
+import { ChevronRight, ChevronDown, ExternalLink, X, Loader2, Activity } from "lucide-react"
 import { useSidebar } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useAIModels } from "../hooks/useAIModels"
 import { useRouter } from "next/navigation"
+import { useAuth } from "../context/AuthContext"
+
+interface TokenInfo {
+  totalTokens: number;
+  usedTokens: number;
+  remainingTokens: number;
+  usagePercentage: number;
+  remainingCreditsInDollars: number;
+  usedCreditsInDollars: number;
+}
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function AppSidebar() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo>({
+    totalTokens: 1000000,
+    usedTokens: 0,
+    remainingTokens: 1000000,
+    usagePercentage: 0,
+    remainingCreditsInDollars: 10,
+    usedCreditsInDollars: 0
+  })
   const { isMobile, setOpenMobile } = useSidebar()
   const { sidebarData, loading, error } = useAIModels()
+  const { user } = useAuth()
   const router = useRouter()
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString();
+  };
+
+  const CircularProgress = ({ percentage, size = 24, strokeWidth = 2 }: { percentage: number; size?: number; strokeWidth?: number }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div className="relative inline-flex items-center justify-center">
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+            fill="transparent"
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={percentage > 80 ? "#ef4444" : percentage > 60 ? "#f59e0b" : "#10b981"}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-300"
+          />
+        </svg>
+      </div>
+    );
+  };
+
+  const fetchTokenInfo = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`${API_BASE}/user/token-info`, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTokenInfo(data);
+      }
+    } catch (error) {
+      console.error('Error fetching token info:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchTokenInfo();
+    }
+  }, [user]);
 
   const toggleSection = (title: string) => {
     setOpenSections(prev => ({
@@ -116,6 +209,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      {user && (
+        <SidebarFooter className="border-t border-border p-4">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary-text-faded" />
+              <span className="text-primary-text-faded">Tokens Usage</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <div className="font-medium">{formatNumber(tokenInfo.remainingTokens)}</div>
+                <div className="text-xs text-primary-text-faded">
+                  of {formatNumber(tokenInfo.totalTokens)}
+                </div>
+              </div>
+              <CircularProgress percentage={tokenInfo.usagePercentage} />
+            </div>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }
