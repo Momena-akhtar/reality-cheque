@@ -29,9 +29,9 @@ router.post('/generate', authMiddleware, checkCredits, async (req, res): Promise
     const userId = (req as any).user.id;
 
     // Validate required fields
-    if (!modelId || !userInput) {
+    if (!modelId) {
       return res.status(400).json({ 
-        message: 'Model ID and user input are required' 
+        message: 'Model ID is required' 
       });
     }
 

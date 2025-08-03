@@ -185,10 +185,19 @@ class GenerateService {
       prompt += `- ${featureName}: ${featurePrompt}\n`;
     });
     
-    prompt += `\nUser Input: ${userInput}\n\n`;
-    prompt += `Please generate a response based on the user's input and the available features. `;
-    prompt += `Use the user's agency information to personalize the response. `;
-    prompt += `If the user is asking for specific content generation, use the appropriate feature prompts to guide your response.\n\n`;
+    // Handle empty user input
+    if (!userInput || userInput.trim() === '') {
+      prompt += `\nUser Input: [No specific instructions provided]\n\n`;
+      prompt += `Since no specific instructions were provided, please generate a generic but high-quality response based on this model's purpose. `;
+      prompt += `Use the user's agency information to personalize the content appropriately. `;
+      prompt += `Create content that would be useful and relevant for the user's business context.\n\n`;
+    } else {
+      prompt += `\nUser Input: ${userInput}\n\n`;
+      prompt += `Please generate a response based on the user's specific input and the available features. `;
+      prompt += `Use the user's agency information to personalize the response. `;
+      prompt += `If the user is asking for specific content generation, use the appropriate feature prompts to guide your response.\n\n`;
+    }
+    
     prompt += `IMPORTANT: Your response must be a valid JSON object where each key is a feature name and each value is the generated content for that feature. `;
     prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here"}\n\n`;
     prompt += `Response (JSON only):`;
@@ -232,9 +241,18 @@ class GenerateService {
     
     prompt += `User Context:\n${userContext}\n`;
     
-    prompt += `User Input: ${userInput}\n\n`;
-    prompt += `Please generate a response based on the master prompt and user input. `;
-    prompt += `Use the user's agency information to personalize the response.\n\n`;
+    // Handle empty user input
+    if (!userInput || userInput.trim() === '') {
+      prompt += `User Input: [No specific instructions provided]\n\n`;
+      prompt += `Since no specific instructions were provided, please generate a generic but high-quality response based on this model's purpose and master prompt. `;
+      prompt += `Use the user's agency information to personalize the content appropriately. `;
+      prompt += `Create content that would be useful and relevant for the user's business context.\n\n`;
+    } else {
+      prompt += `User Input: ${userInput}\n\n`;
+      prompt += `Please generate a response based on the master prompt and user input. `;
+      prompt += `Use the user's agency information to personalize the response.\n\n`;
+    }
+    
     prompt += `Response:`;
 
     return prompt;
@@ -319,15 +337,18 @@ class GenerateService {
         }
       }
 
-      // Save user message to database
-      await this.saveMessage(chat._id, "user", userInput, inputTokens);
+      // Save user message to database only if userInput is not empty
+      if (userInput && userInput.trim() !== '') {
+        await this.saveMessage(chat._id, "user", userInput, inputTokens);
+      }
 
       // Save assistant response to database
       await this.saveMessage(chat._id, "assistant", responseText, outputTokens, structuredResponse, hasFeatures);
 
       // Update chat title with first message if this is a new chat
       if (chat.title === "New Conversation") {
-        await this.updateChatTitle(chat._id, userInput);
+        const titleText = userInput && userInput.trim() !== '' ? userInput : `${model.name} Generation`;
+        await this.updateChatTitle(chat._id, titleText);
       }
 
       return {
