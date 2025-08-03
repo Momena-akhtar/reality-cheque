@@ -49,6 +49,28 @@ router.get('/recent-activity', authMiddleware, async (req, res): Promise<any> =>
   }
 });
 
+// Get user token information
+router.get('/token-info', authMiddleware, async (req, res): Promise<any> => {
+  try {
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const result = await userService.getUserTokenInfo(userId);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error('Error fetching token info:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.get("/:id", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   try {

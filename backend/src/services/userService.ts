@@ -205,4 +205,37 @@ export class UserService {
       return { success: false, message: 'Failed to fetch recent activity' };
     }
   }
+
+  async getUserTokenInfo(userId: string) {
+    try {
+      // Get user's remaining credits in dollars
+      const user = await User.findById(userId);
+      const remainingCreditsInDollars = user?.creditsPerMonth || 0;
+
+      // Calculate total tokens allocated ($10 = 1,000,000 tokens based on O3 pricing)
+      // Average cost per token: ($0.005 + $0.015) / 2 = $0.01 per 1K tokens = $0.00001 per token
+      const totalTokensAllocated = 1000000; // 1M tokens for $10
+      const usedTokensInDollars = 10 - remainingCreditsInDollars;
+      const usedTokens = Math.round(usedTokensInDollars * 100000); // Convert dollars to tokens
+      const remainingTokens = Math.max(0, totalTokensAllocated - usedTokens);
+
+      // Calculate usage percentage
+      const usagePercentage = Math.min(100, (usedTokens / totalTokensAllocated) * 100);
+
+      return {
+        success: true,
+        data: {
+          totalTokens: totalTokensAllocated,
+          usedTokens: usedTokens,
+          remainingTokens: remainingTokens,
+          usagePercentage: Math.round(usagePercentage * 100) / 100,
+          remainingCreditsInDollars: remainingCreditsInDollars,
+          usedCreditsInDollars: usedTokensInDollars
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching user token info:', error);
+      return { success: false, message: 'Failed to fetch token information' };
+    }
+  }
 }
