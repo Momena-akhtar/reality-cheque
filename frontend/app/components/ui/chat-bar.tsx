@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 
 interface ChatBarProps {
@@ -10,9 +10,9 @@ interface ChatBarProps {
 export default function ChatBar({ onSendMessage, disabled = false, placeholder = "Ask me anything..." }: ChatBarProps) {
     const [inputValue, setInputValue] = useState("");
 
-    const handleSendMessage = () => {
-        if (inputValue.trim() && !disabled) {
-            onSendMessage(inputValue);
+    const handleGenerate = () => {
+        if (!disabled) {
+            onSendMessage(inputValue.trim());
             setInputValue("");
         }
     };
@@ -20,7 +20,7 @@ export default function ChatBar({ onSendMessage, disabled = false, placeholder =
     const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && !e.shiftKey && !disabled) {
             e.preventDefault();
-            handleSendMessage();
+            handleGenerate();
         }
     };
 
@@ -34,21 +34,22 @@ export default function ChatBar({ onSendMessage, disabled = false, placeholder =
                     onKeyPress={handleKeyPress}
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={`w-full p-3 pr-12 bg-card focus:outline-none border-border focus:ring-2 focus:ring-primary/10 transition-all rounded-3xl ${
+                    className={`w-full p-3 pr-24 bg-card focus:outline-none border-border focus:ring-2 focus:ring-primary/10 transition-all rounded-3xl ${
                         disabled ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                 />
                 <button 
-                    onClick={handleSendMessage}
-                    disabled={disabled || !inputValue.trim()}
-                    className={`absolute right-2 p-2 rounded-xl transition-colors cursor-pointer ${
-                        disabled || !inputValue.trim() 
-                            ? 'text-foreground/30 cursor-not-allowed' 
-                            : 'text-foreground/80 hover:text-foreground'
+                    onClick={handleGenerate}
+                    disabled={disabled}
+                    className={`absolute right-2 px-3 py-2 rounded-xl transition-colors cursor-pointer flex items-center gap-1 ${
+                        disabled 
+                            ? 'text-foreground/30 cursor-not-allowed bg-muted' 
+                            : 'text-primary-foreground  border border-green-700'
                     }`}
-                    aria-label="Send message"
+                    aria-label="Generate content"
                 >
-                    <Send width={18} height={18} />
+                    <Sparkles width={16} height={16} />
+                    <span className="text-sm font-medium">Generate</span>
                 </button>
             </div>
         </div>

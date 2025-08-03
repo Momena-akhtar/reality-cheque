@@ -297,15 +297,18 @@ function ChatPageContent() {
   const handleSendMessage = async (text: string) => {
     if (!user || !model || sending) return;
 
-    // Add user message immediately
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
-      timestamp: new Date()
-    };
+    // Only add user message to UI if there's actual content
+    let userMessage: Message | null = null;
+    if (text && text.trim() !== '') {
+      userMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: text,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage!]);
+    }
     
-    setMessages(prev => [...prev, userMessage]);
     setSending(true);
 
     try {
@@ -363,8 +366,10 @@ function ChatPageContent() {
       console.error('Error sending message:', error);
       setError(error instanceof Error ? error.message : 'Failed to send message');
       
-      // Remove the user message if there was an error
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      // Remove the user message if there was an error and userMessage exists
+      if (userMessage) {
+        setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      }
     } finally {
       setSending(false);
     }
@@ -543,7 +548,7 @@ function ChatPageContent() {
         <ChatBar 
           onSendMessage={handleSendMessage} 
           disabled={sending || userCredits <= 0.01}
-          placeholder={userCredits <= 0.01 ? "Insufficient credits" : "Type your message..."}
+          placeholder={userCredits <= 0.01 ? "Insufficient credits" : "Add specific instructions or just click Generate..."}
         />
         {userCredits <= 0.01 && (
           <div className="text-center text-sm text-red-500 mt-2">
