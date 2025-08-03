@@ -13,8 +13,6 @@ export const metadata: Metadata = {
   description: "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
   icons: {
     icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
   },
 };
 
