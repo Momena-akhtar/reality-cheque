@@ -40,6 +40,9 @@ jobs:
       - name: Deploy frontend
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use node
             cd ~/reality-cheque/frontend
             git pull origin main
             npm install
@@ -62,6 +65,9 @@ jobs:
       - name: Deploy backend
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.BACKEND_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            nvm use node
             cd ~/reality-cheque/backend
             git pull origin main
             npm install
