@@ -1,0 +1,70 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  determine-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend_changed: ${{ steps.filter.outputs.frontend }}
+      backend_changed: ${{ steps.filter.outputs.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check which folders changed
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
+  deploy-frontend:
+    needs: determine-changes
+    if: needs.determine-changes.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.FRONTEND_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy frontend
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.FRONTEND_HOST }} << 'EOF'
+            cd ~/reality-cheque/frontend
+            git pull origin main
+            npm install
+            npm run build
+            sudo systemctl restart nextjs
+          EOF
+
+  deploy-backend:
+    needs: determine-changes
+    if: needs.determine-changes.outputs.backend_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.BACKEND_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy backend
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.BACKEND_HOST }} << 'EOF'
+            cd ~/reality-cheque/backend
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart all
+          EOF
