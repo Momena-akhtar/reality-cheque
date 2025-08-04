@@ -1,17 +1,15 @@
 "use client";
 import SignInButton from "./ui/signin-button";
 import Theme from "./ui/theme";
-import SignInPopup from "./signin-popup";
-import Portal from "./ui/portal";
 import Logo from "./ui/logo";
-import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { SidebarTrigger, useSidebar } from "./ui/sidebar";
+import { useRouter } from "next/navigation";
 
 export default function Navigation() {
-  const [showSignInPopup, setShowSignInPopup] = useState(false);
   const { user, loading } = useAuth();
   const { state } = useSidebar();
+  const router = useRouter();
 
   return (
     <>
@@ -54,15 +52,10 @@ export default function Navigation() {
 
         {/* User Actions */}
         <div className="flex items-center space-x-4">
-          <SignInButton onSignInClick={() => setShowSignInPopup(true)} user={user} loading={loading} />
+          <SignInButton onSignInClick={() => router.push('/signin')} user={user} loading={loading} />
           <Theme />
         </div>  
       </nav>
-      {showSignInPopup && !user && (
-        <Portal>
-          <SignInPopup onClose={() => setShowSignInPopup(false)} />
-        </Portal>
-      )}
     </>
   );
 }

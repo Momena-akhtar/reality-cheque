@@ -11,8 +11,8 @@ const PricingGrid = () => {
 
   const handlePlanSelect = async (planId: string) => {
     if (!user) {
-      // If no user, redirect to payment for any plan
-      router.push(`/payment?plan=${planId}`);
+      // If no user, redirect to signin first
+      router.push('/signin');
       return;
     }
 

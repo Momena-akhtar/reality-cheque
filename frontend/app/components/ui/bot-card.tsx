@@ -2,9 +2,7 @@ import { ExternalLink } from "lucide-react";
 import CategoryTag from "./category-tag";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext";
-import SignInPopup from "../signin-popup";
-import Portal from "./portal";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface BotCardProps {
   id: string;
@@ -20,7 +18,7 @@ export default function BotCard({
   category,
 }: BotCardProps) {
     const {user} = useAuth();
-    const [showSignInPopup, setShowSignInPopup] = useState(false);
+    const router = useRouter();
     
     return (
       <>
@@ -40,7 +38,7 @@ export default function BotCard({
                 </Link>
               ) : (
                 <button 
-                  onClick={() => setShowSignInPopup(true)}
+                  onClick={() => router.push('/signin')}
                   className="text-foreground hover:text-primary-text-hover transition-colors duration-150"
                 >
                   <ExternalLink size={18} />
@@ -49,11 +47,6 @@ export default function BotCard({
             </div>
           </div>
         </div>
-        {showSignInPopup && !user && (
-          <Portal>
-            <SignInPopup onClose={() => setShowSignInPopup(false)} />
-          </Portal>
-        )}
       </>
     );
 }

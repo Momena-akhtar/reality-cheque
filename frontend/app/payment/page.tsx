@@ -1,9 +1,10 @@
 "use client"
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import PlanSummary from "../components/ui/plan-summary";
 import PaymentForm from "../components/ui/payment-form";
 import { plans } from "../types/plans";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 interface VoucherData {
   id: string;
@@ -16,10 +17,36 @@ interface VoucherData {
 
 const PaymentPageContent = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const planId = searchParams.get("plan") || "";
   const plan = plans[planId];
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherData | null>(null);
   const [appliedCredits, setAppliedCredits] = useState(0);
+
+  // Redirect to signin if user is not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/signin');
+    }
+  }, [user, authLoading, router]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Don't render anything if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   const handleVoucherApplied = (voucher: VoucherData | null, credits: number) => {
     setAppliedVoucher(voucher);
