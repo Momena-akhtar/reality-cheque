@@ -3,33 +3,27 @@ import { Types } from 'mongoose';
 
 export interface CreateVoucherData {
   code?: string;
-  voucherType: 'percentage' | 'credits';
-  value: number; // percentage (1-100) or dollar amount
+  tier: 1 | 2 | 3;
+  credits: number; // Should match tier (1, 2, or 3)
   maxUses: number;
-  validFrom?: Date;
-  validUntil: Date;
   description?: string;
-  applicablePlans: string[];
   createdBy: string;
 }
 
 export interface UpdateVoucherData {
   code?: string;
-  voucherType?: 'percentage' | 'credits';
-  value?: number;
+  tier?: 1 | 2 | 3;
+  credits?: number;
   maxUses?: number;
-  validFrom?: Date;
-  validUntil?: Date;
   isActive?: boolean;
   description?: string;
-  applicablePlans?: string[];
 }
 
 export interface VoucherValidationResult {
   valid: boolean;
   message?: string;
   voucher?: IVoucher;
-  discount?: number;
+  credits?: number;
 }
 
 export class VoucherService {
@@ -62,25 +56,9 @@ export class VoucherService {
         }
       }
 
-      // Validate value based on type
-      if (data.voucherType === 'percentage') {
-        if (data.value <= 0 || data.value > 100) {
-          return { success: false, message: 'Percentage must be between 1 and 100' };
-        }
-      } else if (data.voucherType === 'credits') {
-        if (data.value <= 0) {
-          return { success: false, message: 'Credit amount must be greater than 0' };
-        }
-      }
-
-      // Set default validFrom if not provided
-      if (!data.validFrom) {
-        data.validFrom = new Date();
-      }
-
-      // Validate dates
-      if (data.validUntil <= data.validFrom) {
-        return { success: false, message: 'Valid until date must be after valid from date' };
+      // Validate credits match tier
+      if (data.credits !== data.tier) {
+        return { success: false, message: 'Credits must match the tier (Tier 1 = 1 credit, Tier 2 = 2 credits, Tier 3 = 3 credits)' };
       }
 
       const voucher = new Voucher({
@@ -166,23 +144,10 @@ export class VoucherService {
         data.code = data.code.toUpperCase();
       }
 
-      // Validate value if being updated
-      if (data.voucherType === 'percentage' && data.value !== undefined) {
-        if (data.value <= 0 || data.value > 100) {
-          return { success: false, message: 'Percentage must be between 1 and 100' };
-        }
-      }
-
-      if (data.voucherType === 'credits' && data.value !== undefined) {
-        if (data.value <= 0) {
-          return { success: false, message: 'Credit amount must be greater than 0' };
-        }
-      }
-
-      // Validate dates if being updated
-      if (data.validUntil && data.validFrom) {
-        if (data.validUntil <= data.validFrom) {
-          return { success: false, message: 'Valid until date must be after valid from date' };
+      // Validate credits match tier if both are being updated
+      if (data.credits !== undefined && data.tier !== undefined) {
+        if (data.credits !== data.tier) {
+          return { success: false, message: 'Credits must match the tier' };
         }
       }
 
@@ -219,7 +184,7 @@ export class VoucherService {
     }
   }
 
-  async validateVoucher(code: string, userId: string, orderValue: number, plan: string): Promise<VoucherValidationResult> {
+  async validateVoucher(code: string, userId: string): Promise<VoucherValidationResult> {
     try {
       const result = await this.getVoucherByCode(code);
       if (!result.success || !result.voucher) {
@@ -227,21 +192,20 @@ export class VoucherService {
       }
 
       const voucher = result.voucher;
-      const validation = voucher.validateForUser(userId, orderValue, plan);
+      const validation = voucher.validateForUser(userId);
       
       if (!validation.valid) {
         return { valid: false, message: validation.message };
       }
 
-      const discount = voucher.calculateDiscount(orderValue);
-      return { valid: true, voucher, discount };
+      return { valid: true, voucher, credits: voucher.credits };
     } catch (error) {
       console.error('Error validating voucher:', error);
       return { valid: false, message: 'Error validating voucher' };
     }
   }
 
-  async useVoucher(code: string, userId: string): Promise<{ success: boolean; message?: string }> {
+  async useVoucher(code: string, userId: string): Promise<{ success: boolean; message?: string; credits?: number }> {
     try {
       const result = await this.getVoucherByCode(code);
       if (!result.success || !result.voucher) {
@@ -256,7 +220,7 @@ export class VoucherService {
       }
 
       await voucher.save();
-      return { success: true, message: 'Voucher used successfully' };
+      return { success: true, message: 'Voucher used successfully', credits: voucher.credits };
     } catch (error) {
       console.error('Error using voucher:', error);
       return { success: false, message: 'Failed to use voucher' };
@@ -267,19 +231,22 @@ export class VoucherService {
     try {
       const totalVouchers = await Voucher.countDocuments();
       const activeVouchers = await Voucher.countDocuments({ isActive: true });
-      const expiredVouchers = await Voucher.countDocuments({ validUntil: { $lt: new Date() } });
       const usedVouchers = await Voucher.countDocuments({ usedCount: { $gt: 0 } });
 
       const totalUses = await Voucher.aggregate([
         { $group: { _id: null, totalUses: { $sum: '$usedCount' } } }
       ]);
 
+      const tierStats = await Voucher.aggregate([
+        { $group: { _id: '$tier', count: { $sum: 1 }, used: { $sum: '$usedCount' } } }
+      ]);
+
       const stats = {
         totalVouchers,
         activeVouchers,
-        expiredVouchers,
         usedVouchers,
-        totalUses: totalUses[0]?.totalUses || 0
+        totalUses: totalUses[0]?.totalUses || 0,
+        tierStats
       };
 
       return { success: true, stats };

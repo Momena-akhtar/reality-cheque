@@ -8,18 +8,16 @@ const voucherRouter: express.Router = express.Router();
 const validateVoucher: express.RequestHandler = async (req, res) => {
   try {
     const user = (req as any).user;
-    const { code, orderValue, plan } = req.body;
+    const { code } = req.body;
 
-    if (!code || !orderValue || !plan) {
-      res.status(400).json({ message: 'Missing required fields' });
+    if (!code) {
+      res.status(400).json({ message: 'Voucher code is required' });
       return;
     }
 
     const result = await VoucherService.getInstance().validateVoucher(
       code,
-      user.id,
-      Number(orderValue),
-      plan
+      user.id
     );
 
     if (result.valid) {
@@ -28,12 +26,12 @@ const validateVoucher: express.RequestHandler = async (req, res) => {
         voucher: {
           id: result.voucher?._id,
           code: result.voucher?.code,
-          voucherType: result.voucher?.voucherType,
-          value: result.voucher?.value,
+          tier: result.voucher?.tier,
+          credits: result.voucher?.credits,
           maxUses: result.voucher?.maxUses,
           description: result.voucher?.description
         },
-        discount: result.discount
+        credits: result.credits
       });
     } else {
       res.status(400).json({
@@ -60,7 +58,10 @@ const useVoucher: express.RequestHandler = async (req, res) => {
     const result = await VoucherService.getInstance().useVoucher(code, user.id);
     
     if (result.success) {
-      res.json({ message: result.message });
+      res.json({ 
+        message: result.message,
+        credits: result.credits
+      });
     } else {
       res.status(400).json({ message: result.message });
     }

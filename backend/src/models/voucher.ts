@@ -3,27 +3,21 @@ import mongoose from "mongoose";
 
 export interface IVoucher extends Document {
   code: string;
-  voucherType: 'percentage' | 'credits';
-  value: number; // percentage (1-100) or dollar amount
+  tier: 1 | 2 | 3; // Which tier this voucher is for
+  credits: number; // Credits to give (1, 2, or 3)
   maxUses: number;
   usedCount: number;
   usedBy: string[];
-  validFrom: Date;
-  validUntil: Date;
   isActive: boolean;
   description?: string;
-  applicablePlans: string[];
   createdBy: string;
   
   // Virtual properties
-  isExpired: boolean;
-  isValid: boolean;
   remainingUses: number;
   
   // Instance methods
   hasUserUsed(userId: string): boolean;
-  calculateDiscount(orderValue: number): number;
-  validateForUser(userId: string, orderValue: number, plan: string): { valid: boolean; message?: string };
+  validateForUser(userId: string): { valid: boolean; message?: string };
   useVoucher(userId: string): boolean;
 }
 
@@ -42,15 +36,15 @@ const voucherSchema = new Schema<IVoucher>({
     maxlength: 8,
     match: /^[A-Z0-9]{6,8}$/ // Only uppercase letters and numbers, 6-8 characters
   },
-  voucherType: { 
-    type: String, 
-    enum: ['percentage', 'credits'], 
+  tier: { 
+    type: Number, 
+    enum: [1, 2, 3], 
     required: true 
   },
-  value: { 
+  credits: { 
     type: Number, 
     required: true,
-    min: 0
+    enum: [1, 2, 3] // Credits match the tier
   },
   maxUses: { 
     type: Number, 
@@ -67,15 +61,6 @@ const voucherSchema = new Schema<IVoucher>({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
-  validFrom: { 
-    type: Date, 
-    required: true,
-    default: Date.now
-  },
-  validUntil: { 
-    type: Date, 
-    required: true 
-  },
   isActive: { 
     type: Boolean, 
     default: true 
@@ -84,11 +69,6 @@ const voucherSchema = new Schema<IVoucher>({
     type: String,
     maxlength: 500
   },
-  applicablePlans: [{
-    type: String,
-    enum: ['pro', 'enterprise'],
-    default: ['pro']
-  }],
   createdBy: {
     type: String,
     required: true
@@ -99,21 +79,8 @@ const voucherSchema = new Schema<IVoucher>({
 
 // Index for efficient queries
 voucherSchema.index({ code: 1 });
-voucherSchema.index({ isActive: 1, validUntil: 1 });
+voucherSchema.index({ isActive: 1 });
 voucherSchema.index({ usedCount: 1, maxUses: 1 });
-
-// Virtual for checking if voucher is expired
-voucherSchema.virtual('isExpired').get(function() {
-  return new Date() > this.validUntil;
-});
-
-// Virtual for checking if voucher is valid (not expired, active, and has uses left)
-voucherSchema.virtual('isValid').get(function() {
-  return this.isActive && 
-         new Date() <= this.validUntil && 
-         this.usedCount < this.maxUses &&
-         new Date() >= this.validFrom;
-});
 
 // Virtual for remaining uses
 voucherSchema.virtual('remainingUses').get(function() {
@@ -125,21 +92,15 @@ voucherSchema.methods.hasUserUsed = function(userId: string): boolean {
   return this.usedBy.includes(userId);
 };
 
-// Method to apply voucher and calculate discount/credits
-voucherSchema.methods.calculateDiscount = function(orderValue: number): number {
-  if (this.voucherType === 'percentage') {
-    return (orderValue * this.value) / 100;
-  } else {
-    // For credits, return the dollar amount directly
-    return this.value;
+// Method to validate voucher for a specific user
+voucherSchema.methods.validateForUser = function(userId: string): { valid: boolean; message?: string } {
+  // Check if voucher is active and has uses left
+  if (!this.isActive) {
+    return { valid: false, message: 'Voucher is not active' };
   }
-};
 
-// Method to validate voucher for a specific user and order
-voucherSchema.methods.validateForUser = function(userId: string, orderValue: number, plan: string): { valid: boolean; message?: string } {
-  // Check if voucher is active and not expired
-  if (!this.isValid) {
-    return { valid: false, message: 'Voucher is not valid or has expired' };
+  if (this.usedCount >= this.maxUses) {
+    return { valid: false, message: 'Voucher has been used up' };
   }
 
   // Check if user has already used this voucher
@@ -147,22 +108,12 @@ voucherSchema.methods.validateForUser = function(userId: string, orderValue: num
     return { valid: false, message: 'You have already used this voucher' };
   }
 
-  // Check if voucher applies to the selected plan
-  if (!this.applicablePlans.includes(plan)) {
-    return { valid: false, message: 'Voucher does not apply to this plan' };
-  }
-
-  // For percentage vouchers, check if order value is sufficient
-  if (this.voucherType === 'percentage' && orderValue <= 0) {
-    return { valid: false, message: 'Order value must be greater than 0 for percentage vouchers' };
-  }
-
   return { valid: true };
 };
 
 // Method to use voucher
 voucherSchema.methods.useVoucher = function(userId: string): boolean {
-  if (!this.isValid || this.hasUserUsed(userId)) {
+  if (!this.isActive || this.usedCount >= this.maxUses || this.hasUserUsed(userId)) {
     return false;
   }
 
