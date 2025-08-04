@@ -50,7 +50,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
           )}
         </div>
 
-        <div className="text-3xl font-bold text-foreground mb-1">{price}/mo</div>
+        <div className="text-3xl font-bold text-foreground mb-1">{price}</div>
         {billingInfo && (
           <div className="text-sm text-primary-text-faded mb-4">{billingInfo}</div>
         )}
