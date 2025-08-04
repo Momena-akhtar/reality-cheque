@@ -8,8 +8,8 @@ import { useSearchParams } from "next/navigation";
 interface VoucherData {
   id: string;
   code: string;
-  voucherType: 'percentage' | 'credits';
-  value: number;
+  tier: 1 | 2 | 3;
+  credits: number;
   maxUses: number;
   description?: string;
 }
@@ -19,11 +19,11 @@ const PaymentPageContent = () => {
   const planId = searchParams.get("plan") || "";
   const plan = plans[planId];
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherData | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCredits, setAppliedCredits] = useState(0);
 
-  const handleVoucherApplied = (voucher: VoucherData | null, discount: number) => {
+  const handleVoucherApplied = (voucher: VoucherData | null, credits: number) => {
     setAppliedVoucher(voucher);
-    setDiscountAmount(discount);
+    setAppliedCredits(credits);
   };
 
   if (!plan) {
@@ -43,7 +43,7 @@ const PaymentPageContent = () => {
         <PlanSummary 
           plan={plan} 
           appliedVoucher={appliedVoucher}
-          discountAmount={discountAmount}
+          appliedCredits={appliedCredits}
         />
         <PaymentForm 
           planPrice={plan.price}

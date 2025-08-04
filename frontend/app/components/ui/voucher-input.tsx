@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 interface VoucherInputProps {
   onVoucherApplied: (credits: number) => void;
@@ -11,6 +12,7 @@ interface VoucherInputProps {
 export const VoucherInput: React.FC<VoucherInputProps> = ({ onVoucherApplied }) => {
   const [voucherCode, setVoucherCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const { refreshUser } = useAuth();
 
   const handleVoucherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +54,9 @@ export const VoucherInput: React.FC<VoucherInputProps> = ({ onVoucherApplied }) 
         toast.success(`Voucher applied! You received $${useResult.credits} credits`);
         onVoucherApplied(useResult.credits);
         setVoucherCode('');
+        
+        // Refresh user data to update credits in sidebar and usage history
+        await refreshUser();
       } else {
         toast.error(useResult.message || 'Failed to apply voucher');
       }

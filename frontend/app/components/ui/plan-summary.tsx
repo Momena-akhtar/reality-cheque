@@ -4,8 +4,8 @@ import { PlanDetails } from "../../types/plan-details";
 interface VoucherData {
   id: string;
   code: string;
-  voucherType: 'percentage' | 'credits';
-  value: number;
+  tier: 1 | 2 | 3;
+  credits: number;
   maxUses: number;
   description?: string;
 }
@@ -13,22 +13,21 @@ interface VoucherData {
 interface PlanSummaryProps {
   plan: PlanDetails;
   appliedVoucher?: VoucherData | null;
-  discountAmount?: number;
+  appliedCredits?: number;
 }
 
 const PlanSummary: React.FC<PlanSummaryProps> = ({ 
   plan, 
   appliedVoucher, 
-  discountAmount = 0 
+  appliedCredits = 0 
 }) => {
   // Convert string price to number (remove $ and convert to number)
   const planPriceNumber = parseFloat(plan.price.replace('$', ''));
-  const finalAmount = Math.max(0, planPriceNumber - discountAmount);
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
       <h2 className="text-2xl font-semibold mb-4 text-foreground">{plan.title} Plan</h2>
-      <div className="text-3xl font-bold text-foreground mb-1">{plan.price}/mo</div>
+      <div className="text-3xl font-bold text-foreground mb-1">{plan.price}</div>
       {plan.billingInfo && (
         <p className="text-sm text-primary-text-faded mb-4">{plan.billingInfo}</p>
       )}
@@ -44,29 +43,32 @@ const PlanSummary: React.FC<PlanSummaryProps> = ({
         <div className="text-sm text-primary-text-faded pt-4">
             <p className="flex justify-between">
               <span>{plan.title} Plan </span>
-              <span>${plan.price}</span>
+              <span>{plan.price}</span>
             </p>
         </div>
         
-        {appliedVoucher && discountAmount > 0 && (
+        {appliedVoucher && appliedCredits > 0 && (
           <div className="text-sm text-green-600 pt-2">
             <p className="flex justify-between">
-              <span>Discount ({appliedVoucher.code})</span>
-              <span>-${discountAmount.toFixed(2)}</span>
+              <span>Voucher Bonus ({appliedVoucher.code})</span>
+              <span>+${appliedCredits.toFixed(2)} credits</span>
             </p>
             <p className="text-xs text-primary-text-faded">
-              {appliedVoucher.voucherType === 'percentage' 
-                ? `${appliedVoucher.value}% off` 
-                : `$${appliedVoucher.value} credit applied`
-              }
+              Tier {appliedVoucher.tier} voucher applied
             </p>
           </div>
         )}
         
         <p className="flex justify-between pt-4 text-foreground font-semibold">
           <span>Total due today</span>
-          <span>{finalAmount === 0 ? 'FREE' : `$${finalAmount.toFixed(2)}`}</span>
+          <span>{plan.price}</span>
         </p>
+        
+        {appliedCredits > 0 && (
+          <p className="text-xs text-green-600 pt-2">
+            You'll also receive ${appliedCredits.toFixed(2)} credits in your account
+          </p>
+        )}
       </div>
     </div>
   );

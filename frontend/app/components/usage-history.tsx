@@ -127,7 +127,7 @@ const UsageHistoryPopup = ({ onClose }: { onClose: () => void }) => {
     if (user) {
       fetchUsageData();
     }
-  }, [timeRange, user]);
+  }, [timeRange, user, user?.creditsPerMonth]);
 
   const getTrendIcon = () => {
     switch (stats.trend) {

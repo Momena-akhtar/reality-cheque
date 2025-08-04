@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -10,8 +11,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 interface VoucherData {
   id: string;
   code: string;
-  voucherType: 'percentage' | 'credits';
-  value: number;
+  tier: 1 | 2 | 3;
+  credits: number;
   maxUses: number;
   description?: string;
 }
@@ -19,7 +20,7 @@ interface VoucherData {
 interface PaymentFormContentProps {
   planPrice: string;
   planTitle: string;
-  onVoucherApplied?: (voucher: VoucherData | null, discount: number) => void;
+  onVoucherApplied?: (voucher: VoucherData | null, credits: number) => void;
 }
 
 const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ 
@@ -34,7 +35,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
   const [success, setSuccess] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [appliedVoucher, setAppliedVoucher] = useState<VoucherData | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedCredits, setAppliedCredits] = useState(0);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [wasFreeUpgrade, setWasFreeUpgrade] = useState(false);
   const [form, setForm] = useState({
@@ -42,16 +43,14 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
     country: "Pakistan",
     address: "",
   });
+  const { refreshUser } = useAuth();
 
   // Convert string price to number (remove $ and convert to number)
   const planPriceNumber = parseFloat(planPrice.replace('$', ''));
-  
-  // Calculate final amount after discount
-  const finalAmount = Math.max(0, planPriceNumber - discountAmount);
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) {
-      toast.error('Please enter a promo code');
+      toast.error('Please enter a voucher code');
       return;
     }
 
@@ -64,9 +63,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
         },
         credentials: 'include',
         body: JSON.stringify({
-          code: promoCode.trim().toUpperCase(),
-          orderValue: planPriceNumber,
-          plan: planTitle.toLowerCase()
+          code: promoCode.trim().toUpperCase()
         }),
       });
 
@@ -74,18 +71,19 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 
       if (data.valid) {
         setAppliedVoucher(data.voucher);
-        setDiscountAmount(data.discount);
-        onVoucherApplied?.(data.voucher, data.discount);
-        toast.success(`Promo code applied! ${data.voucher.voucherType === 'percentage' ? `${data.voucher.value}% discount` : `$${data.voucher.value} off`}`);
+        setAppliedCredits(data.credits);
+        onVoucherApplied?.(data.voucher, data.credits);
+        toast.success(`Voucher applied! You received $${data.credits} credits`);
+        refreshUser(); // Refresh user data after successful voucher application
       } else {
-        toast.error(data.message || 'Invalid promo code');
+        toast.error(data.message || 'Invalid voucher code');
         setAppliedVoucher(null);
-        setDiscountAmount(0);
+        setAppliedCredits(0);
         onVoucherApplied?.(null, 0);
       }
     } catch (error) {
-      console.error('Error applying promo code:', error);
-      toast.error('Failed to apply promo code');
+      console.error('Error applying voucher:', error);
+      toast.error('Failed to apply voucher');
     } finally {
       setApplyingPromo(false);
     }
@@ -94,9 +92,9 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
   const removePromoCode = () => {
     setPromoCode('');
     setAppliedVoucher(null);
-    setDiscountAmount(0);
+    setAppliedCredits(0);
     onVoucherApplied?.(null, 0);
-    toast.success('Promo code removed');
+    toast.success('Voucher removed');
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -106,7 +104,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
     setError(null);
 
     try {
-      // If voucher is applied, use it first
+      // If voucher is applied, use it first to add credits to user account
       if (appliedVoucher) {
         const useVoucherRes = await fetch(`${API_BASE}/voucher/use`, {
           method: 'POST',
@@ -123,82 +121,93 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
           const errorData = await useVoucherRes.json();
           throw new Error(errorData.message || 'Failed to use voucher');
         }
-      }
 
-      // If final amount is $0, directly upgrade the user's plan
-      if (finalAmount === 0) {
-        // Get current user info to update their plan
-        const userRes = await fetch(`${API_BASE}/auth/me`, {
-          credentials: 'include',
-        });
-
-        if (!userRes.ok) {
-          throw new Error('Failed to get user information');
-        }
-
-        const userData = await userRes.json();
+        const voucherResult = await useVoucherRes.json();
+        toast.success(`Successfully added $${voucherResult.credits} credits to your account!`);
         
-        // Update user's plan to pro
-        const updatePlanRes = await fetch(`${API_BASE}/user/${userData.id}/plan`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            plan: planTitle.toLowerCase()
-          }),
-        });
-
-        if (!updatePlanRes.ok) {
-          throw new Error('Failed to upgrade plan');
-        }
-
-        setWasFreeUpgrade(true);
-        setSuccess(true);
-        console.log('Plan upgraded successfully');
-        return;
+        // Refresh user data to update credits in sidebar and usage history
+        await refreshUser();
       }
 
-      // For payments greater than $0, use Stripe
-      if (!stripe || !elements) {
-        throw new Error('Stripe not initialized');
+      // Get current user info to update their tier
+      const userRes = await fetch(`${API_BASE}/auth/me`, {
+        credentials: 'include',
+      });
+
+      if (!userRes.ok) {
+        throw new Error('Failed to get user information');
       }
 
-      const response = await fetch(`${API_BASE}/stripe/create-payment-intent`, {
-        method: 'POST',
+      const userData = await userRes.json();
+      
+      // Determine tier based on plan title
+      let tier = 1;
+      if (planTitle.toLowerCase().includes('tier 2') || planTitle.toLowerCase().includes('2')) {
+        tier = 2;
+      } else if (planTitle.toLowerCase().includes('tier 3') || planTitle.toLowerCase().includes('3')) {
+        tier = 3;
+      }
+      
+      // Update user's tier
+      const updateTierRes = await fetch(`${API_BASE}/user/${userData.id}/tier`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          amount: Math.round(finalAmount * 100), // Convert to cents
-          currency: 'usd',
+          tier: tier
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create payment intent');
+      if (!updateTierRes.ok) {
+        throw new Error('Failed to update tier');
       }
 
-      const { clientSecret } = await response.json();
+      // If no voucher was applied, process Stripe payment
+      if (!appliedVoucher) {
+        if (!stripe || !elements) {
+          throw new Error('Stripe not initialized');
+        }
 
-      // Confirm the payment with Stripe
-      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement)!,
-        },
-      });
+        const response = await fetch(`${API_BASE}/stripe/create-payment-intent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: Math.round(planPriceNumber * 100), // Convert to cents
+            currency: 'usd',
+          }),
+        });
 
-      if (paymentError) {
-        setError(paymentError.message || 'Payment failed');
-      } else if (paymentIntent.status === 'succeeded') {
-        setSuccess(true);
-        // Handle successful payment (e.g., update user subscription, redirect, etc.)
-        console.log('Payment successful:', paymentIntent);
+        if (!response.ok) {
+          throw new Error('Failed to create payment intent');
+        }
+
+        const { clientSecret } = await response.json();
+
+        // Confirm the payment with Stripe
+        const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: elements.getElement(CardElement)!,
+          },
+        });
+
+        if (paymentError) {
+          setError(paymentError.message || 'Payment failed');
+          return;
+        } else if (paymentIntent.status === 'succeeded') {
+          console.log('Payment successful:', paymentIntent);
+        }
       }
+
+      setWasFreeUpgrade(true);
+      setSuccess(true);
+      console.log('Tier updated successfully');
     } catch (err) {
-      setError('Payment failed. Please try again.');
-      console.error('Payment error:', err);
+      setError('Subscription failed. Please try again.');
+      console.error('Subscription error:', err);
     } finally {
       setLoading(false);
     }
@@ -229,7 +238,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
           </h2>
           <p className="text-primary-text-faded">
             {wasFreeUpgrade 
-              ? 'Your plan has been upgraded successfully.' 
+              ? `Your ${planTitle} has been activated successfully.${appliedCredits > 0 ? ` You now have $${appliedCredits} credits in your account.` : ''}` 
               : 'Your subscription has been activated.'
             }
           </p>
@@ -242,7 +251,9 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
     <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
       <h2 className="text-2xl font-semibold mb-6 text-foreground">Payment method</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {finalAmount > 0 && (
+        
+        {/* Stripe payment fields - only show when no voucher is applied */}
+        {!appliedVoucher && (
           <>
             <input
               type="text"
@@ -250,12 +261,13 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
               className="w-full border border-border p-3 rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
               value={form.name}
               onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-              required
+              required={!appliedVoucher}
             />
             <select 
               className="w-full border border-border p-3 rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
               value={form.country}
               onChange={(e) => setForm(prev => ({ ...prev, country: e.target.value }))}
+              required={!appliedVoucher}
             >
               <option>Pakistan</option>
             </select>
@@ -265,16 +277,14 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
               className="w-full border border-border p-3 rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
               value={form.address}
               onChange={(e) => setForm(prev => ({ ...prev, address: e.target.value }))}
-              required
+              required={!appliedVoucher}
             />
+            
+            {/* Stripe Card Element */}
+            <div className="border border-border p-3 rounded-lg">
+              <CardElement options={cardElementOptions} />
+            </div>
           </>
-        )}
-        
-        {/* Stripe Card Element - only show when payment is required */}
-        {finalAmount > 0 && (
-          <div className="border border-border p-3 rounded-lg">
-            <CardElement options={cardElementOptions} />
-          </div>
         )}
 
         {error && (
@@ -285,12 +295,12 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
              
         {/* Promo section */}
         <div className="bg-card border border-border rounded-lg p-4">
-          <h2 className="font-semibold mb-4 text-foreground">Promo code</h2>
+          <h2 className="font-semibold mb-4 text-foreground">Voucher Code</h2>
           
-          {finalAmount === 0 && appliedVoucher && (
+          {appliedCredits > 0 && (
             <div className="mb-3 p-2 border border-green-700 rounded-lg">
               <p className="text-sm text-foreground font-medium">
-                Promo code applied successfully. No payment required. Click Subscribe to continue.
+                Voucher applied successfully! You'll receive ${appliedCredits} credits.
               </p>
             </div>
           )}
@@ -299,7 +309,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
             <div className="flex flex-row gap-2">
               <input
                 type="text"
-                placeholder="Enter promo code"
+                placeholder="Enter voucher code"
                 className="flex-1 border border-border p-2 rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
@@ -319,10 +329,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
               <div>
                 <p className="text-sm font-medium text-foreground">{appliedVoucher.code}</p>
                 <p className="text-xs text-primary-text-faded">
-                  {appliedVoucher.voucherType === 'percentage' 
-                    ? `${appliedVoucher.value}% discount applied` 
-                    : `$${appliedVoucher.value} off applied`
-                  }
+                  Tier {appliedVoucher.tier} - ${appliedVoucher.credits} credits
                 </p>
               </div>
               <button
@@ -341,11 +348,15 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
           disabled={loading}
           className="w-full py-2 px-4 rounded-xl bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Processing...' : finalAmount === 0 ? 'Subscribe' : `Pay $${finalAmount.toFixed(2)}`}
+          {loading ? 'Processing...' : 'Subscribe'}
         </button>
  
         <p className="text-xs text-primary-text-faded mt-2">
-          By providing your payment information, you allow us to charge your card in the amount above and monthly until you cancel in accordance with our terms. You can cancel at any time.
+          {appliedVoucher ? (
+            `By clicking Subscribe, you agree to activate your ${planTitle} subscription. You will receive $${appliedCredits} credits in your account.`
+          ) : (
+            `By providing your payment information, you allow us to charge your card in the amount above and monthly until you cancel in accordance with our terms. You can cancel at any time.`
+          )}
         </p>
       </form>
     </div>
@@ -355,7 +366,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 interface PaymentFormProps {
   planPrice: string;
   planTitle: string;
-  onVoucherApplied?: (voucher: VoucherData | null, discount: number) => void;
+  onVoucherApplied?: (voucher: VoucherData | null, credits: number) => void;
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ planPrice, planTitle, onVoucherApplied }) => {

@@ -112,7 +112,7 @@ export function AppSidebar() {
     if (user) {
       fetchTokenInfo();
     }
-  }, [user]);
+  }, [user, user?.creditsPerMonth]);
 
   const toggleSection = (title: string) => {
     setOpenSections(prev => ({
