@@ -57,6 +57,20 @@ export class UserService {
     }
   }
 
+  async updateUserTier(userId: string, tier: 1 | 2 | 3): Promise<IUser | null> {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId, 
+        { creditTier: tier }, 
+        { new: true }
+      );
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user tier:', error);
+      return null;
+    }
+  }
+
   async deleteUser(userId: string): Promise<boolean> {
     try {
       await User.findByIdAndDelete(userId);

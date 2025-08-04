@@ -158,4 +158,31 @@ router.put("/:id/plan", authMiddleware, async (req, res): Promise<any> => {
   }
 });
 
+router.put("/:id/tier", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  const { tier } = req.body;
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    if (![1, 2, 3].includes(tier)) {
+      return res.status(400).json({ message: "Invalid tier. Must be 1, 2, or 3" });
+    }
+    
+    const updatedUser = await userService.updateUserTier(userId, tier);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found or update failed" });
+    }
+    
+    const { password, _id, ...userData } = updatedUser.toObject();
+    res.json({ id: _id, ...userData });
+  } catch (error) {
+    console.error("Error updating user tier:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;

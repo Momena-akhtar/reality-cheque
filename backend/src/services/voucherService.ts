@@ -219,6 +219,14 @@ export class VoucherService {
         return { success: false, message: 'Voucher cannot be used' };
       }
 
+      // Add credits to user's account
+      const User = require('mongoose').model('User');
+      await User.findByIdAndUpdate(
+        userId,
+        { $inc: { creditsPerMonth: voucher.credits } },
+        { new: true }
+      );
+
       await voucher.save();
       return { success: true, message: 'Voucher used successfully', credits: voucher.credits };
     } catch (error) {
