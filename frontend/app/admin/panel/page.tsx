@@ -89,16 +89,13 @@ interface ChatDetails {
 interface Voucher {
   _id: string;
   code: string;
-  voucherType: 'percentage' | 'credits';
-  value: number;
+  tier: 1 | 2 | 3;
+  credits: number;
   maxUses: number;
   usedCount: number;
   usedBy: string[];
-  validFrom: string;
-  validUntil: string;
   isActive: boolean;
   description?: string;
-  applicablePlans: string[];
   createdAt: string;
   updatedAt: string;
   createdBy: {
@@ -168,13 +165,10 @@ export default function AdminPanel() {
 
   const [voucherForm, setVoucherForm] = useState({
     code: '',
-    voucherType: 'percentage' as 'percentage' | 'credits',
-    value: 0,
+    tier: 1 as 1 | 2 | 3,
+    credits: 1,
     maxUses: 100,
-    validFrom: new Date().toISOString().split('T')[0],
-    validUntil: '',
     description: '',
-    applicablePlans: ['pro'] as string[],
     isActive: true
   });
 
@@ -434,13 +428,10 @@ export default function AdminPanel() {
         setEditingVoucher(null);
         setVoucherForm({ 
           code: '', 
-          voucherType: 'percentage', 
-          value: 0, 
+          tier: 1, 
+          credits: 1, 
           maxUses: 100, 
-          validFrom: new Date().toISOString().split('T')[0],
-          validUntil: '',
           description: '',
-          applicablePlans: ['pro'],
           isActive: true 
         });
         fetchData();
@@ -507,13 +498,10 @@ export default function AdminPanel() {
     setEditingVoucher(voucher);
     setVoucherForm({
       code: voucher.code,
-      voucherType: voucher.voucherType,
-      value: voucher.value,
+      tier: voucher.tier,
+      credits: voucher.credits,
       maxUses: voucher.maxUses,
-      validFrom: voucher.validFrom.split('T')[0],
-      validUntil: voucher.validUntil.split('T')[0],
       description: voucher.description || '',
-      applicablePlans: voucher.applicablePlans,
       isActive: voucher.isActive
     });
     setShowVoucherModal(true);
@@ -980,13 +968,10 @@ export default function AdminPanel() {
                   setEditingVoucher(null);
                   setVoucherForm({ 
                     code: '', 
-                    voucherType: 'percentage', 
-                    value: 0, 
+                    tier: 1, 
+                    credits: 1, 
                     maxUses: 100, 
-                    validFrom: new Date().toISOString().split('T')[0],
-                    validUntil: '',
                     description: '',
-                    applicablePlans: ['pro'],
                     isActive: true 
                   });
                   setShowVoucherModal(true);
@@ -1006,8 +991,8 @@ export default function AdminPanel() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Code</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Value</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Usage</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Valid Until</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Plans</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Expiry</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Tier</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">Actions</th>
                     </tr>
@@ -1023,22 +1008,20 @@ export default function AdminPanel() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           <div>
-                            {voucher.voucherType === 'percentage' ? `${voucher.value}%` : `$${voucher.value} credits`}
+                            Tier {voucher.tier} - ${voucher.credits} credits
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           {voucher.usedCount} / {voucher.maxUses}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
-                          {new Date(voucher.validUntil).toLocaleDateString()}
+                          -
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                           <div className="flex flex-wrap gap-1">
-                            {voucher.applicablePlans.map((plan) => (
-                              <span key={plan} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-700/20 text-foreground border border-green-700">
-                                {plan}
-                              </span>
-                            ))}
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-700/20 text-foreground border border-green-700">
+                              Tier {voucher.tier}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1261,36 +1244,33 @@ export default function AdminPanel() {
               {/* Voucher Configuration */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Voucher Type</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Tier</label>
                   <select
-                    value={voucherForm.voucherType}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, voucherType: e.target.value as 'percentage' | 'credits' })}
+                    value={voucherForm.tier}
+                    onChange={(e) => {
+                      const tier = Number(e.target.value) as 1 | 2 | 3;
+                      setVoucherForm({ ...voucherForm, tier, credits: tier });
+                    }}
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                   >
-                    <option value="percentage">Percentage Discount (%)</option>
-                    <option value="credits">Dollar Credits ($)</option>
+                    <option value={1}>Tier 1 - $1 credits</option>
+                    <option value={2}>Tier 2 - $2 credits</option>
+                    <option value={3}>Tier 3 - $3 credits</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    {voucherForm.voucherType === 'percentage' ? 'Percentage (%)' : 'Credit Amount ($)'}
-                  </label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Credits</label>
                   <input
                     type="number"
-                    value={voucherForm.value === 0 ? '' : voucherForm.value}
-                    onChange={(e) => {
-                      const inputValue = e.target.value;
-                      const numValue = inputValue === '' ? 0 : Number(inputValue);
-                      setVoucherForm({ ...voucherForm, value: numValue });
-                    }}
+                    value={voucherForm.credits}
+                    disabled
                     className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     required
-                    min="0"
-                    step="0.01"
-                    max={voucherForm.voucherType === 'percentage' ? '100' : undefined}
-                    placeholder={voucherForm.voucherType === 'percentage' ? 'e.g., 20 for 20%' : 'e.g., 50 for $50 credits'}
+                    min="1"
+                    max="3"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Credits automatically match the tier</p>
                 </div>
               </div>
 
@@ -1312,80 +1292,8 @@ export default function AdminPanel() {
                 />
               </div>
 
-              {/* Validity Period */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Valid From</label>
-                  <input
-                    type="date"
-                    value={voucherForm.validFrom}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, validFrom: e.target.value })} 
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Valid Until</label>
-                  <input
-                    type="date"
-                    value={voucherForm.validUntil}
-                    onChange={(e) => setVoucherForm({ ...voucherForm, validUntil: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Plans and Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Applicable Plans</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={voucherForm.applicablePlans.includes('pro')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setVoucherForm({ 
-                              ...voucherForm, 
-                              applicablePlans: [...voucherForm.applicablePlans, 'pro'] 
-                            });
-                          } else {
-                            setVoucherForm({ 
-                              ...voucherForm, 
-                              applicablePlans: voucherForm.applicablePlans.filter(p => p !== 'pro') 
-                            });
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      Pro Plan
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={voucherForm.applicablePlans.includes('enterprise')}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setVoucherForm({ 
-                              ...voucherForm, 
-                              applicablePlans: [...voucherForm.applicablePlans, 'enterprise'] 
-                            });
-                          } else {
-                            setVoucherForm({ 
-                              ...voucherForm, 
-                              applicablePlans: voucherForm.applicablePlans.filter(p => p !== 'enterprise') 
-                            });
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      Enterprise Plan
-                    </label>
-                  </div>
-                </div>
+              {/* Status */}
+              <div>
 
                 <div className="flex items-center">
                   <input
@@ -1439,9 +1347,9 @@ export default function AdminPanel() {
               </p>
               <div className="bg-card border border-border rounded-lg p-3">
                 <div className="text-xs text-primary-text-faded space-y-1">
-                  <p><span className="font-medium">Type:</span> {voucherToDelete.voucherType === 'percentage' ? `${voucherToDelete.value}% discount` : `$${voucherToDelete.value} credits`}</p>
+                  <p><span className="font-medium">Type:</span> Tier {voucherToDelete.tier} - ${voucherToDelete.credits} credits</p>
                   <p><span className="font-medium">Usage:</span> {voucherToDelete.usedCount} / {voucherToDelete.maxUses}</p>
-                  <p><span className="font-medium">Valid until:</span> {new Date(voucherToDelete.validUntil).toLocaleDateString()}</p>
+                  
                 </div>
               </div>
             </div>
