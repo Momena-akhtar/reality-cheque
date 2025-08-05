@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
+import { TokenUsageWidget } from "./components/token-usage-widget";
 
 const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
           <AuthProvider>
             <AdminAuthProvider>
               {children}
+              <TokenUsageWidget />
               <Toaster />
             </AdminAuthProvider>
           </AuthProvider>
