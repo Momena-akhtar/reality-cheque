@@ -19,6 +19,7 @@ export interface GenerateResponse {
   // New fields for structured responses
   structuredResponse?: StructuredFeatureResponse;
   hasFeatures?: boolean;
+  followUpQuestions?: string[]; // Follow-up questions extracted from features
 }
 
 // New types for structured feature responses

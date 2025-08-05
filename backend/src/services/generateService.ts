@@ -199,7 +199,8 @@ class GenerateService {
     }
     
     prompt += `IMPORTANT: Your response must be a valid JSON object where each key is a feature name and each value is the generated content for that feature. `;
-    prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here"}\n\n`;
+    prompt += `Additionally, include a "Follow-up Questions" feature that contains 3-5 thoughtful questions to help improve the content. `;
+    prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here", "Follow-up Questions": "1. Would you like me to make the headline more attention-grabbing?\\n2. Should I adjust the tone?\\n3. Would you like more specific details?"}\n\n`;
     prompt += `Response (JSON only):`;
 
     return prompt;
@@ -253,6 +254,13 @@ class GenerateService {
       prompt += `Use the user's agency information to personalize the response.\n\n`;
     }
     
+    prompt += `After your main response, please add 3-5 follow-up questions that would help improve or refine the content. `;
+    prompt += `Format them like this:\n\n`;
+    prompt += `---\n\n`;
+    prompt += `**Follow-up Questions:**\n`;
+    prompt += `1. [Your first question]\n`;
+    prompt += `2. [Your second question]\n`;
+    prompt += `3. [Your third question]\n\n`;
     prompt += `Response:`;
 
     return prompt;
@@ -320,12 +328,30 @@ class GenerateService {
 
       // Parse structured response if model has features
       let structuredResponse = undefined;
+      let followUpQuestions: string[] = [];
+      
       if (hasFeatures) {
         try {
           // Try to extract JSON from the response
           const jsonMatch = responseText.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
-            structuredResponse = JSON.parse(jsonMatch[0]);
+            const parsedResponse = JSON.parse(jsonMatch[0]);
+            
+            // Extract follow-up questions if they exist as a feature
+            if (parsedResponse["Follow-up Questions"]) {
+              const questionsText = parsedResponse["Follow-up Questions"];
+              followUpQuestions = questionsText
+                .split('\n')
+                .filter((line: string) => line.trim().match(/^\d+\./))
+                .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+                .filter((q: string) => q.length > 0);
+              
+              // Remove follow-up questions from the structured response
+              const { "Follow-up Questions": _, ...featuresWithoutQuestions } = parsedResponse;
+              structuredResponse = featuresWithoutQuestions;
+            } else {
+              structuredResponse = parsedResponse;
+            }
           } else {
             // Fallback: create a simple structure with the full response
             structuredResponse = { "Complete Response": responseText };
@@ -334,6 +360,21 @@ class GenerateService {
           console.error('Error parsing structured response:', error);
           // Fallback: create a simple structure with the full response
           structuredResponse = { "Complete Response": responseText };
+        }
+      } else {
+        // For non-feature models, extract follow-up questions from the response
+        try {
+          const followUpMatch = responseText.match(/\*\*Follow-up Questions:\*\*\n([\s\S]*?)(?=\n\n|$)/);
+          if (followUpMatch) {
+            const questionsText = followUpMatch[1];
+            followUpQuestions = questionsText
+              .split('\n')
+              .filter((line: string) => line.trim().match(/^\d+\./))
+              .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+              .filter((q: string) => q.length > 0);
+          }
+        } catch (error) {
+          console.error('Error extracting follow-up questions:', error);
         }
       }
 
@@ -362,6 +403,7 @@ class GenerateService {
         outputTokens: outputTokens,
         structuredResponse,
         hasFeatures,
+        followUpQuestions,
       };
 
     } catch (error) {
