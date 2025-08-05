@@ -98,7 +98,7 @@ export interface SessionHistory {
 export interface UserCredits {
   hasCredits: boolean;
   creditsRemaining: number; // Dollar amount remaining
-  plan: 'free' | 'pro' | 'enterprise';
+  tier: 'tier1' | 'tier2' | 'tier3';
   creditsInDollars?: string; // Formatted dollar amount
 }
 
@@ -133,7 +133,7 @@ export interface UserContext {
   offer?: string;
   caseStudies?: string;
   servicePricing?: string;
-  plan: 'free' | 'pro' | 'enterprise';
+  tier: 'tier1' | 'tier2' | 'tier3';
   creditsPerMonth: number;
 }
 

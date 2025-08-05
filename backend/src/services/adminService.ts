@@ -129,15 +129,15 @@ export class AdminService {
       const users = await User.find({}, 'plan');
       let revenue = 0;
       users.forEach(user => {
-        switch (user.plan) {
-          case 'pro':
-            revenue += 29; // $29/month
+        switch (user.tier) {
+          case 'tier2':
+            revenue += 2; // $2 one-time
             break;
-          case 'enterprise':
-            revenue += 99; // $99/month
+          case 'tier3':
+            revenue += 3; // $3 one-time
             break;
           default:
-            revenue += 0; // Free plan
+            revenue += 1; // Tier 1 is $1 one-time
         }
       });
 

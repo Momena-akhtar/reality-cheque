@@ -140,7 +140,7 @@ router.get('/credits', authMiddleware, async (req, res): Promise<any> => {
       data: {
         hasCredits,
         creditsRemaining: user?.creditsPerMonth || 0,
-        plan: user?.plan || 'free',
+        tier: user?.tier || 'tier1',
         creditsInDollars: `$${(user?.creditsPerMonth || 0).toFixed(2)}`
       },
       message: 'Credits information retrieved successfully'

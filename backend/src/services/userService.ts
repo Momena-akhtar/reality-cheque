@@ -43,25 +43,11 @@ export class UserService {
     }
   }
 
-  async updateUserPlan(userId: string, plan: "free" | "pro" | "enterprise"): Promise<IUser | null> {
+  async updateUserTier(userId: string, tier: "tier1" | "tier2" | "tier3"): Promise<IUser | null> {
     try {
       const updatedUser = await User.findByIdAndUpdate(
         userId, 
-        { plan }, 
-        { new: true }
-      );
-      return updatedUser;
-    } catch (error) {
-      console.error('Error updating user plan:', error);
-      return null;
-    }
-  }
-
-  async updateUserTier(userId: string, tier: 1 | 2 | 3): Promise<IUser | null> {
-    try {
-      const updatedUser = await User.findByIdAndUpdate(
-        userId, 
-        { creditTier: tier }, 
+        { tier }, 
         { new: true }
       );
       return updatedUser;

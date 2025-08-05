@@ -131,33 +131,6 @@ router.delete("/:id", authMiddleware, async (req, res): Promise<any> => {
   }
 });
 
-router.put("/:id/plan", authMiddleware, async (req, res): Promise<any> => {
-  const userId = req.params.id;
-  const { plan } = req.body;
-  
-  try {
-    const authenticatedUser = (req as any).user;
-    if (authenticatedUser._id.toString() !== userId) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-    
-    if (!["free", "pro", "enterprise"].includes(plan)) {
-      return res.status(400).json({ message: "Invalid plan" });
-    }
-    
-    const updatedUser = await userService.updateUserPlan(userId, plan);
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found or update failed" });
-    }
-    
-    const { password, _id, ...userData } = updatedUser.toObject();
-    res.json({ id: _id, ...userData });
-  } catch (error) {
-    console.error("Error updating user plan:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
 router.put("/:id/tier", authMiddleware, async (req, res): Promise<any> => {
   const userId = req.params.id;
   const { tier } = req.body;
@@ -168,8 +141,8 @@ router.put("/:id/tier", authMiddleware, async (req, res): Promise<any> => {
       return res.status(403).json({ message: "Access denied" });
     }
     
-    if (![1, 2, 3].includes(tier)) {
-      return res.status(400).json({ message: "Invalid tier. Must be 1, 2, or 3" });
+    if (!["tier1", "tier2", "tier3"].includes(tier)) {
+      return res.status(400).json({ message: "Invalid tier. Must be tier1, tier2, or tier3" });
     }
     
     const updatedUser = await userService.updateUserTier(userId, tier);
@@ -184,5 +157,7 @@ router.put("/:id/tier", authMiddleware, async (req, res): Promise<any> => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+
 
 export default router;

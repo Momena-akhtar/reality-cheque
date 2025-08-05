@@ -12,6 +12,9 @@ const FIXED_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, sameSite: 'lax' as const };
 // Register handler
 const registerHandler: express.RequestHandler = async (req, res) => {
   const { username, email, password, role, agencyName, offer, caseStudies, servicePricing } = req.body;
+  
+  console.log('Registration attempt:', { username, email, role, agencyName, offer, caseStudies, servicePricing });
+  
   if (!email || !password || !role) {
     res.status(400).json({ message: 'Email, password, and role are required' });
     return;
@@ -55,7 +58,8 @@ const registerHandler: express.RequestHandler = async (req, res) => {
       } 
     });
   } catch (err) {
-    res.status(500).json({ message: 'Registration failed', error: err });
+    console.error('Registration error:', err);
+    res.status(500).json({ message: 'Registration failed', error: err instanceof Error ? err.message : 'Unknown error' });
   }
 };
 
