@@ -136,9 +136,14 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
         
         // Refresh user data to update credits in sidebar and usage history
         await refreshUser();
+        
+        // Skip tier upgrade since voucher already provides the tier credits
+        setWasFreeUpgrade(true);
+        setSuccess(true);
+        return;
       }
 
-      // Get current user info to update their tier
+      // Only update tier if no voucher was applied
       const userRes = await fetch(`${API_BASE}/auth/me`, {
         credentials: 'include',
       });

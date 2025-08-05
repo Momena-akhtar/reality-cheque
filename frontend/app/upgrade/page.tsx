@@ -18,7 +18,7 @@ export default function Upgrade() {
       router.push('/signin');
     }
   }, [user, authLoading, router]);
-
+  
   // Show loading while checking authentication
   if (authLoading) {
     return (
