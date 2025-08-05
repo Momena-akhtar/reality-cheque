@@ -5,6 +5,7 @@ import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
 import FeatureSections from "../components/ui/feature-sections";
+import FollowUpQuestions from "../components/ui/follow-up-questions";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ interface Message {
   tokenCount?: number;
   structuredResponse?: { [key: string]: string };
   hasFeatures?: boolean;
+  followUpQuestions?: string[];
 }
 
 interface Model {
@@ -214,6 +216,7 @@ function ChatPageContent() {
               tokenCount: number;
               structuredResponse?: { [key: string]: string };
               hasFeatures?: boolean;
+              followUpQuestions?: string[];
             }) => ({
               id: msg.id,
               role: msg.role,
@@ -221,7 +224,8 @@ function ChatPageContent() {
               timestamp: new Date(msg.timestamp),
               tokenCount: msg.tokenCount,
               structuredResponse: msg.structuredResponse,
-              hasFeatures: msg.hasFeatures
+              hasFeatures: msg.hasFeatures,
+              followUpQuestions: msg.followUpQuestions
             })));
             setCurrentChatId(chatId);
           }
@@ -259,6 +263,11 @@ function ChatPageContent() {
 
   const handleShowHistory = () => {
     setShowHistory(true);
+  };
+
+  const handleFollowUpQuestion = async (question: string) => {
+    // Send the follow-up question as a user message
+    await handleSendMessage(question);
   };
 
   const handleRegenerateFeature = async (featureName: string, feedback: string) => {
@@ -373,7 +382,8 @@ function ChatPageContent() {
           content: data.data.response,
           timestamp: new Date(),
           structuredResponse: data.data.structuredResponse,
-          hasFeatures: data.data.hasFeatures
+          hasFeatures: data.data.hasFeatures,
+          followUpQuestions: data.data.followUpQuestions
         };
         
         setMessages(prev => [...prev, aiMessage]);
@@ -540,16 +550,34 @@ function ChatPageContent() {
                         }`}
                       >
                         {message.role === 'assistant' && message.hasFeatures && message.structuredResponse ? (
-                          <FeatureSections
-                            features={modelFeatures}
-                            structuredResponse={message.structuredResponse}
-                            onRegenerateFeature={handleRegenerateFeature}
-                            isRegenerating={regeneratingFeature}
-                          />
+                          <>
+                            <FeatureSections
+                              features={modelFeatures}
+                              structuredResponse={message.structuredResponse}
+                              onRegenerateFeature={handleRegenerateFeature}
+                              isRegenerating={regeneratingFeature}
+                            />
+                            {message.followUpQuestions && (
+                              <FollowUpQuestions
+                                questions={message.followUpQuestions}
+                                onQuestionClick={handleFollowUpQuestion}
+                                disabled={sending || userCredits <= 0.01}
+                              />
+                            )}
+                          </>
                         ) : (
-                          <div className="whitespace-pre-wrap">
-                            {message.role === 'assistant' ? cleanMarkdown(message.content) : message.content}
-                          </div>
+                          <>
+                            <div className="whitespace-pre-wrap">
+                              {message.role === 'assistant' ? cleanMarkdown(message.content) : message.content}
+                            </div>
+                            {message.role === 'assistant' && message.followUpQuestions && (
+                              <FollowUpQuestions
+                                questions={message.followUpQuestions}
+                                onQuestionClick={handleFollowUpQuestion}
+                                disabled={sending || userCredits <= 0.01}
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     </motion.div>

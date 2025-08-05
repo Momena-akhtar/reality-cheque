@@ -8,6 +8,7 @@ export interface IMessage extends Document {
     tokenCount: number;
     structuredResponse?: { [key: string]: string }; // For feature-based responses
     hasFeatures?: boolean;
+    followUpQuestions?: string[]; // For follow-up questions
 }
 
 const messageSchema = new Schema<IMessage>({
@@ -43,6 +44,10 @@ const messageSchema = new Schema<IMessage>({
   hasFeatures: {
     type: Boolean,
     default: false
+  },
+  followUpQuestions: {
+    type: [String],
+    default: undefined
   }
 }, {
   timestamps: true,
