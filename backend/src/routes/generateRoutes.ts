@@ -133,15 +133,19 @@ router.get('/credits', authMiddleware, async (req, res): Promise<any> => {
 
     // Get user details for credits info
     const User = require('mongoose').model('User');
-    const user = await User.findById(userId).select('creditsPerMonth plan');
+    const user = await User.findById(userId).select('totalCredits usedCredits tier');
+
+    const totalCredits = user?.totalCredits || 0.00;
+    const usedCredits = user?.usedCredits || 0.00;
+    const remainingCredits = totalCredits - usedCredits;
 
     res.json({
       success: true,
       data: {
         hasCredits,
-        creditsRemaining: user?.creditsPerMonth || 0,
+        creditsRemaining: remainingCredits,
         tier: user?.tier || 'tier1',
-        creditsInDollars: `$${(user?.creditsPerMonth || 0).toFixed(2)}`
+        creditsInDollars: `$${remainingCredits.toFixed(2)}`
       },
       message: 'Credits information retrieved successfully'
     });
