@@ -8,7 +8,7 @@ const voucherRouter: express.Router = express.Router();
 const validateVoucher: express.RequestHandler = async (req, res) => {
   try {
     const user = (req as any).user;
-    const { code } = req.body;
+    const { code, targetTier } = req.body;
 
     if (!code) {
       res.status(400).json({ message: 'Voucher code is required' });
@@ -17,7 +17,8 @@ const validateVoucher: express.RequestHandler = async (req, res) => {
 
     const result = await VoucherService.getInstance().validateVoucher(
       code,
-      user.id
+      user.id,
+      targetTier
     );
 
     if (result.valid) {

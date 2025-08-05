@@ -184,7 +184,7 @@ export class VoucherService {
     }
   }
 
-  async validateVoucher(code: string, userId: string): Promise<VoucherValidationResult> {
+  async validateVoucher(code: string, userId: string, targetTier?: string): Promise<VoucherValidationResult> {
     try {
       const result = await this.getVoucherByCode(code);
       if (!result.success || !result.voucher) {
@@ -196,6 +196,17 @@ export class VoucherService {
       
       if (!validation.valid) {
         return { valid: false, message: validation.message };
+      }
+
+      // Check if voucher is for the correct tier
+      if (targetTier) {
+        const voucherTier = `tier${voucher.tier}`;
+        if (voucherTier !== targetTier) {
+          return { 
+            valid: false, 
+            message: `This voucher is for ${voucherTier.toUpperCase()} but you're upgrading to ${targetTier.toUpperCase()}. Vouchers can only be used for their specific tier.` 
+          };
+        }
       }
 
       return { valid: true, voucher, credits: voucher.credits };
