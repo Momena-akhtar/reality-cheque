@@ -7,7 +7,6 @@ interface User {
   username: string;
   picture?: string;
   tier?: "tier1" | "tier2" | "tier3";
-  creditsPerMonth?: number;
   totalCredits?: number;
   usedCredits?: number;
   agencyName?: string;

@@ -102,10 +102,10 @@ export function TokenUsageWidget() {
 
   if (!user) return null;
 
-  // Don't show on admin pages or non-main pages
+  // Only show on the main page (/)
   if (typeof window !== 'undefined') {
     const pathname = window.location.pathname;
-    if (pathname.startsWith('/admin') || pathname !== '/') {
+    if (pathname !== '/') {
       return null;
     }
   }
