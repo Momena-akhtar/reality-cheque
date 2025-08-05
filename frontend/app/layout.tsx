@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Kumbh_Sans } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { TokenUsageWidget } from "./components/token-usage-widget";
+import { ThemeProvider } from "./components/ui/theme-provider";
 
 const kumbhSans = Kumbh_Sans({
     subsets: ["latin"],
@@ -33,12 +33,31 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-            <body className={`${kumbhSans.className} antialiased`}>
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            try {
+                                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                                    document.documentElement.classList.add('dark')
+                                } else {
+                                    document.documentElement.classList.remove('dark')
+                                }
+                            } catch (_) {}
+                        `,
+                    }}
+                />
+            </head>
+            <body
+                className={`${kumbhSans.className} antialiased`}
+                suppressHydrationWarning
+            >
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"
                     enableSystem={true}
+                    disableTransitionOnChange
                 >
                     <AuthProvider>
                         <AdminAuthProvider>
