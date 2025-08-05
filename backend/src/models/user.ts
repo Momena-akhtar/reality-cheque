@@ -7,7 +7,7 @@ export interface IUser extends Document {
   password: string;
   email: string;
   picture: string;
-  plan: "free" | "pro" | "enterprise";
+  tier: "tier1" | "tier2" | "tier3";
   creditsPerMonth?: number;
   agencyName?: string;
   offer?: string;
@@ -40,10 +40,10 @@ const userSchema = new Schema<IUser>({
     type: String, 
     default: "" 
   },
-  plan: { 
+  tier: { 
     type: String, 
-    enum: ["free", "pro", "enterprise"], 
-    default: "free" 
+    enum: ["tier1", "tier2", "tier3"], 
+    default: "tier1" 
   },
   creditsPerMonth: {
     type: Number,
