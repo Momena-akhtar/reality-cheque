@@ -8,6 +8,8 @@ interface User {
   picture?: string;
   tier?: "tier1" | "tier2" | "tier3";
   creditsPerMonth?: number;
+  totalCredits?: number;
+  usedCredits?: number;
   agencyName?: string;
   offer?: string;
   caseStudies?: string;
