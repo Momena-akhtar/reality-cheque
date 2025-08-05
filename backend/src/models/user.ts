@@ -8,7 +8,6 @@ export interface IUser extends Document {
   email: string;
   picture: string;
   tier: "tier1" | "tier2" | "tier3";
-  creditsPerMonth?: number;
   totalCredits: number;
   usedCredits: number;
   agencyName?: string;
@@ -47,13 +46,10 @@ const userSchema = new Schema<IUser>({
     enum: ["tier1", "tier2", "tier3"], 
     default: "tier1" 
   },
-  creditsPerMonth: {
-    type: Number,
-    default: 10.00, // $10.00 worth of credits
-  },
+
   totalCredits: {
     type: Number,
-    default: 10.00, // Initial $10.00 credits on signup
+    default: 0.00, // No free credits on signup
   },
   usedCredits: {
     type: Number,
