@@ -462,9 +462,22 @@ class GenerateService {
   async updateUserCredits(userId: string, costInDollars: number): Promise<void> {
     try {
       const User = mongoose.model('User');
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const currentUsedCredits = user.usedCredits || 0.00;
+      const newUsedCredits = currentUsedCredits + costInDollars;
+
+      // Check if user has enough credits
+      if (newUsedCredits > user.totalCredits) {
+        throw new Error('Insufficient credits');
+      }
+
       await User.findByIdAndUpdate(
         userId,
-        { $inc: { creditsPerMonth: -costInDollars } },
+        { usedCredits: newUsedCredits },
         { new: true }
       );
     } catch (error) {
@@ -477,7 +490,15 @@ class GenerateService {
     try {
       const User = mongoose.model('User');
       const user = await User.findById(userId);
-      return user ? user.creditsPerMonth > 0.01 : false; // At least $0.01 remaining
+      if (!user) {
+        return false;
+      }
+
+      const totalCredits = user.totalCredits || 0.00;
+      const usedCredits = user.usedCredits || 0.00;
+      const remainingCredits = totalCredits - usedCredits;
+
+      return remainingCredits > 0.01; // At least $0.01 remaining
     } catch (error) {
       console.error('Error checking user credits:', error);
       return false;

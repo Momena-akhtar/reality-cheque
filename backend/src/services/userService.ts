@@ -45,14 +45,68 @@ export class UserService {
 
   async updateUserTier(userId: string, tier: "tier1" | "tier2" | "tier3"): Promise<IUser | null> {
     try {
+      // Get current user to calculate credit addition
+      const currentUser = await User.findById(userId);
+      if (!currentUser) {
+        return null;
+      }
+
+      // Calculate credits based on tier
+      const tierCredits = parseInt(tier.replace('tier', ''));
+      
+      // Check if this is the user's first tier upgrade (they still have their initial $10)
+      const hasInitialCredits = currentUser.totalCredits === 10.00 && currentUser.usedCredits === 0.00;
+      
+      let newTotalCredits: number;
+      
+      if (hasInitialCredits) {
+        // First upgrade: add tier credits to initial $10
+        newTotalCredits = 10.00 + tierCredits;
+      } else {
+        // Subsequent upgrades: replace credits with tier amount only
+        newTotalCredits = tierCredits;
+        // Reset used credits since they're getting new credits
+        await User.findByIdAndUpdate(userId, { usedCredits: 0.00 });
+      }
+
       const updatedUser = await User.findByIdAndUpdate(
         userId, 
-        { tier }, 
+        { 
+          tier,
+          totalCredits: newTotalCredits
+        }, 
         { new: true }
       );
       return updatedUser;
     } catch (error) {
       console.error('Error updating user tier:', error);
+      return null;
+    }
+  }
+
+  async updateUserCredits(userId: string, creditsUsed: number): Promise<IUser | null> {
+    try {
+      const currentUser = await User.findById(userId);
+      if (!currentUser) {
+        return null;
+      }
+
+      const currentUsedCredits = currentUser.usedCredits || 0.00;
+      const newUsedCredits = currentUsedCredits + creditsUsed;
+
+      // Ensure used credits don't exceed total credits
+      if (newUsedCredits > currentUser.totalCredits) {
+        throw new Error('Insufficient credits');
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { usedCredits: newUsedCredits },
+        { new: true }
+      );
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user credits:', error);
       return null;
     }
   }
@@ -208,29 +262,35 @@ export class UserService {
 
   async getUserTokenInfo(userId: string) {
     try {
-      // Get user's remaining credits in dollars
       const user = await User.findById(userId);
-      const remainingCreditsInDollars = user?.creditsPerMonth || 0;
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
 
-      // Calculate total tokens allocated ($10 = 1,000,000 tokens based on O3 pricing)
-      // Average cost per token: ($0.005 + $0.015) / 2 = $0.01 per 1K tokens = $0.00001 per token
-      const totalTokensAllocated = 1000000; // 1M tokens for $10
-      const usedTokensInDollars = 10 - remainingCreditsInDollars;
-      const usedTokens = Math.round(usedTokensInDollars * 100000); // Convert dollars to tokens
-      const remainingTokens = Math.max(0, totalTokensAllocated - usedTokens);
+      // Use actual user credit data
+      const totalCredits = user.totalCredits || 10.00;
+      const usedCredits = user.usedCredits || 0.00;
+      const remainingCredits = totalCredits - usedCredits;
+
+      // Convert credits to tokens (1 credit = $1 = 1,000,000 tokens based on O3 pricing)
+      // $0.01 per 1K tokens, so $10 = 1M tokens
+      const tokensPerCredit = 1000000;
+      const totalTokens = Math.round(totalCredits * tokensPerCredit);
+      const usedTokens = Math.round(usedCredits * tokensPerCredit);
+      const remainingTokens = Math.round(remainingCredits * tokensPerCredit);
 
       // Calculate usage percentage
-      const usagePercentage = Math.min(100, (usedTokens / totalTokensAllocated) * 100);
+      const usagePercentage = totalCredits > 0 ? (usedCredits / totalCredits) * 100 : 0;
 
       return {
         success: true,
         data: {
-          totalTokens: totalTokensAllocated,
+          totalTokens: totalTokens,
           usedTokens: usedTokens,
           remainingTokens: remainingTokens,
           usagePercentage: Math.round(usagePercentage * 100) / 100,
-          remainingCreditsInDollars: remainingCreditsInDollars,
-          usedCreditsInDollars: usedTokensInDollars
+          remainingCreditsInDollars: remainingCredits,
+          usedCreditsInDollars: usedCredits
         }
       };
     } catch (error) {

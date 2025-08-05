@@ -234,7 +234,7 @@ export class VoucherService {
       const User = require('mongoose').model('User');
       await User.findByIdAndUpdate(
         userId,
-        { $inc: { creditsPerMonth: voucher.credits } },
+        { $inc: { totalCredits: voucher.credits } },
         { new: true }
       );
 
