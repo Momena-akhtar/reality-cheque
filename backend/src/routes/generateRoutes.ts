@@ -278,7 +278,9 @@ export default router;
 router.get('/chats', authMiddleware, async (req, res): Promise<any> => {
   try {
     const userId = (req as any).user.id;
-    const chats = await generateService.getUserChats(userId);
+    const { modelId } = req.query;
+    
+    const chats = await generateService.getUserChats(userId, modelId as string);
 
     // Get message counts for each chat
     const chatsWithMessageCounts = await Promise.all(

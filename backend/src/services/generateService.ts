@@ -548,9 +548,16 @@ class GenerateService {
   }
 
   // Get user's chat sessions
-  async getUserChats(userId: string): Promise<any[]> {
+  async getUserChats(userId: string, modelId?: string): Promise<any[]> {
     try {
-      const chats = await Chat.find({ userId, isActive: true })
+      const query: any = { userId, isActive: true };
+      
+      // If modelId is provided, filter by model
+      if (modelId) {
+        query.modelId = modelId;
+      }
+
+      const chats = await Chat.find(query)
         .populate('modelId', 'name description')
         .sort({ lastActivity: -1 })
         .lean();
