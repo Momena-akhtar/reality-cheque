@@ -62,7 +62,7 @@ export default function UserIcon() {
                                     <span className="font-medium">Email:</span> {user?.email || 'N/A'}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    <span className="font-medium">Plan:</span> {user?.plan || 'free'}
+                                    <span className="font-medium">Tier:</span> {user?.tier || 'tier1'}
                                 </p>
                             </div>
                         </div>

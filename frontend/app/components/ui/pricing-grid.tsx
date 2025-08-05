@@ -22,10 +22,6 @@ const PricingGrid = () => {
 
   return (
     <section className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Choose Your Credit Package</h1>
-      </div>
-      
       <div className="flex flex-col md:flex-row items-center justify-center gap-4 max-w-6xl w-full">
         {Object.values(plans).map((plan) => (
           <PricingCard

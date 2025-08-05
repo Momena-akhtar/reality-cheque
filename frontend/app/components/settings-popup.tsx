@@ -113,22 +113,22 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const getPlanColor = (str: string | undefined | null) => {
+  const getTierColor = (str: string | undefined | null) => {
     switch (str?.toLowerCase()) {
-      case "free":
+      case "tier1":
         return "text-green-700";
-      case "pro":
+      case "tier2":
         return "text-yellow-700";
-      case "enterprise":
+      case "tier3":
         return "text-blue-700";
       default:
         return "text-primary";
     }
   };
 
-  const capitalize = (str: string | undefined | null) => {
+  const formatTierName = (str: string | undefined | null) => {
     if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
+    return str.charAt(0).toUpperCase() + str.slice(1, 4) + " " + str.slice(4);
   };
 
   if (!user) {
@@ -231,16 +231,16 @@ const SettingsPopup = ({ onClose }: { onClose: () => void }) => {
           <div className='space-y-4'>
             <div className='flex justify-between items-center'>
               <p className='flex gap-1 text-sm text-primary-text-faded'>
-                Plan:{" "}
-                <span className={getPlanColor(user?.plan)}>
-                  {capitalize(user?.plan)}
+                Tier:{" "}
+                <span className={getTierColor(user?.tier)}>
+                  {formatTierName(user?.tier)}
                 </span>
               </p>
               <button 
                 className="flex text-sm hover:underline py-1 cursor-pointer text-foreground rounded-lg w-fit"
                 onClick={() => router.push("/upgrade")}
               >
-                Upgrade 
+                Change Tier
               </button>
             </div>
                 <div className='flex justify-between items-center'>

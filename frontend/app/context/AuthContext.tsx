@@ -6,7 +6,7 @@ interface User {
   email: string;
   username: string;
   picture?: string;
-  plan?: "free" | "pro" | "enterprise";
+  tier?: "tier1" | "tier2" | "tier3";
   creditsPerMonth?: number;
   agencyName?: string;
   offer?: string;
@@ -21,7 +21,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   updateUser: (userId: string, updateData: Partial<User>) => Promise<boolean>;
-  updateUserPlan: (userId: string, plan: "free" | "pro" | "enterprise") => Promise<boolean>;
+  updateUserTier: (userId: string, tier: "tier1" | "tier2" | "tier3") => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   refreshUser: () => Promise<void>;
   loading: boolean;
@@ -98,15 +98,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateUserPlan = async (userId: string, plan: "free" | "pro" | "enterprise"): Promise<boolean> => {
+  const updateUserTier = async (userId: string, tier: "tier1" | "tier2" | "tier3"): Promise<boolean> => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/plan`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/tier`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ tier }),
       });
 
       if (res.ok) {
@@ -114,11 +114,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(updatedUser);
         return true;
       } else {
-        console.error("Failed to update user plan:", await res.text());
+        console.error("Failed to update user tier:", await res.text());
         return false;
       }
     } catch (error) {
-      console.error("Error updating user plan:", error);
+      console.error("Error updating user tier:", error);
       return false;
     }
   };
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser, 
       logout, 
       updateUser, 
-      updateUserPlan,
+      updateUserTier,
       deleteUser, 
       refreshUser, 
       loading 

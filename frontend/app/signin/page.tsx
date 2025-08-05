@@ -10,6 +10,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function SignInPage() {
     const [isSignUp, setIsSignUp] = useState(false);
+    const [signupStep, setSignupStep] = useState(1);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
@@ -23,6 +24,25 @@ export default function SignInPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (isSignUp && signupStep === 1) {
+            // Validate first step
+            if (!username || !email || !password) {
+                toast.error('Please fill in all required fields');
+                return;
+            }
+            setSignupStep(2);
+            return;
+        }
+        
+        if (isSignUp && signupStep === 2) {
+            // Validate second step
+            if (!agencyName) {
+                toast.error('Please provide your agency name');
+                return;
+            }
+        }
+        
         setLoading(true);
         try {
             let url = `${API_BASE}/auth/${isSignUp ? 'register' : 'login'}`;
@@ -51,7 +71,11 @@ export default function SignInPage() {
                 toast.success(isSignUp ? 'Registration successful!' : 'Login successful!');
                 // Refresh user data from backend to get complete user info
                 await refreshUser();
-                router.push('/');
+                if (isSignUp) {
+                    router.push('/upgrade');
+                } else {
+                    router.push('/');
+                }
             }
         } catch (err) {
             toast.error('Network error. Please try again.');
@@ -62,7 +86,7 @@ export default function SignInPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-full max-w-[500px] shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
+            <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-full max-w-[600px] shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
                     <Link href="/" className="text-gray-500 hover:text-gray-700 cursor-pointer">
@@ -72,8 +96,58 @@ export default function SignInPage() {
                     </Link>
                 </div>
                 
+                {/* Steps Navigation for Signup */}
+                {isSignUp && (
+                    <div className="flex items-center justify-center mb-6">
+                        <div className="flex items-center space-x-4">
+                            <div className={`flex items-center ${signupStep >= 1 ? 'text-foreground' : 'text-gray-400'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 1 ? 'border-primary bg-primary text-white' : 'border-gray-300'}`}>
+                                    1
+                                </div>
+                                <span className="ml-2 text-sm font-medium">Personal Info</span>
+                            </div>
+                            <div className={`w-8 h-0.5 ${signupStep >= 2 ? 'bg-background' : 'bg-gray-300'}`}></div>
+                            <div className={`flex items-center ${signupStep >= 2 ? 'text-primary' : 'text-gray-400'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 2 ? 'border-primary bg-primary text-white' : 'border-gray-300'}`}>
+                                    2
+                                </div>
+                                <span className="ml-2 text-sm font-medium">Agency Info</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {isSignUp && (
+                    {/* Sign In Mode - Only Email and Password */}
+                    {!isSignUp && (
+                        <>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+                    
+                    {/* Sign Up Step 1 - Personal Info */}
+                    {isSignUp && signupStep === 1 && (
                         <>
                             <div>
                                 <label htmlFor="username" className="block text-sm font-medium mb-1">Username</label>
@@ -88,8 +162,37 @@ export default function SignInPage() {
                             </div>
                             
                             <div>
+                                <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
+                    
+                    {/* Sign Up Step 2 - Agency Info Only */}
+                    {isSignUp && signupStep === 2 && (
+                        <>
+                            <div>
                                 <label htmlFor="agencyName" className="block text-sm font-medium mb-1">
-                                    1. What is your agency's name?
+                                    What is your agency's name?
                                 </label>
                                 <input
                                     type="text"
@@ -104,7 +207,7 @@ export default function SignInPage() {
                             
                             <div>
                                 <label htmlFor="offer" className="block text-sm font-medium mb-1">
-                                    2. What is your offer?
+                                    What is your offer?
                                 </label>
                                 <input
                                     type="text"
@@ -118,7 +221,7 @@ export default function SignInPage() {
                             
                             <div>
                                 <label htmlFor="caseStudies" className="block text-sm font-medium mb-1">
-                                    3. List a few case studies and testimonials
+                                    List a few case studies and testimonials
                                 </label>
                                 <textarea
                                     id="caseStudies"
@@ -132,7 +235,7 @@ export default function SignInPage() {
                             
                             <div>
                                 <label htmlFor="servicePricing" className="block text-sm font-medium mb-1">
-                                    4. What are your services priced at?
+                                    What are your services priced at?
                                 </label>
                                 <input
                                     type="text"
@@ -145,32 +248,30 @@ export default function SignInPage() {
                             </div>
                         </>
                     )}
-                    
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                            required
-                        />
+                    <div className="flex space-x-3">
+                        {isSignUp && signupStep === 2 && (
+                            <button 
+                                type="button" 
+                                onClick={() => setSignupStep(1)}
+                                className="flex-1 cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors"
+                            >
+                                Back
+                            </button>
+                        )}
+                        <button 
+                            type="submit" 
+                            disabled={loading} 
+                            className={`cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors ${isSignUp && signupStep === 2 ? 'flex-1' : 'w-full'}`}
+                        >
+                            {loading 
+                                ? (isSignUp ? 'Signing Up...' : 'Signing In...') 
+                                : (isSignUp 
+                                    ? (signupStep === 1 ? 'Next' : 'Sign Up') 
+                                    : 'Sign In'
+                                  )
+                            }
+                        </button>
                     </div>
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
-                            required
-                        />
-                    </div>
-                    <button type="submit" disabled={loading} className="w-full cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors">
-                        {loading ? (isSignUp ? 'Signing Up...' : 'Signing In...') : (isSignUp ? 'Sign Up' : 'Sign In')}
-                    </button>
                 </form>
 
                 <div className="mt-4 text-center text-sm">
