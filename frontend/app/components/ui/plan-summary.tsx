@@ -61,7 +61,7 @@ const PlanSummary: React.FC<PlanSummaryProps> = ({
         
         <p className="flex justify-between pt-4 text-foreground font-semibold">
           <span>Total due today</span>
-          <span>{plan.price}</span>
+          <span>{appliedVoucher && appliedCredits > 0 ? '$0.00' : plan.price}</span>
         </p>
         
         {appliedCredits > 0 && (

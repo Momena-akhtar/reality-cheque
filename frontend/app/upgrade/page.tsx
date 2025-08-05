@@ -45,23 +45,46 @@ export default function Upgrade() {
 
     setVoucherLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/vouchers/apply`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/voucher/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ code: voucherCode }),
+        body: JSON.stringify({ 
+          code: voucherCode,
+          targetTier: 'tier1' // Default tier for upgrade page
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(`Voucher applied successfully! You received ${data.credits} credits.`);
-        setVoucherCode("");
-        setShowVoucherInput(false);
-        // Refresh user data to show updated credits
-        window.location.reload();
+        if (data.valid) {
+          // Now use the voucher to actually apply the credits
+          const useResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/voucher/use`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ code: voucherCode }),
+          });
+
+          if (useResponse.ok) {
+            const useData = await useResponse.json();
+            toast.success(`Voucher applied successfully! You received ${useData.credits} credits.`);
+            setVoucherCode("");
+            setShowVoucherInput(false);
+            // Refresh user data to show updated credits
+            window.location.reload();
+          } else {
+            const errorData = await useResponse.json();
+            toast.error(errorData.message || "Failed to apply voucher");
+          }
+        } else {
+          toast.error(data.message || "Invalid voucher code");
+        }
       } else {
         toast.error(data.message || "Invalid voucher code");
       }

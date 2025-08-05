@@ -56,6 +56,14 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 
     setApplyingPromo(true);
     try {
+      // Determine target tier from plan title
+      let targetTier = 'tier1';
+      if (planTitle.toLowerCase().includes('tier 2') || planTitle.toLowerCase().includes('2')) {
+        targetTier = 'tier2';
+      } else if (planTitle.toLowerCase().includes('tier 3') || planTitle.toLowerCase().includes('3')) {
+        targetTier = 'tier3';
+      }
+
       const res = await fetch(`${API_BASE}/voucher/validate`, {
         method: 'POST',
         headers: {
@@ -63,7 +71,8 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
         },
         credentials: 'include',
         body: JSON.stringify({
-          code: promoCode.trim().toUpperCase()
+          code: promoCode.trim().toUpperCase(),
+          targetTier
         }),
       });
 
@@ -141,11 +150,11 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
       const userData = await userRes.json();
       
       // Determine tier based on plan title
-      let tier = 1;
+      let tier = 'tier1';
       if (planTitle.toLowerCase().includes('tier 2') || planTitle.toLowerCase().includes('2')) {
-        tier = 2;
+        tier = 'tier2';
       } else if (planTitle.toLowerCase().includes('tier 3') || planTitle.toLowerCase().includes('3')) {
-        tier = 3;
+        tier = 'tier3';
       }
       
       // Update user's tier
@@ -228,6 +237,16 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
     },
   };
 
+  // Handle redirect after successful payment
+  React.useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   if (success) {
     return (
       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
@@ -237,10 +256,13 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
             {wasFreeUpgrade ? 'Subscription Activated!' : 'Payment Successful!'}
           </h2>
           <p className="text-primary-text-faded">
-            {wasFreeUpgrade 
+            {wasFreeUpgrade
               ? `Your ${planTitle} has been activated successfully.${appliedCredits > 0 ? ` You now have $${appliedCredits} credits in your account.` : ''}` 
               : 'Your subscription has been activated.'
             }
+          </p>
+          <p className="text-xs text-primary-text-faded mt-2">
+            Redirecting to home page...
           </p>
         </div>
       </div>
