@@ -7,34 +7,48 @@ import { AuthProvider } from "./context/AuthContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { TokenUsageWidget } from "./components/token-usage-widget";
 
-const kumbhSans = Kumbh_Sans({ subsets: ["latin"], weight: ['400', '500', '600', '700', '800'] });
+const kumbhSans = Kumbh_Sans({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "800"],
+});
 
 export const metadata: Metadata = {
-  title: "Reality Cheque",
-  description: "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
-  icons: {
-    icon: '/logo.png',
-  },
+    title: "Reality Cheque",
+    description:
+        "A multi-agent AI assistant hub featuring domain-specific bots for streamlined knowledge access using prompt prompt engineering.",
+    icons: {
+        icon: "/logo.png",
+        apple: "/logo.png",
+        shortcut: "/logo.png",
+        other: {
+            rel: "icon",
+            url: "/logo.png",
+        },
+    },
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en">
-      <body className={`${kumbhSans.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={true}>
-          <AuthProvider>
-            <AdminAuthProvider>
-              {children}
-              <TokenUsageWidget />
-              <Toaster />
-            </AdminAuthProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body className={`${kumbhSans.className} antialiased`}>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="dark"
+                    enableSystem={true}
+                >
+                    <AuthProvider>
+                        <AdminAuthProvider>
+                            {children}
+                            <TokenUsageWidget />
+                            <Toaster />
+                        </AdminAuthProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </body>
+        </html>
+    );
 }
