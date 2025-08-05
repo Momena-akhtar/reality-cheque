@@ -128,7 +128,7 @@ class GenerateService {
       caseStudies: user.caseStudies,
       servicePricing: user.servicePricing,
       tier: user.tier,
-      creditsPerMonth: user.creditsPerMonth || 0
+      totalCredits: user.totalCredits || 0
     };
 
     let context = `User Information:\n`;
@@ -152,7 +152,7 @@ class GenerateService {
     }
     
     context += `- Tier: ${userContext.tier}\n`;
-    context += `- Credits per month: ${userContext.creditsPerMonth}\n\n`;
+    context += `- Total Credits: ${userContext.totalCredits}\n\n`;
     
     return context;
   }

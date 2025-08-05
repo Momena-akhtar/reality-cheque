@@ -54,20 +54,10 @@ export class UserService {
       // Calculate credits based on tier
       const tierCredits = parseInt(tier.replace('tier', ''));
       
-      // Check if this is the user's first tier upgrade (they still have their initial $10)
-      const hasInitialCredits = currentUser.totalCredits === 10.00 && currentUser.usedCredits === 0.00;
-      
-      let newTotalCredits: number;
-      
-      if (hasInitialCredits) {
-        // First upgrade: add tier credits to initial $10
-        newTotalCredits = 10.00 + tierCredits;
-      } else {
-        // Subsequent upgrades: replace credits with tier amount only
-        newTotalCredits = tierCredits;
-        // Reset used credits since they're getting new credits
-        await User.findByIdAndUpdate(userId, { usedCredits: 0.00 });
-      }
+      // All tier upgrades now just give the tier amount (no free credits)
+      const newTotalCredits = tierCredits;
+      // Reset used credits since they're getting new credits
+      await User.findByIdAndUpdate(userId, { usedCredits: 0.00 });
 
       const updatedUser = await User.findByIdAndUpdate(
         userId, 
@@ -268,7 +258,7 @@ export class UserService {
       }
 
       // Use actual user credit data
-      const totalCredits = user.totalCredits || 10.00;
+      const totalCredits = user.totalCredits || 0.00;
       const usedCredits = user.usedCredits || 0.00;
       const remainingCredits = totalCredits - usedCredits;
 
