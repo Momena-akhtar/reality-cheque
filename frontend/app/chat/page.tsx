@@ -5,11 +5,11 @@ import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
 import FeatureSections from "../components/ui/feature-sections";
-import FollowUpQuestions from "../components/ui/follow-up-questions";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { MessageSquare } from "lucide-react";
 
 interface Message {
   id: string;
@@ -69,35 +69,7 @@ function ChatPageContent() {
   const botId = searchParams.get('id');
   const { user, loading: authLoading } = useAuth();
 
-  // Redirect to signin if user is not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/signin');
-    }
-  }, [user, authLoading, router]);
-
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="flex-none">
-          <ChatHeader />
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render anything if user is not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
-  
+  // All hooks must be called before any conditional returns
   const [messages, setMessages] = useState<Message[]>([]);
   const [model, setModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,6 +83,14 @@ function ChatPageContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  // All useEffect hooks must be called before any conditional returns
+  // Redirect to signin if user is not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/signin');
+    }
+  }, [user, authLoading, router]);
 
   // Fetch model data when botId changes
   useEffect(() => {
@@ -238,6 +218,28 @@ function ChatPageContent() {
     loadChatHistory();
   }, [searchParams, user, API_BASE]);
 
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-none">
+          <ChatHeader />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -265,10 +267,7 @@ function ChatPageContent() {
     setShowHistory(true);
   };
 
-  const handleFollowUpQuestion = async (question: string) => {
-    // Send the follow-up question as a user message
-    await handleSendMessage(question);
-  };
+
 
   const handleRegenerateFeature = async (featureName: string, feedback: string) => {
     if (!user || !model || !currentChatId || regeneratingFeature) return;
@@ -557,25 +556,50 @@ function ChatPageContent() {
                               onRegenerateFeature={handleRegenerateFeature}
                               isRegenerating={regeneratingFeature}
                             />
-                            {message.followUpQuestions && (
-                              <FollowUpQuestions
-                                questions={message.followUpQuestions}
-                                onQuestionClick={handleFollowUpQuestion}
-                                disabled={sending || userCredits <= 0.01}
-                              />
+                            {message.followUpQuestions && message.followUpQuestions.length > 0 && (
+                              <div className="mt-6 pt-4 border-t border-border/30">
+                                <div className="text-sm font-medium text-muted-foreground mb-3">Follow-up Questions:</div>
+                                <div className="space-y-2">
+                                  {message.followUpQuestions.map((question, index) => (
+                                    <div key={index} className="text-sm text-foreground">
+                                      {index + 1}. {question.replace(/\\n/g, '\n').trim()}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             )}
+                            
+                            {/* Instructions */}
+                            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <h4 className="text-sm font-medium text-foreground mb-1">
+                                    How to use this interface
+                                  </h4>
+                                  <p className="text-sm text-foreground">
+                                    Hover over any section to see the edit button. Click it to provide feedback and regenerate just that specific section while keeping everything else unchanged.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
                           </>
                         ) : (
                           <>
                             <div className="whitespace-pre-wrap">
                               {message.role === 'assistant' ? cleanMarkdown(message.content) : message.content}
                             </div>
-                            {message.role === 'assistant' && message.followUpQuestions && (
-                              <FollowUpQuestions
-                                questions={message.followUpQuestions}
-                                onQuestionClick={handleFollowUpQuestion}
-                                disabled={sending || userCredits <= 0.01}
-                              />
+                            {message.followUpQuestions && message.followUpQuestions.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-border/30">
+                                <div className="text-sm font-medium text-muted-foreground mb-3">Follow-up Questions:</div>
+                                <div className="space-y-2">
+                                  {message.followUpQuestions.map((question, index) => (
+                                    <div key={index} className="text-sm text-foreground">
+                                      {index + 1}. {question.replace(/\\n/g, '\n').trim()}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
                             )}
                           </>
                         )}

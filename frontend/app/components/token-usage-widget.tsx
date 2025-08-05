@@ -23,7 +23,7 @@ export function TokenUsageWidget() {
     remainingCreditsInDollars: 10,
     usedCreditsInDollars: 0
   })
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Convert tokens to simplified credits (1K tokens = 1 credit for display)
@@ -100,9 +100,8 @@ export function TokenUsageWidget() {
     }
   }, [user, user?.totalCredits, user?.usedCredits]);
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
-  // Only show on the main page (/)
   if (typeof window !== 'undefined') {
     const pathname = window.location.pathname;
     if (pathname !== '/') {
