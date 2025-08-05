@@ -462,6 +462,7 @@ function ChatPageContent() {
         onSelectChat={handleSelectChat}
         onClearChat={handleClearChat}
         currentChatId={currentChatId}
+        modelId={botId}
       />
       
       <div className="flex-1 overflow-hidden pt-15">

@@ -10,6 +10,7 @@ interface ChatHistorySidebarProps {
   onSelectChat: (chatId: string) => void;
   onClearChat: (chatId: string) => void;
   currentChatId?: string | null;
+  modelId?: string | null;
 }
 
 export default function ChatHistorySidebar({
@@ -17,7 +18,8 @@ export default function ChatHistorySidebar({
   onClose,
   onSelectChat,
   onClearChat,
-  currentChatId
+  currentChatId,
+  modelId
 }: ChatHistorySidebarProps) {
   return (
     <AnimatePresence>
@@ -58,6 +60,7 @@ export default function ChatHistorySidebar({
                 }}
                 onClearChat={onClearChat}
                 currentChatId={currentChatId}
+                modelId={modelId}
               />
             </div>
           </motion.div>

@@ -17,9 +17,10 @@ interface ChatSessionsProps {
   onSelectChat: (chatId: string) => void;
   onClearChat: (chatId: string) => void;
   currentChatId?: string | null;
+  modelId?: string | null;
 }
 
-export default function ChatSessions({ onSelectChat, onClearChat, currentChatId }: ChatSessionsProps) {
+export default function ChatSessions({ onSelectChat, onClearChat, currentChatId, modelId }: ChatSessionsProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +31,22 @@ export default function ChatSessions({ onSelectChat, onClearChat, currentChatId 
     const fetchSessions = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE}/generate/chats`, {
+        
+        // Only fetch if we have a modelId
+        if (!modelId) {
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log('Fetching chats for modelId:', modelId);
+        const response = await fetch(`${API_BASE}/generate/chats?modelId=${modelId}`, {
           credentials: "include",
         });
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Chat sessions response:', data);
           if (data.success) {
             setSessions(data.data);
           } else {
@@ -53,7 +64,7 @@ export default function ChatSessions({ onSelectChat, onClearChat, currentChatId 
     };
 
     fetchSessions();
-  }, [API_BASE]);
+  }, [API_BASE, modelId]);
 
   const handleClearChat = async (chatId: string) => {
     try {
@@ -106,7 +117,9 @@ export default function ChatSessions({ onSelectChat, onClearChat, currentChatId 
     return (
       <div className="p-4 text-center">
         <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No chat history yet</p>
+        <p className="text-sm text-muted-foreground">
+          {modelId ? 'No chat history for this model yet' : 'Select a model to view chat history'}
+        </p>
       </div>
     );
   }
