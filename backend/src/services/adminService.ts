@@ -188,6 +188,11 @@ export class AdminService {
         .limit(3);
 
       recentChats.forEach(chat => {
+        // Skip if user or model data is missing
+        if (!chat.userId || !chat.modelId) {
+          return;
+        }
+        
         activities.push({
           type: 'chat_started',
           title: 'Chat session started',
@@ -216,6 +221,11 @@ export class AdminService {
         .limit(3);
 
       recentMessages.forEach(message => {
+        // Skip if chat, user, or model data is missing
+        if (!message.chatId || !message.chatId.userId || !message.chatId.modelId) {
+          return;
+        }
+        
         activities.push({
           type: 'message_sent',
           title: message.role === 'user' ? 'User sent message' : 'AI responded',
