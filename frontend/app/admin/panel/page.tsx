@@ -56,11 +56,11 @@ interface Feature {
 
 interface ChatSession {
   _id: string;
-  userId: {
+  userId?: {
     _id: string;
     username: string;
     email: string;
-  };
+  } | null;
   modelId: {
     _id: string;
     name: string;
@@ -82,7 +82,13 @@ interface ChatMessage {
 }
 
 interface ChatDetails {
-  chat: ChatSession;
+  chat: ChatSession & {
+    userId?: {
+      _id: string;
+      username: string;
+      email: string;
+    } | null;
+  };
   messages: ChatMessage[];
 }
 
@@ -128,6 +134,38 @@ interface RecentActivity {
   };
   tokens?: number;
 }
+
+// Helper function to format message content
+const formatMessageContent = (content: string, role: 'user' | 'assistant') => {
+  if (role === 'user') {
+    return content;
+  }
+
+  // Try to parse as JSON and convert to clean text
+  try {
+    const parsed = JSON.parse(content);
+    let cleanText = '';
+    
+    Object.entries(parsed).forEach(([key, value]) => {
+      cleanText += `${key}\n`;
+      if (typeof value === 'string') {
+        cleanText += `${value}\n\n`;
+      } else if (Array.isArray(value)) {
+        value.forEach((item, index) => {
+          cleanText += `${index + 1}. ${item}\n`;
+        });
+        cleanText += '\n';
+      } else {
+        cleanText += `${JSON.stringify(value)}\n\n`;
+      }
+    });
+    
+    return <div className="whitespace-pre-wrap leading-relaxed">{cleanText.trim()}</div>;
+  } catch {
+    // If not JSON, return as regular text
+    return <div className="whitespace-pre-wrap leading-relaxed">{content}</div>;
+  }
+};
 
 export default function AdminPanel() {
   const { admin, adminLogout, adminLoading } = useAdminAuth();
@@ -926,8 +964,14 @@ export default function AdminPanel() {
                     {chats.map((chat) => (
                       <tr key={chat._id} className="hover:bg-primary-hover transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-foreground">{chat.userId.username}</div>
-                          <div className="text-xs text-primary-text-faded">{chat.userId.email}</div>
+                          {chat.userId ? (
+                            <>
+                              <div className="text-sm font-medium text-foreground">{chat.userId.username}</div>
+                              <div className="text-xs text-primary-text-faded">{chat.userId.email}</div>
+                            </>
+                          ) : (
+                            <div className="text-sm text-primary-text-faded italic">Anonymous User</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-foreground">{chat.modelId.name}</div>
@@ -944,7 +988,7 @@ export default function AdminPanel() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => viewChatDetails(chat._id)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 cursor-pointer hover:text-blue-900"
                             title="View Chat Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -1380,7 +1424,7 @@ export default function AdminPanel() {
               <div>
                 <h3 className="text-lg font-semibold text-foreground">Chat Details</h3>
                 <p className="text-sm text-primary-text-faded">
-                  {chatDetails.chat.userId.username} • {chatDetails.chat.modelId.name}
+                  {chatDetails.chat.userId ? chatDetails.chat.userId.username : 'Anonymous User'} • {chatDetails.chat.modelId.name}
                 </p>
               </div>
               <button
@@ -1395,8 +1439,14 @@ export default function AdminPanel() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-muted rounded-lg">
               <div>
                 <h4 className="font-medium text-foreground">User</h4>
-                <p className="text-sm text-primary-text-faded">{chatDetails.chat.userId.username}</p>
-                <p className="text-xs text-primary-text-faded">{chatDetails.chat.userId.email}</p>
+                {chatDetails.chat.userId ? (
+                  <>
+                    <p className="text-sm text-primary-text-faded">{chatDetails.chat.userId.username}</p>
+                    <p className="text-xs text-primary-text-faded">{chatDetails.chat.userId.email}</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-primary-text-faded italic">Anonymous User</p>
+                )}
               </div>
               <div>
                 <h4 className="font-medium text-foreground">Model</h4>
@@ -1431,7 +1481,9 @@ export default function AdminPanel() {
                         {new Date(message.timestamp).toLocaleString()}
                       </span>
                     </div>
-                    <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                    <div className="text-sm">
+                      {formatMessageContent(message.content, message.role)}
+                    </div>
                     <div className="text-xs text-primary-text-faded mt-2">
                       Tokens: {message.tokenCount}
                     </div>
