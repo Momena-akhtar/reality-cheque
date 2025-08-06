@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Crown, Lock, X } from "lucide-react";
-import { Button } from "./button";
 import { useRouter } from "next/navigation";
 
 interface UpgradePromptProps {
@@ -46,18 +45,18 @@ export default function UpgradePrompt({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-background border border-border rounded-2xl p-6 max-w-md w-full shadow-xl">
+    <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
+      <div className="bg-background text-foreground border border-border rounded-lg p-6 max-w-md w-full shadow-lg relative">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-foreground" />
+            <Crown className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">{title}</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-muted rounded-md cursor-pointer transition-colors"
+            className="absolute cursor-pointer top-3 right-3 text-foreground hover:text-primary-hover text-xl font-bold"
           >
-            <X className="h-4 w-4" />
+            &times;
           </button>
         </div>
 
@@ -114,19 +113,18 @@ export default function UpgradePrompt({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
+            <button
               onClick={onClose}
-              className="flex-1 border border-border cursor-pointer rounded-lg"
+              className="flex-1 px-4 py-2 text-sm border border-border hover:bg-primary-hover cursor-pointer text-foreground rounded-lg"
             >
-              Maybe LaterMayb
-            </Button>
-            <Button
+              Maybe Later
+            </button>
+            <button
               onClick={handleUpgrade}
-              className="flex-1 border border-border cursor-pointer rounded-lg"
+              className="flex-1 px-4 py-2 text-sm bg-primary hover:bg-primary-hover cursor-pointer text-primary-foreground rounded-lg"
             >
               Upgrade Now
-            </Button>
+            </button>
           </div>
         </div>
       </div>
