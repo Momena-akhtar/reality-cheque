@@ -131,13 +131,13 @@ export class AdminService {
       users.forEach(user => {
         switch (user.tier) {
           case 'tier2':
-            revenue += 2; // $2 one-time
+            revenue += 20; // $20 one-time
             break;
           case 'tier3':
-            revenue += 3; // $3 one-time
+            revenue += 50; // $50 one-time
             break;
           default:
-            revenue += 1; // Tier 1 is $1 one-time
+            revenue += 10; // Tier 1 is $10 one-time
         }
       });
 

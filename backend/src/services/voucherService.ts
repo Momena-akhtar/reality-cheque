@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 export interface CreateVoucherData {
   code?: string;
   tier: 1 | 2 | 3;
-  credits: number; // Should match tier (1, 2, or 3)
+  credits: number; // Should match tier (10, 20, or 50)
   maxUses: number;
   description?: string;
   createdBy: string;
@@ -57,8 +57,9 @@ export class VoucherService {
       }
 
       // Validate credits match tier
-      if (data.credits !== data.tier) {
-        return { success: false, message: 'Credits must match the tier (Tier 1 = 1 credit, Tier 2 = 2 credits, Tier 3 = 3 credits)' };
+      const expectedCredits = data.tier === 1 ? 10 : data.tier === 2 ? 20 : 50;
+      if (data.credits !== expectedCredits) {
+        return { success: false, message: 'Credits must match the tier (Tier 1 = $10, Tier 2 = $20, Tier 3 = $50)' };
       }
 
       const voucher = new Voucher({
@@ -146,8 +147,9 @@ export class VoucherService {
 
       // Validate credits match tier if both are being updated
       if (data.credits !== undefined && data.tier !== undefined) {
-        if (data.credits !== data.tier) {
-          return { success: false, message: 'Credits must match the tier' };
+        const expectedCredits = data.tier === 1 ? 10 : data.tier === 2 ? 20 : 50;
+        if (data.credits !== expectedCredits) {
+          return { success: false, message: 'Credits must match the tier (Tier 1 = $10, Tier 2 = $20, Tier 3 = $50)' };
         }
       }
 

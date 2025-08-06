@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 export interface IVoucher extends Document {
     code: string;
     tier: 1 | 2 | 3; // Which tier this voucher is for
-    credits: number; // Credits to give (1, 2, or 3)
+    credits: number; // Credits to give (10, 20, or 50)
     maxUses: number;
     usedCount: number;
     usedBy: string[];
@@ -45,7 +45,7 @@ const voucherSchema = new Schema<IVoucher>(
         credits: {
             type: Number,
             required: true,
-            enum: [1, 2, 3], // Credits match the tier
+            enum: [10, 20, 50], // Credits match the tier
         },
         maxUses: {
             type: Number,
