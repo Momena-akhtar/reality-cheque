@@ -6,11 +6,15 @@ export const plans: Record<string, PlanDetails> = {
     title: "Tier 1",
     price: "$10.00",
     billingInfo: "One-time purchase",
-    features: ["Basic AI models",
-            "Limited citations",
-            "Community support",
-            "Basic file uploads",
-            "Access to public tools"],
+    features: [
+      "Website Builder Tools",
+      "Upwork Tools", 
+      "Fiverr Tools",
+      "Basic AI models",
+      "Limited citations",
+      "Community support",
+      "Basic file uploads"
+    ],
   },
   tier2: {
     id: "tier2",
@@ -18,12 +22,11 @@ export const plans: Record<string, PlanDetails> = {
     price: "$20.00",
     billingInfo: "One-time purchase",
     features: [
-      "Advanced AI models",
-      "10x citations in answers",
-      "Unlimited file & photo uploads",
-      "Extended research access",
-      "Image generation tools",
-      "Access to latest AI models",
+      "Everything in Tier 1",
+      "Offer & Pricing Builder",
+      "Cold Email Outreach",
+      "Cold DM Outreach", 
+      "FB Ads Tools",
     ],
   },
   tier3: {
@@ -32,12 +35,13 @@ export const plans: Record<string, PlanDetails> = {
     price: "$50.00",
     billingInfo: "One-time purchase",
     features: [
-      "All AI models",
-      "Unlimited citations",
-      "All tools and features",
-      "Priority support",
-      "Early access to new products",
-      "Advanced AI models like GPT-4o, Claude 4"
+      "Everything in Tier 2",
+      "High-Ticket Sales Tools",
+      "Client Onboarding Tools",
+      "Email Marketing Tools",
+      "Ad / Landing Creative Vault",
+      "Resources & Leaderboard",
+      "All AI models"
     ]
   }
 }; 
