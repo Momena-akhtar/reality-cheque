@@ -158,6 +158,28 @@ router.put("/:id/tier", authMiddleware, async (req, res): Promise<any> => {
   }
 });
 
+// Sync user tier based on credits (admin only)
+router.post("/:id/sync-tier", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    const updatedUser = await userService.syncUserTier(userId);
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found or sync failed" });
+    }
+    
+    const { password, _id, ...userData } = updatedUser.toObject();
+    res.json({ id: _id, ...userData });
+  } catch (error) {
+    console.error("Error syncing user tier:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
 export default router;

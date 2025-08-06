@@ -232,11 +232,24 @@ export class VoucherService {
         return { success: false, message: 'Voucher cannot be used' };
       }
 
-      // Add credits to user's account
+      // Add credits to user's account and update tier
       const User = require('mongoose').model('User');
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      // Determine the tier based on voucher
+      const voucherTier = `tier${voucher.tier}`;
+      
+      // Update user with credits and tier
       await User.findByIdAndUpdate(
         userId,
-        { $inc: { totalCredits: voucher.credits } },
+        { 
+          $inc: { totalCredits: voucher.credits },
+          tier: voucherTier // Update tier to match voucher tier
+        },
         { new: true }
       );
 

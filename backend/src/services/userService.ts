@@ -74,6 +74,43 @@ export class UserService {
     }
   }
 
+  // New method to sync tier based on credits (for fixing inconsistencies)
+  async syncUserTier(userId: string): Promise<IUser | null> {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return null;
+      }
+
+      // Determine correct tier based on credits
+      let correctTier: "tier1" | "tier2" | "tier3" = "tier1";
+      if (user.totalCredits >= 50) {
+        correctTier = "tier3";
+      } else if (user.totalCredits >= 20) {
+        correctTier = "tier2";
+      } else if (user.totalCredits >= 10) {
+        correctTier = "tier1";
+      }
+
+      // Only update if tier is incorrect
+      if (user.tier !== correctTier) {
+        console.log(`Syncing user ${user.email} tier from ${user.tier} to ${correctTier} (credits: ${user.totalCredits})`);
+        
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { tier: correctTier },
+          { new: true }
+        );
+        return updatedUser;
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error syncing user tier:', error);
+      return null;
+    }
+  }
+
   async updateUserCredits(userId: string, creditsUsed: number): Promise<IUser | null> {
     try {
       const currentUser = await User.findById(userId);
