@@ -9,7 +9,8 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Lock, Crown } from "lucide-react";
+import { isCategoryAccessible, getUpgradeMessage } from "../utils/tier-access";
 
 interface Message {
     id: string;
@@ -26,7 +27,12 @@ interface Model {
     _id: string;
     name: string;
     description: string;
-    categoryId: string;
+    categoryId: {
+        _id: string;
+        name: string;
+        description: string;
+        tierAccess: "tier1" | "tier2" | "tier3";
+    };
     masterPrompt: string;
     featureIds: string[];
     isActive: boolean;
@@ -106,7 +112,10 @@ function ChatPageContent() {
             try {
                 setLoading(true);
                 const response = await fetch(
-                    `${API_BASE}/ai-models/models/${botId}`
+                    `${API_BASE}/ai-models/models/${botId}`,
+                    {
+                        credentials: 'include'
+                    }
                 );
 
                 if (!response.ok) {
@@ -116,12 +125,25 @@ function ChatPageContent() {
                 const data = await response.json();
 
                 if (data.success) {
-                    setModel(data.data);
+                    const modelData = data.data;
+                    
+                    // Check if user has access to this model's category
+                    if (user && modelData.categoryId && modelData.categoryId.tierAccess) {
+                        const hasAccess = isCategoryAccessible(user.tier || "tier1", modelData.categoryId.tierAccess);
+                        if (!hasAccess) {
+                            const upgradeMessage = getUpgradeMessage(modelData.categoryId.tierAccess);
+                            setError(`Access Denied: ${upgradeMessage}\n\nCurrent tier: ${user.tier}\nRequired tier: ${modelData.categoryId.tierAccess}`);
+                            setLoading(false);
+                            return;
+                        }
+                    }
+                    
+                    setModel(modelData);
 
                     // Fetch model features if the model has featureIds
                     if (
-                        data.data.featureIds &&
-                        data.data.featureIds.length > 0
+                        modelData.featureIds &&
+                        modelData.featureIds.length > 0
                     ) {
                         try {
                             const featuresResponse = await fetch(
@@ -133,7 +155,7 @@ function ChatPageContent() {
                                     },
                                     credentials: "include",
                                     body: JSON.stringify({
-                                        featureIds: data.data.featureIds,
+                                        featureIds: modelData.featureIds,
                                     }),
                                 }
                             );
@@ -166,7 +188,7 @@ function ChatPageContent() {
         };
 
         fetchModel();
-    }, [botId, API_BASE]);
+    }, [botId, API_BASE, user]);
 
     // Fetch user credits
     useEffect(() => {
