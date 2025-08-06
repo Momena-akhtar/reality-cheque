@@ -11,7 +11,7 @@ const FIXED_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, sameSite: 'lax' as const };
 
 // Register handler
 const registerHandler: express.RequestHandler = async (req, res) => {
-  const { username, email, password, role, agencyName, offer, caseStudies, servicePricing } = req.body;
+  const { username, email, password, role, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = req.body;
     
   if (!email || !password || !role) {
     res.status(400).json({ message: 'Email, password, and role are required' });
@@ -32,9 +32,18 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         email, 
         password, 
         agencyName: agencyName || '', 
-        offer: offer || '', 
+        services: services || '', 
+        website: website || '', 
+        pricingPackages: pricingPackages || '', 
         caseStudies: caseStudies || '', 
-        servicePricing: servicePricing || '' 
+        clientsServed: clientsServed || 0, 
+        targetAudience: targetAudience || '', 
+        offer: offer || '', 
+        bigBrands: bigBrands || '', 
+        stepByStepProcess: stepByStepProcess || '', 
+        timelineToResults: timelineToResults || '', 
+        leadSources: leadSources || '', 
+        monthlyRevenue: monthlyRevenue || 0 
       });
       await user.save();
     }
@@ -49,9 +58,18 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         ...(role === 'user' ? { 
           username,
           agencyName: user.agencyName,
-          offer: user.offer,
+          services: user.services,
+          website: user.website,
+          pricingPackages: user.pricingPackages,
           caseStudies: user.caseStudies,
-          servicePricing: user.servicePricing
+          clientsServed: user.clientsServed,
+          targetAudience: user.targetAudience,
+          offer: user.offer,
+          bigBrands: user.bigBrands,
+          stepByStepProcess: user.stepByStepProcess,
+          timelineToResults: user.timelineToResults,
+          leadSources: user.leadSources,
+          monthlyRevenue: user.monthlyRevenue
         } : {}) 
       } 
     });
@@ -88,9 +106,18 @@ const loginHandler: express.RequestHandler = async (req, res) => {
         ...(role === 'user' ? { 
           username: user.username,
           agencyName: user.agencyName,
-          offer: user.offer,
+          services: user.services,
+          website: user.website,
+          pricingPackages: user.pricingPackages,
           caseStudies: user.caseStudies,
-          servicePricing: user.servicePricing
+          clientsServed: user.clientsServed,
+          targetAudience: user.targetAudience,
+          offer: user.offer,
+          bigBrands: user.bigBrands,
+          stepByStepProcess: user.stepByStepProcess,
+          timelineToResults: user.timelineToResults,
+          leadSources: user.leadSources,
+          monthlyRevenue: user.monthlyRevenue
         } : {}) 
       } 
     });
@@ -113,7 +140,7 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, plan, creditsPerMonth, agencyName, offer, caseStudies, servicePricing } = (req as any).user;
+    const { _id, email, username, picture, plan, creditsPerMonth, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
     res.json({ 
       id: _id, 
       email, 
@@ -122,9 +149,18 @@ authRouter.get('/me', authMiddleware, (req, res) => {
       plan, 
       creditsPerMonth,
       agencyName,
-      offer,
+      services,
+      website,
+      pricingPackages,
       caseStudies,
-      servicePricing
+      clientsServed,
+      targetAudience,
+      offer,
+      bigBrands,
+      stepByStepProcess,
+      timelineToResults,
+      leadSources,
+      monthlyRevenue
     });
   } else {
     res.status(401).json({ message: 'Not authenticated' });
