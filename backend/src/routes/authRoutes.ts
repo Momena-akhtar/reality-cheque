@@ -57,6 +57,9 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         role, 
         ...(role === 'user' ? { 
           username,
+          tier: user.tier,
+          totalCredits: user.totalCredits,
+          usedCredits: user.usedCredits,
           agencyName: user.agencyName,
           services: user.services,
           website: user.website,
@@ -105,6 +108,9 @@ const loginHandler: express.RequestHandler = async (req, res) => {
         role, 
         ...(role === 'user' ? { 
           username: user.username,
+          tier: user.tier,
+          totalCredits: user.totalCredits,
+          usedCredits: user.usedCredits,
           agencyName: user.agencyName,
           services: user.services,
           website: user.website,
@@ -140,14 +146,15 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, plan, creditsPerMonth, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
+    const { _id, email, username, picture, tier, totalCredits, usedCredits, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
     res.json({ 
       id: _id, 
       email, 
       username, 
       picture, 
-      plan, 
-      creditsPerMonth,
+      tier,
+      totalCredits,
+      usedCredits,
       agencyName,
       services,
       website,
