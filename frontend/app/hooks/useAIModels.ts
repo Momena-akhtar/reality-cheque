@@ -5,6 +5,7 @@ interface Category {
   name: string;
   description: string;
   isActive: boolean;
+  tierAccess: "tier1" | "tier2" | "tier3";
   models: Model[];
 }
 
@@ -21,6 +22,7 @@ interface Model {
 interface SidebarData {
   _id: string;
   title: string;
+  tierAccess: "tier1" | "tier2" | "tier3";
   children: Model[];
 }
 
@@ -37,7 +39,9 @@ export function useAIModels() {
       try {
         setLoading(true);
        
-        const response = await fetch(`${API_BASE}/ai-models/categories`);
+        const response = await fetch(`${API_BASE}/ai-models/categories`, {
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -52,6 +56,7 @@ export function useAIModels() {
             return {
               _id: category._id,
               title: category.name,
+              tierAccess: category.tierAccess,
               children: category.models || []
             };
           });

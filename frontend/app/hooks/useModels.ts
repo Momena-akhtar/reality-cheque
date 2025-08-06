@@ -8,6 +8,7 @@ interface Model {
     _id: string;
     name: string;
     description: string;
+    tierAccess: "tier1" | "tier2" | "tier3";
   };
   masterPrompt: string;
   featureIds: any[];
@@ -28,7 +29,10 @@ export function useModels() {
       try {
         setLoading(true);
         
-        const response = await fetch(`${API_BASE}/ai-models/models`);
+        // Use the admin endpoint to get all models without tier filtering
+        const response = await fetch(`${API_BASE}/ai-models/models`, {
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

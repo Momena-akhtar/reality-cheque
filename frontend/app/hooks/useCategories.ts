@@ -19,7 +19,9 @@ export function useCategories() {
       try {
         setLoading(true);
         
-        const response = await fetch(`${API_BASE}/ai-models/categories`);
+        const response = await fetch(`${API_BASE}/ai-models/categories`, {
+          credentials: 'include'
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
