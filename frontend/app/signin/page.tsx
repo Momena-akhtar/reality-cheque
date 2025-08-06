@@ -15,9 +15,18 @@ export default function SignInPage() {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [agencyName, setAgencyName] = useState('');
-    const [offer, setOffer] = useState('');
+    const [services, setServices] = useState('');
+    const [website, setWebsite] = useState('');
+    const [pricingPackages, setPricingPackages] = useState('');
     const [caseStudies, setCaseStudies] = useState('');
-    const [servicePricing, setServicePricing] = useState('');
+    const [clientsServed, setClientsServed] = useState('');
+    const [targetAudience, setTargetAudience] = useState('');
+    const [offer, setOffer] = useState('');
+    const [bigBrands, setBigBrands] = useState('');
+    const [stepByStepProcess, setStepByStepProcess] = useState('');
+    const [timelineToResults, setTimelineToResults] = useState('');
+    const [leadSources, setLeadSources] = useState('');
+    const [monthlyRevenue, setMonthlyRevenue] = useState('');
     const [loading, setLoading] = useState(false);
     const { refreshUser } = useAuth();
     const router = useRouter();
@@ -53,9 +62,18 @@ export default function SignInPage() {
                     password, 
                     role: 'user',
                     agencyName,
-                    offer,
+                    services,
+                    website,
+                    pricingPackages,
                     caseStudies,
-                    servicePricing
+                    clientsServed: clientsServed ? parseInt(clientsServed) : 0,
+                    targetAudience,
+                    offer,
+                    bigBrands,
+                    stepByStepProcess,
+                    timelineToResults,
+                    leadSources,
+                    monthlyRevenue: monthlyRevenue ? parseInt(monthlyRevenue) : 0
                   }
                 : { email, password, role: 'user' };
             const res = await fetch(url, {
@@ -206,44 +224,176 @@ export default function SignInPage() {
                             </div>
                             
                             <div>
-                                <label htmlFor="offer" className="block text-sm font-medium mb-1">
-                                    What is your offer?
+                                <label htmlFor="services" className="block text-sm font-medium mb-1">
+                                    List all the services you provide
+                                </label>
+                                <textarea
+                                    id="services"
+                                    value={services}
+                                    onChange={(e) => setServices(e.target.value)}
+                                    placeholder="e.g., Social Media Management, Content Creation, PPC Advertising"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="website" className="block text-sm font-medium mb-1">
+                                    Share your website link (optional)
                                 </label>
                                 <input
-                                    type="text"
-                                    id="offer"
-                                    value={offer}
-                                    onChange={(e) => setOffer(e.target.value)}
-                                    placeholder="Only enter if you have an offer in place"
+                                    type="url"
+                                    id="website"
+                                    value={website}
+                                    onChange={(e) => setWebsite(e.target.value)}
+                                    placeholder="https://yourwebsite.com"
                                     className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
                                 />
                             </div>
                             
                             <div>
+                                <label htmlFor="pricingPackages" className="block text-sm font-medium mb-1">
+                                    Pricing packages (optional)
+                                </label>
+                                <textarea
+                                    id="pricingPackages"
+                                    value={pricingPackages}
+                                    onChange={(e) => setPricingPackages(e.target.value)}
+                                    placeholder="e.g., Basic: $500/month, Premium: $1500/month"
+                                    rows={2}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                />
+                            </div>
+                            
+                            <div>
                                 <label htmlFor="caseStudies" className="block text-sm font-medium mb-1">
-                                    List a few case studies and testimonials
+                                    Case studies (optional)
                                 </label>
                                 <textarea
                                     id="caseStudies"
                                     value={caseStudies}
                                     onChange={(e) => setCaseStudies(e.target.value)}
-                                    placeholder="Leave blank if you don't have any"
+                                    placeholder="Share your best case studies and results"
                                     rows={3}
                                     className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
                                 />
                             </div>
                             
                             <div>
-                                <label htmlFor="servicePricing" className="block text-sm font-medium mb-1">
-                                    What are your services priced at?
+                                <label htmlFor="clientsServed" className="block text-sm font-medium mb-1">
+                                    Number of clients served
+                                </label>
+                                <input
+                                    type="number"
+                                    id="clientsServed"
+                                    value={clientsServed}
+                                    onChange={(e) => setClientsServed(e.target.value)}
+                                    placeholder="e.g., 25"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="targetAudience" className="block text-sm font-medium mb-1">
+                                    Target audience
                                 </label>
                                 <input
                                     type="text"
-                                    id="servicePricing"
-                                    value={servicePricing}
-                                    onChange={(e) => setServicePricing(e.target.value)}
-                                    placeholder="Leave blank if you are new"
+                                    id="targetAudience"
+                                    value={targetAudience}
+                                    onChange={(e) => setTargetAudience(e.target.value)}
+                                    placeholder="e.g., Small businesses, E-commerce stores, SaaS companies"
                                     className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="offer" className="block text-sm font-medium mb-1">
+                                    Offer (optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    id="offer"
+                                    value={offer}
+                                    onChange={(e) => setOffer(e.target.value)}
+                                    placeholder="Your current offer or promotion"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="bigBrands" className="block text-sm font-medium mb-1">
+                                    Big brands you've worked with and results (optional)
+                                </label>
+                                <textarea
+                                    id="bigBrands"
+                                    value={bigBrands}
+                                    onChange={(e) => setBigBrands(e.target.value)}
+                                    placeholder="List major clients and their results"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="stepByStepProcess" className="block text-sm font-medium mb-1">
+                                    Step-by-step process
+                                </label>
+                                <textarea
+                                    id="stepByStepProcess"
+                                    value={stepByStepProcess}
+                                    onChange={(e) => setStepByStepProcess(e.target.value)}
+                                    placeholder="Describe your service delivery process"
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="timelineToResults" className="block text-sm font-medium mb-1">
+                                    Timeline to achieve results (optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    id="timelineToResults"
+                                    value={timelineToResults}
+                                    onChange={(e) => setTimelineToResults(e.target.value)}
+                                    placeholder="e.g., 30-60 days, 3-6 months"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="leadSources" className="block text-sm font-medium mb-1">
+                                    Lead sources
+                                </label>
+                                <input
+                                    type="text"
+                                    id="leadSources"
+                                    value={leadSources}
+                                    onChange={(e) => setLeadSources(e.target.value)}
+                                    placeholder="e.g., Referrals, Social Media, Cold Outreach"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="monthlyRevenue" className="block text-sm font-medium mb-1">
+                                    Monthly revenue
+                                </label>
+                                <input
+                                    type="number"
+                                    id="monthlyRevenue"
+                                    value={monthlyRevenue}
+                                    onChange={(e) => setMonthlyRevenue(e.target.value)}
+                                    placeholder="e.g., 50000"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                    required
                                 />
                             </div>
                         </>

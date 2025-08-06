@@ -27,7 +27,7 @@ export default function UserIcon() {
         user.agencyName || 
         user.offer || 
         user.caseStudies || 
-        user.servicePricing
+                        user.pricingPackages
     );
 
     return (
@@ -106,14 +106,14 @@ export default function UserIcon() {
                                     </div>
                                 )}
 
-                                {user?.servicePricing && (
+                                {user?.pricingPackages && (
                                     <div className="border-b border-border/30 pb-3">
                                         <h4 className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                                             <DollarSign className="h-3 w-3 text-yellow-500" />
-                                            Service Pricing
+                                            Pricing Packages
                                         </h4>
                                         <p className="text-xs text-muted-foreground leading-relaxed">
-                                            {user.servicePricing}
+                                            {user.pricingPackages}
                                         </p>
                                     </div>
                                 )}
