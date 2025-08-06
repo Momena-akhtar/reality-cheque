@@ -75,6 +75,7 @@ const PaymentPageContent = () => {
         <PaymentForm 
           planPrice={plan.price}
           planTitle={plan.title}
+          planId={planId}
           onVoucherApplied={handleVoucherApplied}
         />
       </div>

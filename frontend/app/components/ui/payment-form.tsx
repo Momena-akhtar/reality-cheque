@@ -20,12 +20,14 @@ interface VoucherData {
 interface PaymentFormContentProps {
   planPrice: string;
   planTitle: string;
+  planId: string;
   onVoucherApplied?: (voucher: VoucherData | null, credits: number) => void;
 }
 
 const PaymentFormContent: React.FC<PaymentFormContentProps> = ({ 
   planPrice, 
   planTitle, 
+  planId,
   onVoucherApplied 
 }) => {
   const stripe = useStripe();
@@ -137,7 +139,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
         // Refresh user data to update credits in sidebar and usage history
         await refreshUser();
         
-        // Skip tier upgrade since voucher already provides the tier credits
+        // Voucher already updates the tier, so we're done
         setWasFreeUpgrade(true);
         setSuccess(true);
         return;
@@ -154,11 +156,11 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 
       const userData = await userRes.json();
       
-      // Determine tier based on plan title
+      // Determine tier based on plan ID (more reliable than parsing title)
       let tier = 'tier1';
-      if (planTitle.toLowerCase().includes('tier 2') || planTitle.toLowerCase().includes('2')) {
+      if (planId === 'tier2') {
         tier = 'tier2';
-      } else if (planTitle.toLowerCase().includes('tier 3') || planTitle.toLowerCase().includes('3')) {
+      } else if (planId === 'tier3') {
         tier = 'tier3';
       }
       
@@ -393,15 +395,17 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 interface PaymentFormProps {
   planPrice: string;
   planTitle: string;
+  planId: string;
   onVoucherApplied?: (voucher: VoucherData | null, credits: number) => void;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ planPrice, planTitle, onVoucherApplied }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ planPrice, planTitle, planId, onVoucherApplied }) => {
   return (
     <Elements stripe={stripePromise}>
       <PaymentFormContent 
         planPrice={planPrice} 
         planTitle={planTitle} 
+        planId={planId}
         onVoucherApplied={onVoucherApplied}
       />
     </Elements>
