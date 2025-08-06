@@ -124,9 +124,18 @@ class GenerateService {
       username: user.username,
       email: user.email,
       agencyName: user.agencyName,
-      offer: user.offer,
+      services: user.services,
+      website: user.website,
+      pricingPackages: user.pricingPackages,
       caseStudies: user.caseStudies,
-      servicePricing: user.servicePricing,
+      clientsServed: user.clientsServed,
+      targetAudience: user.targetAudience,
+      offer: user.offer,
+      bigBrands: user.bigBrands,
+      stepByStepProcess: user.stepByStepProcess,
+      timelineToResults: user.timelineToResults,
+      leadSources: user.leadSources,
+      monthlyRevenue: user.monthlyRevenue,
       tier: user.tier,
       totalCredits: user.totalCredits || 0
     };
@@ -139,16 +148,52 @@ class GenerateService {
       context += `- Agency Name: ${userContext.agencyName}\n`;
     }
     
-    if (userContext.offer) {
-      context += `- Offer: ${userContext.offer}\n`;
+    if (userContext.services) {
+      context += `- Services: ${userContext.services}\n`;
+    }
+    
+    if (userContext.website) {
+      context += `- Website: ${userContext.website}\n`;
+    }
+    
+    if (userContext.pricingPackages) {
+      context += `- Pricing Packages: ${userContext.pricingPackages}\n`;
     }
     
     if (userContext.caseStudies) {
       context += `- Case Studies: ${userContext.caseStudies}\n`;
     }
     
-    if (userContext.servicePricing) {
-      context += `- Service Pricing: ${userContext.servicePricing}\n`;
+    if (userContext.clientsServed) {
+      context += `- Clients Served: ${userContext.clientsServed}\n`;
+    }
+    
+    if (userContext.targetAudience) {
+      context += `- Target Audience: ${userContext.targetAudience}\n`;
+    }
+    
+    if (userContext.offer) {
+      context += `- Offer: ${userContext.offer}\n`;
+    }
+    
+    if (userContext.bigBrands) {
+      context += `- Big Brands & Results: ${userContext.bigBrands}\n`;
+    }
+    
+    if (userContext.stepByStepProcess) {
+      context += `- Step-by-Step Process: ${userContext.stepByStepProcess}\n`;
+    }
+    
+    if (userContext.timelineToResults) {
+      context += `- Timeline to Results: ${userContext.timelineToResults}\n`;
+    }
+    
+    if (userContext.leadSources) {
+      context += `- Lead Sources: ${userContext.leadSources}\n`;
+    }
+    
+    if (userContext.monthlyRevenue) {
+      context += `- Monthly Revenue: $${userContext.monthlyRevenue}\n`;
     }
     
     context += `- Tier: ${userContext.tier}\n`;

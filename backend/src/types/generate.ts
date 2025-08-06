@@ -131,9 +131,18 @@ export interface UserContext {
   username: string;
   email: string;
   agencyName?: string;
-  offer?: string;
+  services?: string;
+  website?: string;
+  pricingPackages?: string;
   caseStudies?: string;
-  servicePricing?: string;
+  clientsServed?: number;
+  targetAudience?: string;
+  offer?: string;
+  bigBrands?: string;
+  stepByStepProcess?: string;
+  timelineToResults?: string;
+  leadSources?: string;
+  monthlyRevenue?: number;
   tier: 'tier1' | 'tier2' | 'tier3';
   totalCredits: number;
 }
