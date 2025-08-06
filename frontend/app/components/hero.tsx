@@ -14,7 +14,6 @@ export default function Hero() {
                 </p>
                 <div className="flex flex-col sm:flex-col md:flex-row gap-4 pt-10 justify-center">
                     <GetStarted />
-                    <ContactSales />
                 </div>
             </div>
         </div>
