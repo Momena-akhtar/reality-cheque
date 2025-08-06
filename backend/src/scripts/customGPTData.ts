@@ -2,51 +2,63 @@ export const customGPTData = {
     categories: [
         {
             name: "Website Builder",
-            description: "Tools for creating landing pages, VSL scripts, and SEO content"
+            description: "Tools for creating landing pages, VSL scripts, and SEO content",
+            tierAccess: "tier1"
         },
         {
             name: "Upwork Tools", 
-            description: "Tools for freelancers on Upwork platform"
+            description: "Tools for freelancers on Upwork platform",
+            tierAccess: "tier1"
         },
         {
             name: "Fiverr Tools",
-            description: "Tools for freelancers on Fiverr platform"
+            description: "Tools for freelancers on Fiverr platform",
+            tierAccess: "tier1"
         },
         {
             name: "Offer & Pricing Builder",
-            description: "Tools for creating offers and pricing strategies"
+            description: "Tools for creating offers and pricing strategies",
+            tierAccess: "tier2"
         },
         {
             name: "Cold Email Outreach",
-            description: "Tools for cold email campaigns"
+            description: "Tools for cold email campaigns",
+            tierAccess: "tier2"
         },
         {
             name: "Cold DM Outreach",
-            description: "Tools for social media outreach"
+            description: "Tools for social media outreach",
+            tierAccess: "tier2"
         },
         {
             name: "FB Ads",
-            description: "Tools for Facebook advertising"
+            description: "Tools for Facebook advertising",
+            tierAccess: "tier2"
         },
         {
             name: "High-Ticket Sales",
-            description: "Tools for high-value sales processes"
+            description: "Tools for high-value sales processes",
+            tierAccess: "tier3"
         },
         {
             name: "Client Onboarding",
-            description: "Tools for client onboarding processes"
+            description: "Tools for client onboarding processes",
+            tierAccess: "tier3"
         },
         {
             name: "Email Marketing",
-            description: "Tools for email marketing campaigns"
+            description: "Tools for email marketing campaigns",
+            tierAccess: "tier3"
         },
         {
             name: "Ad / Landing Creative Vault",
-            description: "Library of creative assets and copy"
+            description: "Library of creative assets and copy",
+            tierAccess: "tier3"
         },
         {
             name: "Resources & Leaderboard",
-            description: "Best practices and community resources"
+            description: "Best practices and community resources",
+            tierAccess: "tier3"
         }
     ],
     models: [

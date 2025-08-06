@@ -72,6 +72,45 @@ export class AIModelService {
             throw new Error(`Failed to get categories with models: ${error}`);
         }
     }
+
+    // Get categories with models filtered by user tier
+    async getCategoriesWithModelsByTier(userTier: "tier1" | "tier2" | "tier3") {
+        try {
+            // Define tier hierarchy for filtering
+            const tierHierarchy = {
+                "tier1": ["tier1"],
+                "tier2": ["tier1", "tier2"],
+                "tier3": ["tier1", "tier2", "tier3"]
+            };
+
+            const allowedTiers = tierHierarchy[userTier];
+            
+            // Get categories that the user's tier can access
+            const categories = await Category.find({ 
+                isActive: true,
+                tierAccess: { $in: allowedTiers }
+            }).sort({ name: 1 });
+            
+            // For each category, fetch its models
+            const categoriesWithModels = await Promise.all(
+                categories.map(async (category) => {
+                    const models = await AIModel.find({ 
+                        categoryId: category._id, 
+                        isActive: true 
+                    }).populate('featureIds');
+                    
+                    return {
+                        ...category.toObject(),
+                        models: models
+                    };
+                })
+            );
+
+            return categoriesWithModels;
+        } catch (error) {
+            throw new Error(`Failed to get categories with models by tier: ${error}`);
+        }
+    }
     //Get all models
     async getAllModels(){
         try {

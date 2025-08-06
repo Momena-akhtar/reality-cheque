@@ -4,8 +4,20 @@ import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Get all categories with their models
-router.get('/categories', async (req, res) => {
+// Get all categories with their models (filtered by user tier)
+router.get('/categories', authMiddleware, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        const categories = await aiModelService.getCategoriesWithModelsByTier(user.tier);
+        res.json({ success: true, data: categories });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Internal server error';
+        res.status(500).json({ success: false, error: message });
+    }
+});
+
+// Get all categories (admin endpoint - no tier filtering)
+router.get('/categories/all', async (req, res) => {
     try {
         const categories = await aiModelService.getCategoriesWithModels();
         res.json({ success: true, data: categories });

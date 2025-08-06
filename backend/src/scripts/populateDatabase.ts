@@ -46,7 +46,8 @@ async function populateDatabase() {
         console.log('Creating categories...');
         const categories = customGPTData.categories.map(cat => ({
             name: cat.name,
-            description: cat.description
+            description: cat.description,
+            tierAccess: cat.tierAccess
         }));
 
         const createdCategories = await Category.insertMany(categories);

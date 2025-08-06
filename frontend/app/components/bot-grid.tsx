@@ -5,6 +5,7 @@ import BotCard from "./ui/bot-card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CategorySort from "./ui/categories-filters";
 import { useModels } from "../hooks/useModels";
+import { useAuth } from "../context/AuthContext";
 
 export default function BotGrid() {
     const [currentPage, setCurrentPage] = useState(1);
@@ -12,6 +13,7 @@ export default function BotGrid() {
     const botsPerPage = 9;
     
     const { models, loading, error } = useModels();
+    const { user } = useAuth();
     
     // Filter bots based on selected category
     const filteredBots = selectedCategory === "All Categories" 
@@ -72,6 +74,7 @@ export default function BotGrid() {
                         name={bot.name}
                         description={bot.description}
                         category={bot.categoryId.name}
+                        categoryTierAccess={bot.categoryId.tierAccess}
                     />
                 ))}
             </div>

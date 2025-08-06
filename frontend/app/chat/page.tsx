@@ -91,9 +91,6 @@ function ChatPageContent() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-    // All useEffect hooks must be called before any conditional returns
-    // Redirect to signin if user is not authenticated
     useEffect(() => {
         if (!authLoading && !user) {
             router.push("/signin");

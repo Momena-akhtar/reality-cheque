@@ -5,6 +5,7 @@ export interface Category extends Document {
     name: string;
     description: string;
     isActive: boolean;
+    tierAccess: "tier1" | "tier2" | "tier3"; // Which tier is required to access this category
     createdAt: Date;
     updatedAt: Date;
 }
@@ -25,13 +26,19 @@ const categorySchema = new Schema<Category>({
     isActive: {
         type: Boolean,
         default: true
+    },
+    tierAccess: {
+        type: String,
+        enum: ["tier1", "tier2", "tier3"],
+        required: true,
+        default: "tier1"
     }
 }, {
     timestamps: true
 });
 
 // Create indexes for better performance
-categorySchema.index({ isActive: 1 });
+categorySchema.index({ isActive: 1, tierAccess: 1 });
 
 // Export model
 export const Category = mongoose.models.Category || mongoose.model<Category>("Category", categorySchema); 
