@@ -11,9 +11,18 @@ export interface IUser extends Document {
   totalCredits: number;
   usedCredits: number;
   agencyName?: string;
-  offer?: string;
+  services?: string;
+  website?: string;
+  pricingPackages?: string;
   caseStudies?: string;
-  servicePricing?: string;
+  clientsServed?: number;
+  targetAudience?: string;
+  offer?: string;
+  bigBrands?: string;
+  stepByStepProcess?: string;
+  timelineToResults?: string;
+  leadSources?: string;
+  monthlyRevenue?: number;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -60,7 +69,17 @@ const userSchema = new Schema<IUser>({
     trim: true,
     default: ""
   },
-  offer: {
+  services: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  website: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  pricingPackages: {
     type: String,
     trim: true,
     default: ""
@@ -70,10 +89,43 @@ const userSchema = new Schema<IUser>({
     trim: true,
     default: ""
   },
-  servicePricing: {
+  clientsServed: {
+    type: Number,
+    default: 0
+  },
+  targetAudience: {
     type: String,
     trim: true,
     default: ""
+  },
+  offer: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  bigBrands: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  stepByStepProcess: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  timelineToResults: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  leadSources: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+  monthlyRevenue: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
