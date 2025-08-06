@@ -281,7 +281,7 @@ export default function AdminPanel() {
     const [voucherForm, setVoucherForm] = useState({
         code: "",
         tier: 1 as 1 | 2 | 3,
-        credits: 1,
+        credits: 10, // Default to Tier 1 credits ($10)
         maxUses: 100,
         description: "",
         isActive: true,
@@ -568,7 +568,7 @@ export default function AdminPanel() {
                 setVoucherForm({
                     code: "",
                     tier: 1,
-                    credits: 1,
+                    credits: 10,
                     maxUses: 100,
                     description: "",
                     isActive: true,
@@ -1335,7 +1335,7 @@ export default function AdminPanel() {
                                     setVoucherForm({
                                         code: "",
                                         tier: 1,
-                                        credits: 1,
+                                        credits: 10,
                                         maxUses: 100,
                                         description: "",
                                         isActive: true,
@@ -1743,22 +1743,23 @@ export default function AdminPanel() {
                                             const tier = Number(
                                                 e.target.value
                                             ) as 1 | 2 | 3;
+                                            const credits = tier === 1 ? 10 : tier === 2 ? 20 : 50;
                                             setVoucherForm({
                                                 ...voucherForm,
                                                 tier,
-                                                credits: tier,
+                                                credits,
                                             });
                                         }}
                                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                                     >
                                         <option value={1}>
-                                            Tier 1 - $1 credits
+                                            Tier 1 - $10 credits
                                         </option>
                                         <option value={2}>
-                                            Tier 2 - $2 credits
+                                            Tier 2 - $20 credits
                                         </option>
                                         <option value={3}>
-                                            Tier 3 - $3 credits
+                                            Tier 3 - $50 credits
                                         </option>
                                     </select>
                                 </div>
@@ -1773,11 +1774,11 @@ export default function AdminPanel() {
                                         disabled
                                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary-hover"
                                         required
-                                        min="1"
-                                        max="3"
+                                        min="10"
+                                        max="50"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Credits automatically match the tier
+                                        Credits automatically match the tier ($10/$20/$50)
                                     </p>
                                 </div>
                             </div>

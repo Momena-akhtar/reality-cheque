@@ -4,7 +4,7 @@ export const plans: Record<string, PlanDetails> = {
   tier1: {
     id: "tier1",
     title: "Tier 1",
-    price: "$1.00",
+    price: "$10.00",
     billingInfo: "One-time purchase",
     features: ["Basic AI models",
             "Limited citations",
@@ -15,7 +15,7 @@ export const plans: Record<string, PlanDetails> = {
   tier2: {
     id: "tier2",
     title: "Tier 2",
-    price: "$2.00",
+    price: "$20.00",
     billingInfo: "One-time purchase",
     features: [
       "Advanced AI models",
@@ -29,7 +29,7 @@ export const plans: Record<string, PlanDetails> = {
   tier3: {
     id: "tier3",
     title: "Tier 3",
-    price: "$3.00",
+    price: "$50.00",
     billingInfo: "One-time purchase",
     features: [
       "All AI models",

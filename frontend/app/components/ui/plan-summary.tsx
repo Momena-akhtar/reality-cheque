@@ -4,10 +4,10 @@ import { PlanDetails } from "../../types/plan-details";
 interface VoucherData {
   id: string;
   code: string;
-  tier: 1 | 2 | 3;
+    tier: 10 | 20 | 50;
   credits: number;
   maxUses: number;
-  description?: string;
+  description?: string ;
 }
 
 interface PlanSummaryProps {
