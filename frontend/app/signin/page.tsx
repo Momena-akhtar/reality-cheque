@@ -384,7 +384,7 @@ export default function SignInPage() {
                             
                             <div>
                                 <label htmlFor="monthlyRevenue" className="block text-sm font-medium mb-1">
-                                    Monthly revenue
+                                    Monthly revenue ($)
                                 </label>
                                 <input
                                     type="number"

@@ -61,11 +61,11 @@ interface ChatSession {
         username: string;
         email: string;
     } | null;
-    modelId: {
+    modelId?: {
         _id: string;
         name: string;
         description: string;
-    };
+    } | null;
     title: string;
     totalTokens: number;
     messageCount: number;
@@ -1275,15 +1275,20 @@ export default function AdminPanel() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-foreground">
-                                                        {chat.modelId.name}
-                                                    </div>
-                                                    <div className="text-xs text-primary-text-faded">
-                                                        {
-                                                            chat.modelId
-                                                                .description
-                                                        }
-                                                    </div>
+                                                    {chat.modelId ? (
+                                                        <>
+                                                            <div className="text-sm font-medium text-foreground">
+                                                                {chat.modelId.name}
+                                                            </div>
+                                                            <div className="text-xs text-primary-text-faded">
+                                                                {chat.modelId.description}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-sm text-primary-text-faded italic">
+                                                            Model Deleted
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="text-sm text-foreground max-w-xs truncate">
@@ -1934,7 +1939,7 @@ export default function AdminPanel() {
                                     {chatDetails.chat.userId
                                         ? chatDetails.chat.userId.username
                                         : "Anonymous User"}{" "}
-                                    • {chatDetails.chat.modelId.name}
+                                    • {chatDetails.chat.modelId ? chatDetails.chat.modelId.name : "Model Deleted"}
                                 </p>
                             </div>
                             <button
@@ -1970,12 +1975,20 @@ export default function AdminPanel() {
                                 <h4 className="font-medium text-foreground">
                                     Model
                                 </h4>
-                                <p className="text-sm text-primary-text-faded">
-                                    {chatDetails.chat.modelId.name}
-                                </p>
-                                <p className="text-xs text-primary-text-faded">
-                                    {chatDetails.chat.modelId.description}
-                                </p>
+                                {chatDetails.chat.modelId ? (
+                                    <>
+                                        <p className="text-sm text-primary-text-faded">
+                                            {chatDetails.chat.modelId.name}
+                                        </p>
+                                        <p className="text-xs text-primary-text-faded">
+                                            {chatDetails.chat.modelId.description}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-primary-text-faded italic">
+                                        Model Deleted
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <h4 className="font-medium text-foreground">
