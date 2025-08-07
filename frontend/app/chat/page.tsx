@@ -584,14 +584,20 @@ function ChatPageContent() {
                                             {model.description}
                                         </p>
 
-                                        {/* Features Badge if model has features */}
+                                        {/* Features List if model has features */}
                                         {modelFeatures.length > 0 && (
                                             <div className="flex justify-center mb-4">
-                                                <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-foreground text-xs font-medium rounded-full border border-green-700/20">
-                                                    <div className="w-1.5 h-1.5 bg-green-700 rounded-full"></div>
-                                                    {modelFeatures.length}{" "}
-                                                    Features Available
-                                                </span>
+                                                <div className="flex flex-wrap gap-2 justify-center max-w-sm">
+                                                    {modelFeatures.map((feature) => (
+                                                        <span
+                                                            key={feature._id}
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-foreground text-xs font-medium rounded-full border border-border/10"
+                                                        >
+                                                            <div className="w-1 h-1 bg-green-700 rounded-full"></div>
+                                                            {feature.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
