@@ -1230,9 +1230,6 @@ export default function AdminPanel() {
                                                 Model
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
-                                                Title
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Messages
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
@@ -1271,22 +1268,6 @@ export default function AdminPanel() {
                                                     ) : (
                                                         <div className="text-sm text-primary-text-faded italic">
                                                             Anonymous User
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {chat.modelId ? (
-                                                        <>
-                                                            <div className="text-sm font-medium text-foreground">
-                                                                {chat.modelId.name}
-                                                            </div>
-                                                            <div className="text-xs text-primary-text-faded">
-                                                                {chat.modelId.description}
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <div className="text-sm text-primary-text-faded italic">
-                                                            Model Deleted
                                                         </div>
                                                     )}
                                                 </td>
