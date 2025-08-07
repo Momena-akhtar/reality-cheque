@@ -45,21 +45,6 @@ export const customGPTData = {
             description: "Tools for client onboarding processes",
             tierAccess: "tier3"
         },
-        {
-            name: "Email Marketing",
-            description: "Tools for email marketing campaigns",
-            tierAccess: "tier3"
-        },
-        {
-            name: "Ad / Landing Creative Vault",
-            description: "Library of creative assets and copy",
-            tierAccess: "tier3"
-        },
-        {
-            name: "Resources & Leaderboard",
-            description: "Best practices and community resources",
-            tierAccess: "tier3"
-        }
     ],
     models: [
         // 1. Website Builder
@@ -241,13 +226,6 @@ Guard Rails:
         },
 
         // 2. Upwork Tools
-        {
-            name: "Job Feed Filter & Bid Analyzer",
-            description: "Filter and analyze Upwork job feeds and bids",
-            categoryName: "Upwork Tools",
-            masterPrompt:"You are a bid analyzer",
-            features: []
-        },
         {
             name: "Proposal Builder",
             description: "Create winning Upwork proposals",
@@ -531,13 +509,6 @@ Guard Rails:
 
         // 4. Offer & Pricing Builder
         {
-            name: "Ideal Client Avatar Generator",
-            description: "Create detailed ideal client personas",
-            categoryName: "Offer & Pricing Builder",
-            masterPrompt: "You are an Ideal Client Avatar Generator specialized at creating detailed client personas that help target the right audience.",
-            features: []
-        },
-        {
             name: "One-Sentence Value Proposition Creator",
             description: "Create compelling value propositions (Sabri Subi, Alex Hormozi style)",
             categoryName: "Offer & Pricing Builder",
@@ -562,21 +533,6 @@ Guard Rails:
 `,
             features: []
         },
-        {
-            name: "Outcome-Based Offer Builder",
-            description: "Create offers focused on results (Sabri Subi, Alex Hormozi style)",
-            categoryName: "Offer & Pricing Builder",
-            masterPrompt: "You are an Outcome-Based Offer Builder specialized at creating offers that focus on results and transformations rather than features.",
-            features: []
-        },
-        {
-            name: "Packaging Your Transformation",
-            description: "Package your transformation into compelling offers",
-            categoryName: "Offer & Pricing Builder",
-            masterPrompt: "You are a Transformation Packaging specialist who helps package transformations into compelling, high-value offers.",
-            features: []
-        },
-
         // 5. Cold Email Outreach
         {
             name: "Buyer Persona",
@@ -918,13 +874,6 @@ Guard Rails:
             features: []
         },
         {
-            name: "Live Objection Role Play",
-            description: "Practice handling objections in real-time",
-            categoryName: "High-Ticket Sales",
-            masterPrompt: "You are a Live Objection Role Play specialist who helps practice handling objections in real-time scenarios.",
-            features: []
-        },
-        {
             name: "Pitch Deck Generator",
             description: "Create compelling pitch decks",
             categoryName: "High-Ticket Sales",
@@ -1108,67 +1057,5 @@ Guard Rails:
 `,
             features: []
         },
-
-        // 10. Email Marketing
-        {
-            name: "Newsletter Draft AI",
-            description: "Create engaging newsletter content",
-            categoryName: "Email Marketing",
-            masterPrompt: "You are a Newsletter Draft AI specialized at creating engaging email newsletters that build relationships and drive engagement.",
-            features: []
-        },
-        {
-            name: "Promo Campaign Wizard",
-            description: "Create promotional email campaigns",
-            categoryName: "Email Marketing",
-            masterPrompt: "You are a Promo Campaign Wizard specialized at creating promotional email campaigns that drive sales and conversions.",
-            features: []
-        },
-        {
-            name: "Subject-Line Tester",
-            description: "Test and optimize email subject lines",
-            categoryName: "Email Marketing",
-            masterPrompt: "You are a Subject-Line Tester specialized at creating and testing email subject lines that maximize open rates.",
-            features: []
-        },
-
-        // 11. Ad / Landing Creative Vault
-        {
-            name: "Swipeable Hook Library",
-            description: "Library of proven hooks by niche/angle",
-            categoryName: "Ad / Landing Creative Vault",
-            masterPrompt: "You are a Swipeable Hook Library specialist who provides proven hooks and angles for different niches.",
-            features: []
-        },
-        {
-            name: "Winning Copy Examples",
-            description: "Proven copy examples and templates",
-            categoryName: "Ad / Landing Creative Vault",
-            masterPrompt: "You are a Winning Copy Examples specialist who provides proven copy templates and examples.",
-            features: []
-        },
-
-        // 12. Resources & Leaderboard
-        {
-            name: "Best-Practice Guides",
-            description: "Best practices for each tool category",
-            categoryName: "Resources & Leaderboard",
-            masterPrompt: "You are a Best-Practice Guides specialist who provides comprehensive best practices for different marketing tools and strategies.",
-            features: []
-        },
-        {
-            name: "Community Template Gallery",
-            description: "User-submitted, upvoted templates",
-            categoryName: "Resources & Leaderboard",
-            masterPrompt: "You are a Community Template Gallery curator who helps organize and showcase community-contributed templates.",
-            features: []
-        },
-        {
-            name: "Performance Leaderboards & Scorecards",
-            description: "Track and compare performance metrics",
-            categoryName: "Resources & Leaderboard",
-            masterPrompt: "You are a Performance Leaderboards specialist who helps track, compare, and improve performance metrics.",
-            features: []
-        }
     ]
 };
