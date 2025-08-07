@@ -1030,6 +1030,7 @@ Constraints:
 Guard Rails:
 - If the user asks about a different topic, tell them you can only help create questions for client intake forms.
 `,
+        features: []
         },
         {
             name: "Welcome Email / Packet Builder",
