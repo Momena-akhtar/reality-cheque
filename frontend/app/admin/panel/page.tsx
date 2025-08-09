@@ -699,16 +699,16 @@ export default function AdminPanel() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center">
-                            <Settings className="w-8 h-8 text-foreground mr-3" />
-                            <h1 className="text-xl font-semibold text-foreground">
+                            <Settings className="w-6 h-6 sm:w-8 sm:h-8 text-foreground mr-2 sm:mr-3" />
+                            <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                                 Admin Panel
                             </h1>
                         </div>
-                        <div className="flex items-center space-x-4">
-                            <span className="text-sm text-primary-text-faded">
+                        <div className="flex items-center space-x-2 sm:space-x-4">
+                            <span className="hidden sm:block text-sm text-primary-text-faded">
                                 Welcome, {admin?.email}
                             </span>
-                            <div className="flex items-center space-x-2">
+                            <div className="hidden sm:flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                 <span className="text-xs text-primary-text-faded">
                                     Session Active
@@ -735,9 +735,10 @@ export default function AdminPanel() {
                             </div>
                             <button
                                 onClick={adminLogout}
-                                className="px-3 py-1 text-sm border border-border rounded-lg text-foreground hover:bg-primary-hover transition-colors"
+                                className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-border rounded-lg text-foreground hover:bg-primary-hover transition-colors"
                             >
-                                Logout
+                                <span className="hidden sm:inline">Logout</span>
+                                <span className="sm:hidden">Logout</span>
                             </button>
                         </div>
                     </div>
@@ -747,7 +748,7 @@ export default function AdminPanel() {
             {/* Navigation Tabs */}
             <div className="border-b border-border bg-card">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <nav className="flex space-x-8">
+                    <nav className="flex justify-center sm:justify-start space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
                         {[
                             {
                                 id: "stats",
@@ -775,14 +776,15 @@ export default function AdminPanel() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
-                                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                                    className={`flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors min-w-[60px] sm:min-w-0 ${
                                         activeTab === tab.id
                                             ? "border-foreground text-foreground"
                                             : "border-transparent text-primary-text-faded hover:text-foreground hover:border-border"
                                     }`}
                                 >
-                                    <Icon className="w-4 h-4" />
-                                    <span>{tab.label}</span>
+                                    <Icon className="w-4 h-4 sm:w-4 sm:h-4" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                    <span className="sm:hidden text-center">{tab.label.split(' ')[0]}</span>
                                 </button>
                             );
                         })}
@@ -791,73 +793,73 @@ export default function AdminPanel() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
                 {activeTab === "stats" && (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold text-foreground">
+                    <div className="space-y-4 sm:space-y-6">
+                        <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center sm:text-left">
                             Dashboard Overview
                         </h2>
 
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div className="bg-card border border-border rounded-lg p-6 hover:bg-card-hover transition-colors">
-                                <div className="flex items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6 hover:bg-card-hover transition-colors">
+                                <div className="flex items-center justify-center sm:justify-start">
                                     <div className="p-2 bg-blue-500/10 rounded-lg">
-                                        <Users className="w-6 h-6 text-blue-500" />
+                                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
                                     </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-primary-text-faded">
+                                    <div className="ml-3 sm:ml-4 text-center sm:text-left">
+                                        <p className="text-xs sm:text-sm font-medium text-primary-text-faded">
                                             Total Users
                                         </p>
-                                        <p className="text-2xl font-bold text-foreground">
+                                        <p className="text-xl sm:text-2xl font-bold text-foreground">
                                             {stats?.totalUsers || 0}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-card border border-border rounded-lg p-6 hover:bg-card-hover transition-colors">
-                                <div className="flex items-center">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6 hover:bg-card-hover transition-colors">
+                                <div className="flex items-center justify-center sm:justify-start">
                                     <div className="p-2 bg-green-500/10 rounded-lg">
-                                        <MessageSquare className="w-6 h-6 text-green-500" />
+                                        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                                     </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-primary-text-faded">
+                                    <div className="ml-3 sm:ml-4 text-center sm:text-left">
+                                        <p className="text-xs sm:text-sm font-medium text-primary-text-faded">
                                             Total Chats
                                         </p>
-                                        <p className="text-2xl font-bold text-foreground">
+                                        <p className="text-xl sm:text-2xl font-bold text-foreground">
                                             {stats?.totalChats || 0}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-card border border-border rounded-lg p-6 hover:bg-card-hover transition-colors">
-                                <div className="flex items-center">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6 hover:bg-card-hover transition-colors">
+                                <div className="flex items-center justify-center sm:justify-start">
                                     <div className="p-2 bg-purple-500/10 rounded-lg">
-                                        <Activity className="w-6 h-6 text-purple-500" />
+                                        <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500" />
                                     </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-primary-text-faded">
+                                    <div className="ml-3 sm:ml-4 text-center sm:text-left">
+                                        <p className="text-xs sm:text-sm font-medium text-primary-text-faded">
                                             Active Users
                                         </p>
-                                        <p className="text-2xl font-bold text-foreground">
+                                        <p className="text-xl sm:text-2xl font-bold text-foreground">
                                             {stats?.activeUsers || 0}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-card border border-border rounded-lg p-6 hover:bg-card-hover transition-colors">
-                                <div className="flex items-center">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6 hover:bg-card-hover transition-colors">
+                                <div className="flex items-center justify-center sm:justify-start">
                                     <div className="p-2 bg-yellow-500/10 rounded-lg">
-                                        <DollarSign className="w-6 h-6 text-yellow-500" />
+                                        <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
                                     </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-primary-text-faded">
+                                    <div className="ml-3 sm:ml-4 text-center sm:text-left">
+                                        <p className="text-xs sm:text-sm font-medium text-primary-text-faded">
                                             Revenue
                                         </p>
-                                        <p className="text-2xl font-bold text-foreground">
+                                        <p className="text-xl sm:text-2xl font-bold text-foreground">
                                             ${stats?.revenue || 0}
                                         </p>
                                     </div>
@@ -866,12 +868,12 @@ export default function AdminPanel() {
                         </div>
 
                         {/* Recent Activity */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-card border border-border rounded-lg p-6">
-                                <h3 className="text-lg font-semibold text-foreground mb-4">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+                                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">
                                     Recent Activity
                                 </h3>
-                                <div className="space-y-4">
+                                <div className="space-y-3 sm:space-y-4">
                                     {recentActivity.length > 0 ? (
                                         recentActivity
                                             .slice(0, 5)
@@ -930,19 +932,19 @@ export default function AdminPanel() {
                                                         className="flex items-center space-x-3"
                                                     >
                                                         {getActivityIcon()}
-                                                        <div className="flex-1">
-                                                            <span className="text-sm text-foreground">
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-xs sm:text-sm text-foreground block truncate">
                                                                 {activity.title}
                                                             </span>
                                                             {activity.description && (
-                                                                <p className="text-xs text-primary-text-faded">
+                                                                <p className="text-xs text-primary-text-faded truncate">
                                                                     {
                                                                         activity.description
                                                                     }
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <span className="text-xs text-primary-text-faded ml-auto">
+                                                        <span className="text-xs text-primary-text-faded ml-2 flex-shrink-0">
                                                             {formatTimeAgo(
                                                                 activity.timestamp
                                                             )}
@@ -960,40 +962,40 @@ export default function AdminPanel() {
                                 </div>
                             </div>
 
-                            <div className="bg-card border border-border rounded-lg p-6">
-                                <h3 className="text-lg font-semibold text-foreground mb-4">
+                            <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+                                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">
                                     Quick Actions
                                 </h3>
-                                <div className="space-y-3">
+                                <div className="space-y-2 sm:space-y-3">
                                     <button
                                         onClick={() => setActiveTab("prompts")}
-                                        className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                                        className="w-full cursor-pointer text-left p-2 sm:p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
                                     >
-                                        <div className="flex items-center space-x-3 cursor-pointer">
-                                            <MessageSquare className="w-5 h-5 text-foreground" />
-                                            <span className="text-foreground">
+                                        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer">
+                                            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                                            <span className="text-sm sm:text-base text-foreground">
                                                 Manage Prompts
                                             </span>
                                         </div>
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("vouchers")}
-                                        className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                                        className="w-full cursor-pointer text-left p-2 sm:p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
                                     >
-                                        <div className="flex items-center space-x-3 cursor-pointer">
-                                            <CreditCard className="w-5 h-5 text-foreground" />
-                                            <span className="text-foreground">
+                                        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer">
+                                            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                                            <span className="text-sm sm:text-base text-foreground">
                                                 Create Voucher
                                             </span>
                                         </div>
                                     </button>
                                     <button
                                         onClick={() => setActiveTab("chats")}
-                                        className="w-full cursor-pointer text-left p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
+                                        className="w-full cursor-pointer text-left p-2 sm:p-3 border border-border rounded-lg hover:bg-primary-hover transition-colors"
                                     >
-                                        <div className="flex items-center space-x-3 cursor-pointer">
-                                            <History className="w-5 h-5 text-foreground" />
-                                            <span className="text-foreground">
+                                        <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer">
+                                            <History className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                                            <span className="text-sm sm:text-base text-foreground">
                                                 View Chat History
                                             </span>
                                         </div>
@@ -1005,9 +1007,9 @@ export default function AdminPanel() {
                 )}
 
                 {activeTab === "prompts" && (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-foreground">
+                    <div className="space-y-4 sm:space-y-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                            <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center sm:text-left">
                                 AI Models & Features
                             </h2>
                             <button
@@ -1022,35 +1024,35 @@ export default function AdminPanel() {
                                     });
                                     setShowPromptModal(true);
                                 }}
-                                className="flex items-center space-x-2 px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
+                                className="flex items-center space-x-2 px-3 sm:px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors w-full sm:w-auto justify-center"
                             >
                                 <Plus className="w-4 h-4" />
-                                <span>Add Feature</span>
+                                <span className="text-sm sm:text-base">Add Feature</span>
                             </button>
                         </div>
 
                         {/* Models Section */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-foreground">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground text-center sm:text-left">
                                 AI Models
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {models.map((model) => (
                                     <div
                                         key={model._id}
                                         className="bg-card border border-border rounded-lg p-4 hover:bg-card-hover transition-colors"
                                     >
                                         <div className="flex items-start justify-between mb-3">
-                                            <div>
-                                                <h4 className="font-semibold text-foreground">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-foreground text-sm sm:text-base">
                                                     {model.name}
                                                 </h4>
-                                                <p className="text-sm text-primary-text-faded">
+                                                <p className="text-xs sm:text-sm text-primary-text-faded">
                                                     {model.categoryId.name}
                                                 </p>
                                             </div>
                                             <span
-                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${
                                                     model.isActive
                                                         ? "bg-green-700/20 border border-green-700 text-foreground"
                                                         : "bg-red-700/20 border border-red-700 text-foreground"
@@ -1061,7 +1063,7 @@ export default function AdminPanel() {
                                                     : "Inactive"}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-foreground mb-3 line-clamp-2">
+                                        <p className="text-xs sm:text-sm text-foreground mb-3 line-clamp-2">
                                             {model.description}
                                         </p>
                                         <div className="space-y-2">
@@ -1105,7 +1107,7 @@ export default function AdminPanel() {
 
                         {/* Features Section */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-foreground">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground text-center sm:text-left">
                                 Features
                             </h3>
                             <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -1113,19 +1115,19 @@ export default function AdminPanel() {
                                     <table className="w-full">
                                         <thead className="bg-primary border-b border-border">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                     Name
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                     Description
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                     Order
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                     Optional
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                     Actions
                                                 </th>
                                             </tr>
@@ -1136,22 +1138,35 @@ export default function AdminPanel() {
                                                     key={feature._id}
                                                     className="hover:bg-primary-hover transition-colors"
                                                 >
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="px-3 sm:px-6 py-4">
                                                         <div className="text-sm font-medium text-foreground">
                                                             {feature.name}
                                                         </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm text-primary-text-faded max-w-xs truncate">
-                                                            {
-                                                                feature.description
-                                                            }
+                                                        <div className="sm:hidden text-xs text-primary-text-faded mt-1">
+                                                            {feature.description}
+                                                        </div>
+                                                        <div className="sm:hidden flex items-center space-x-2 mt-1">
+                                                            <span className="text-xs text-primary-text-faded">
+                                                                Order: {feature.order}
+                                                            </span>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                                feature.isOptional
+                                                                    ? "bg-blue-700/20 text-foreground border border-blue-700"
+                                                                    : "bg-red-700/20 border border-red-700 text-foreground"
+                                                            }`}>
+                                                                {feature.isOptional ? "Optional" : "Required"}
+                                                            </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                    <td className="hidden sm:table-cell px-6 py-4">
+                                                        <div className="text-sm text-primary-text-faded max-w-xs truncate">
+                                                            {feature.description}
+                                                        </div>
+                                                    </td>
+                                                    <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                         {feature.order}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                                                         {feature.isOptional ? (
                                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-700/20 text-foreground border border-blue-700">
                                                                 Yes
@@ -1162,7 +1177,7 @@ export default function AdminPanel() {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                         <div className="flex space-x-2">
                                                             <button
                                                                 onClick={() => {
@@ -1211,9 +1226,9 @@ export default function AdminPanel() {
                 )}
 
                 {activeTab === "chats" && (
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-foreground">
+                            <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center sm:text-left">
                                 Chat History
                             </h2>
                         </div>
@@ -1223,22 +1238,22 @@ export default function AdminPanel() {
                                 <table className="w-full">
                                     <thead className="bg-primary border-b border-border">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 User
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Model
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Messages
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Tokens
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Last Activity
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
@@ -1249,20 +1264,14 @@ export default function AdminPanel() {
                                                 key={chat._id}
                                                 className="hover:bg-primary-hover transition-colors"
                                             >
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-3 sm:px-6 py-4">
                                                     {chat.userId ? (
                                                         <>
                                                             <div className="text-sm font-medium text-foreground">
-                                                                {
-                                                                    chat.userId
-                                                                        .username
-                                                                }
+                                                                {chat.userId.username}
                                                             </div>
                                                             <div className="text-xs text-primary-text-faded">
-                                                                {
-                                                                    chat.userId
-                                                                        .email
-                                                                }
+                                                                {chat.userId.email}
                                                             </div>
                                                         </>
                                                     ) : (
@@ -1270,29 +1279,39 @@ export default function AdminPanel() {
                                                             Anonymous User
                                                         </div>
                                                     )}
+                                                    <div className="sm:hidden text-xs text-primary-text-faded mt-1">
+                                                        {chat.title}
+                                                    </div>
+                                                    <div className="sm:hidden flex items-center space-x-2 mt-1">
+                                                        <span className="text-xs text-primary-text-faded">
+                                                            Messages: {chat.messageCount}
+                                                        </span>
+                                                        <span className="text-xs text-primary-text-faded">
+                                                            Tokens: {chat.totalTokens}
+                                                        </span>
+                                                    </div>
+                                                    <div className="sm:hidden text-xs text-primary-text-faded mt-1">
+                                                        {new Date(chat.lastActivity).toLocaleDateString()}
+                                                    </div>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="hidden sm:table-cell px-6 py-4">
                                                     <div className="text-sm text-foreground max-w-xs truncate">
                                                         {chat.title}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                     {chat.messageCount}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                     {chat.totalTokens}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
-                                                    {new Date(
-                                                        chat.lastActivity
-                                                    ).toLocaleDateString()}
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
+                                                    {new Date(chat.lastActivity).toLocaleDateString()}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <button
                                                         onClick={() =>
-                                                            viewChatDetails(
-                                                                chat._id
-                                                            )
+                                                            viewChatDetails(chat._id)
                                                         }
                                                         className="text-blue-600 cursor-pointer hover:text-blue-900"
                                                         title="View Chat Details"
@@ -1310,9 +1329,9 @@ export default function AdminPanel() {
                 )}
 
                 {activeTab === "vouchers" && (
-                    <div className="space-y-6">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-foreground">
+                    <div className="space-y-4 sm:space-y-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                            <h2 className="text-xl sm:text-2xl font-bold text-foreground text-center sm:text-left">
                                 Manage Vouchers
                             </h2>
                             <button
@@ -1328,10 +1347,10 @@ export default function AdminPanel() {
                                     });
                                     setShowVoucherModal(true);
                                 }}
-                                className="flex items-center space-x-2 px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors"
+                                className="flex items-center space-x-2 px-3 sm:px-4 py-2 border border-border text-foreground cursor-pointer rounded-lg hover:bg-primary-hover transition-colors w-full sm:w-auto justify-center"
                             >
                                 <Plus className="w-4 h-4" />
-                                <span>Add Voucher</span>
+                                <span className="text-sm sm:text-base">Add Voucher</span>
                             </button>
                         </div>
 
@@ -1340,25 +1359,25 @@ export default function AdminPanel() {
                                 <table className="w-full">
                                     <thead className="bg-primary border-b border-border">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Code
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Value
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Usage
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Expiry
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Tier
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Status
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
+                                            <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-primary-text-faded uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
@@ -1369,40 +1388,54 @@ export default function AdminPanel() {
                                                 key={voucher._id}
                                                 className="hover:bg-primary-hover transition-colors"
                                             >
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-3 sm:px-6 py-4">
                                                     <div className="text-sm font-medium text-foreground">
                                                         {voucher.code}
                                                     </div>
                                                     {voucher.description && (
                                                         <div className="text-xs text-primary-text-faded truncate max-w-xs">
-                                                            {
-                                                                voucher.description
-                                                            }
+                                                            {voucher.description}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                                    <div>
-                                                        Tier {voucher.tier} - $
-                                                        {voucher.credits}{" "}
-                                                        credits
+                                                    <div className="sm:hidden flex items-center space-x-2 mt-1">
+                                                        <span className="text-xs text-primary-text-faded">
+                                                            Tier {voucher.tier} - ${voucher.credits} credits
+                                                        </span>
+                                                    </div>
+                                                    <div className="sm:hidden flex items-center space-x-2 mt-1">
+                                                        <span className="text-xs text-primary-text-faded">
+                                                            Usage: {voucher.usedCount} / {voucher.maxUses}
+                                                        </span>
+                                                    </div>
+                                                    <div className="sm:hidden flex items-center space-x-2 mt-1">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                                            voucher.isActive
+                                                                ? "bg-green-700/20 border border-green-700 text-foreground"
+                                                                : "bg-red-700/20 border border-red-700 text-foreground"
+                                                        }`}>
+                                                            {voucher.isActive ? "Active" : "Inactive"}
+                                                        </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                                    {voucher.usedCount} /{" "}
-                                                    {voucher.maxUses}
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                    <div>
+                                                        Tier {voucher.tier} - ${voucher.credits} credits
+                                                    </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                    {voucher.usedCount} / {voucher.maxUses}
+                                                </td>
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-primary-text-faded">
                                                     -
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                     <div className="flex flex-wrap gap-1">
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-700/20 text-foreground border border-green-700">
                                                             Tier {voucher.tier}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                                                     {voucher.isActive ? (
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-700/20 border border-green-700 text-foreground">
                                                             <CheckCircle className="w-3 h-3 mr-1" />
@@ -1415,13 +1448,11 @@ export default function AdminPanel() {
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex space-x-2">
                                                         <button
                                                             onClick={() =>
-                                                                editVoucher(
-                                                                    voucher
-                                                                )
+                                                                editVoucher(voucher)
                                                             }
                                                             className="text-blue-600 hover:text-blue-900 p-1 cursor-pointer"
                                                         >
@@ -1429,9 +1460,7 @@ export default function AdminPanel() {
                                                         </button>
                                                         <button
                                                             onClick={() =>
-                                                                deleteVoucher(
-                                                                    voucher._id
-                                                                )
+                                                                deleteVoucher(voucher._id)
                                                             }
                                                             className="text-red-600 hover:text-red-900 p-1 cursor-pointer"
                                                         >

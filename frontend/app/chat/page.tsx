@@ -817,7 +817,7 @@ function ChatPageContent() {
                     placeholder={
                         userCredits <= 0.01
                             ? "Insufficient credits"
-                            : "Add specific instructions or just click Generate..."
+                            : "Add anything or click Generate..."
                     }
                 />
                 {userCredits <= 0.01 && (
