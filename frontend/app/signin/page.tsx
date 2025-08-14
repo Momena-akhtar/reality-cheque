@@ -637,11 +637,11 @@ export default function SignInPage() {
                                             <div className="space-y-2">
                                                 {pricingPackages.map((pkg, index) => (
                                                     <div key={index} className="flex border border-border items-center gap-2 p-2 bg-muted/20 rounded-lg">
-                                                        <span className="flex-1 text-sm">Package {index + 1}: {pkg.name} - ${pkg.price}</span>
+                                                        <span className="flex-1 text-sm">{pkg.name} - ${pkg.price}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => removePackage(index)}
-                                                            className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                                            className="text-red-500 cursor-pointer border border-red-700 p-1 rounded-full hover:text-foreground transition-colors"
                                                         >
                                                             <Minus className="w-4 h-4" />
                                                         </button>
@@ -686,7 +686,12 @@ export default function SignInPage() {
                                             <div className="space-y-2">
                                                 {currentOffers.map((offer, index) => (
                                                     <div key={index} className="flex border border-border items-center gap-2 p-2 bg-muted/20 rounded-lg">
-                                                        <span className="flex-1 text-sm">{offer.name}</span>
+                                                        <span className="flex-1 text-sm">
+                                                            {offer.name}
+                                                            {offer.packageId && pricingPackages[parseInt(offer.packageId)] && (
+                                                                <span className="text-muted-foreground ml-2">({pricingPackages[parseInt(offer.packageId)].name})</span>
+                                                            )}
+                                                        </span>
                                                         <button
                                                             type="button"
                                                             onClick={() => removeOffer(index)}
@@ -705,7 +710,7 @@ export default function SignInPage() {
                                                         <option value="">Package</option>
                                                         {pricingPackages.map((pkg, pkgIndex) => (
                                                             <option key={pkgIndex} value={pkgIndex.toString()}>
-                                                                Package {pkgIndex + 1}: {pkg.name}
+                                                                {pkg.name}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -740,7 +745,7 @@ export default function SignInPage() {
                                             <div className="space-y-2">
                                                 {stepByStepProcess.map((process, index) => (
                                                     <div key={index} className="p-2 bg-muted/20 rounded-lg border border-border">
-                                                        <div className="text-sm font-medium mb-1">Package {process.packageId}</div>
+                                                        <div className="text-sm font-medium mb-1">{pricingPackages[parseInt(process.packageId)]?.name}</div>
                                                         <div className="space-y-1 ml-3">
                                                             {process.steps.map((step, stepIndex) => (
                                                                 <div key={stepIndex} className="flex items-center gap-2">
@@ -767,14 +772,14 @@ export default function SignInPage() {
                                                         <option value="">Package</option>
                                                         {pricingPackages.map((pkg, pkgIndex) => (
                                                             <option key={pkgIndex} value={pkgIndex.toString()}>
-                                                                Package {pkgIndex + 1}: {pkg.name}
+                                                                {pkg.name}
                                                             </option>
                                                         ))}
                                                     </select>
                                                     <input
                                                         type="number"
                                                         placeholder="Step order"
-                                                        value={newStep.order}
+                                                        value={newStep.order || ''}
                                                         onChange={(e) => setNewStep(prev => ({...prev, order: parseInt(e.target.value) || 0}))}
                                                         className="w-24 px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover text-sm"
                                                     />
@@ -802,7 +807,7 @@ export default function SignInPage() {
                                             <div className="space-y-2">
                                                 {timelineToResults.map((timeline, index) => (
                                                     <div key={index} className="flex border border-border items-center gap-2 p-2 bg-muted/20 rounded-lg">
-                                                        <span className="flex-1 text-sm">Package {timeline.packageId}: {timeline.timeline}</span>
+                                                        <span className="flex-1 text-sm">{pricingPackages[parseInt(timeline.packageId)]?.name}: {timeline.timeline}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => removeTimeline(index)}
@@ -821,7 +826,7 @@ export default function SignInPage() {
                                                         <option value="">Package</option>
                                                         {pricingPackages.map((pkg, pkgIndex) => (
                                                             <option key={pkgIndex} value={pkgIndex.toString()}>
-                                                                Package {pkgIndex + 1}: {pkg.name}
+                                                                {pkg.name}
                                                             </option>
                                                         ))}
                                                     </select>
