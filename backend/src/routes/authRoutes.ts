@@ -11,7 +11,29 @@ const FIXED_COOKIE_OPTIONS = { ...COOKIE_OPTIONS, sameSite: 'lax' as const };
 
 // Register handler
 const registerHandler: express.RequestHandler = async (req, res) => {
-  const { username, email, password, role, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = req.body;
+  const { 
+    username, 
+    email, 
+    password, 
+    role, 
+    userType,
+    usageType,
+    agencyName, 
+    services, 
+    website, 
+    pricingPackages, 
+    currentOffers,
+    caseStudies, 
+    clientsServed, 
+    targetAudience,
+    idealClientProfile,
+    offer, 
+    bigBrands, 
+    stepByStepProcess, 
+    timelineToResults, 
+    leadSources, 
+    monthlyRevenue 
+  } = req.body;
     
   if (!email || !password || !role) {
     res.status(400).json({ message: 'Email, password, and role are required' });
@@ -21,6 +43,15 @@ const registerHandler: express.RequestHandler = async (req, res) => {
     res.status(400).json({ message: 'Username is required for user registration' });
     return;
   }
+  if (role === 'user' && !userType) {
+    res.status(400).json({ message: 'User type (agency/freelancer) is required' });
+    return;
+  }
+  if (role === 'user' && !usageType) {
+    res.status(400).json({ message: 'Usage type (personal/clients) is required' });
+    return;
+  }
+  
   try {
     let user;
     if (role === 'admin') {
@@ -30,19 +61,23 @@ const registerHandler: express.RequestHandler = async (req, res) => {
       user = new User({ 
         username, 
         email, 
-        password, 
+        password,
+        userType,
+        usageType,
         agencyName: agencyName || '', 
-        services: services || '', 
+        services: services || [], 
         website: website || '', 
-        pricingPackages: pricingPackages || '', 
+        pricingPackages: pricingPackages || [], 
+        currentOffers: currentOffers || [],
         caseStudies: caseStudies || '', 
         clientsServed: clientsServed || 0, 
-        targetAudience: targetAudience || '', 
+        targetAudience: targetAudience || '',
+        idealClientProfile: idealClientProfile || '',
         offer: offer || '', 
         bigBrands: bigBrands || '', 
-        stepByStepProcess: stepByStepProcess || '', 
-        timelineToResults: timelineToResults || '', 
-        leadSources: leadSources || '', 
+        stepByStepProcess: stepByStepProcess || [], 
+        timelineToResults: timelineToResults || [], 
+        leadSources: leadSources || [], 
         monthlyRevenue: monthlyRevenue || 0 
       });
       await user.save();
@@ -57,6 +92,8 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         role, 
         ...(role === 'user' ? { 
           username,
+          userType: user.userType,
+          usageType: user.usageType,
           tier: user.tier,
           totalCredits: user.totalCredits,
           usedCredits: user.usedCredits,
@@ -64,9 +101,11 @@ const registerHandler: express.RequestHandler = async (req, res) => {
           services: user.services,
           website: user.website,
           pricingPackages: user.pricingPackages,
+          currentOffers: user.currentOffers,
           caseStudies: user.caseStudies,
           clientsServed: user.clientsServed,
           targetAudience: user.targetAudience,
+          idealClientProfile: user.idealClientProfile,
           offer: user.offer,
           bigBrands: user.bigBrands,
           stepByStepProcess: user.stepByStepProcess,
@@ -76,9 +115,28 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         } : {}) 
       } 
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Registration error:', err);
-    res.status(500).json({ message: 'Registration failed', error: err instanceof Error ? err.message : 'Unknown error' });
+    
+    // Handle specific MongoDB errors
+    if (err.code === 11000) {
+      if (err.keyPattern?.email) {
+        res.status(400).json({ message: 'Email already exists' });
+      } else if (err.keyPattern?.username) {
+        res.status(400).json({ message: 'Username already exists' });
+      } else {
+        res.status(400).json({ message: 'Duplicate key error' });
+      }
+      return;
+    }
+    
+    if (err.name === 'ValidationError') {
+      const validationErrors = Object.values(err.errors).map((e: any) => e.message);
+      res.status(400).json({ message: 'Validation failed', errors: validationErrors });
+      return;
+    }
+    
+    res.status(500).json({ message: 'Registration failed', error: err.message || 'Unknown error' });
   }
 };
 
@@ -108,6 +166,8 @@ const loginHandler: express.RequestHandler = async (req, res) => {
         role, 
         ...(role === 'user' ? { 
           username: user.username,
+          userType: user.userType,
+          usageType: user.usageType,
           tier: user.tier,
           totalCredits: user.totalCredits,
           usedCredits: user.usedCredits,
@@ -115,9 +175,11 @@ const loginHandler: express.RequestHandler = async (req, res) => {
           services: user.services,
           website: user.website,
           pricingPackages: user.pricingPackages,
+          currentOffers: user.currentOffers,
           caseStudies: user.caseStudies,
           clientsServed: user.clientsServed,
           targetAudience: user.targetAudience,
+          idealClientProfile: user.idealClientProfile,
           offer: user.offer,
           bigBrands: user.bigBrands,
           stepByStepProcess: user.stepByStepProcess,
@@ -146,7 +208,7 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, tier, totalCredits, usedCredits, agencyName, services, website, pricingPackages, caseStudies, clientsServed, targetAudience, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
+    const { _id, email, username, picture, tier, totalCredits, usedCredits, userType, usageType, agencyName, services, website, pricingPackages, currentOffers, caseStudies, clientsServed, targetAudience, idealClientProfile, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
     res.json({ 
       id: _id, 
       email, 
@@ -155,13 +217,17 @@ authRouter.get('/me', authMiddleware, (req, res) => {
       tier,
       totalCredits,
       usedCredits,
+      userType,
+      usageType,
       agencyName,
       services,
       website,
       pricingPackages,
+      currentOffers,
       caseStudies,
       clientsServed,
       targetAudience,
+      idealClientProfile,
       offer,
       bigBrands,
       stepByStepProcess,
