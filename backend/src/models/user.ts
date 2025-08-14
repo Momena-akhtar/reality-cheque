@@ -6,7 +6,6 @@ export interface IUser extends Document {
   username: string;
   password: string;
   email: string;
-  picture: string;
   tier: "tier1" | "tier2" | "tier3";
   totalCredits: number;
   usedCredits: number;
@@ -45,7 +44,6 @@ export interface IUser extends Document {
   clientsServed?: number;
   targetAudience?: string;
   idealClientProfile?: string;
-  offer?: string;
   bigBrands?: string;
   leadSources?: Array<string>;
   monthlyRevenue?: number;
@@ -71,10 +69,6 @@ const userSchema = new Schema<IUser>({
     unique: true, 
     lowercase: true, 
     trim: true 
-  },
-  picture: { 
-    type: String, 
-    default: "" 
   },
   tier: { 
     type: String, 
@@ -198,11 +192,6 @@ const userSchema = new Schema<IUser>({
     default: ""
   },
   idealClientProfile: {
-    type: String,
-    trim: true,
-    default: ""
-  },
-  offer: {
     type: String,
     trim: true,
     default: ""
