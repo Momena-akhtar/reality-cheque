@@ -10,18 +10,44 @@ export interface IUser extends Document {
   tier: "tier1" | "tier2" | "tier3";
   totalCredits: number;
   usedCredits: number;
+  // User type fields
+  userType: "agency" | "freelancer";
+  usageType: "personal" | "clients";
+  // Agency/Freelancer specific fields
   agencyName?: string;
-  services?: string;
+  services?: Array<{
+    name: string;
+    description?: string;
+  }>;
   website?: string;
-  pricingPackages?: string;
+  pricingPackages?: Array<{
+    name: string;
+    price: string;
+    description?: string;
+  }>;
+  currentOffers?: Array<{
+    name: string;
+    description?: string;
+    packageId?: string;
+  }>;
+  stepByStepProcess?: Array<{
+    packageId: string;
+    steps: Array<{
+      order: number;
+      description: string;
+    }>;
+  }>;
+  timelineToResults?: Array<{
+    packageId: string;
+    timeline: string;
+  }>;
   caseStudies?: string;
   clientsServed?: number;
   targetAudience?: string;
+  idealClientProfile?: string;
   offer?: string;
   bigBrands?: string;
-  stepByStepProcess?: string;
-  timelineToResults?: string;
-  leadSources?: string;
+  leadSources?: Array<string>;
   monthlyRevenue?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -55,35 +81,108 @@ const userSchema = new Schema<IUser>({
     enum: ["tier1", "tier2", "tier3"], 
     default: "tier1" 
   },
-
   totalCredits: {
     type: Number,
-    default: 0.00, // No free credits on signup
+    default: 0.00,
   },
   usedCredits: {
     type: Number,
-    default: 0.00, // No credits used initially
+    default: 0.00,
   },
+  // New user type fields
+  userType: {
+    type: String,
+    enum: ["agency", "freelancer"],
+    required: true
+  },
+  usageType: {
+    type: String,
+    enum: ["personal", "clients"],
+    required: true
+  },
+  // Updated agency/freelancer fields
   agencyName: {
     type: String,
     trim: true,
     default: ""
   },
-  services: {
-    type: String,
-    trim: true,
-    default: ""
-  },
+  services: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    }
+  }],
   website: {
     type: String,
     trim: true,
     default: ""
   },
-  pricingPackages: {
-    type: String,
-    trim: true,
-    default: ""
-  },
+  pricingPackages: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    price: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    }
+  }],
+  currentOffers: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    packageId: {
+      type: String,
+      trim: true
+    }
+  }],
+  stepByStepProcess: [{
+    packageId: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    steps: [{
+      order: {
+        type: Number,
+        required: true
+      },
+      description: {
+        type: String,
+        required: true,
+        trim: true
+      }
+    }]
+  }],
+  timelineToResults: [{
+    packageId: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    timeline: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }],
   caseStudies: {
     type: String,
     trim: true,
@@ -98,6 +197,11 @@ const userSchema = new Schema<IUser>({
     trim: true,
     default: ""
   },
+  idealClientProfile: {
+    type: String,
+    trim: true,
+    default: ""
+  },
   offer: {
     type: String,
     trim: true,
@@ -108,21 +212,23 @@ const userSchema = new Schema<IUser>({
     trim: true,
     default: ""
   },
-  stepByStepProcess: {
+  leadSources: [{
     type: String,
-    trim: true,
-    default: ""
-  },
-  timelineToResults: {
-    type: String,
-    trim: true,
-    default: ""
-  },
-  leadSources: {
-    type: String,
-    trim: true,
-    default: ""
-  },
+    enum: [
+      "Upwork",
+      "Fiverr", 
+      "Linkedin",
+      "Cold Email",
+      "B2B/Other Agencies",
+      "SEO",
+      "Social Media (FB, IG, etc)",
+      "Google Ads",
+      "Meta Ads",
+      "Influencers",
+      "Conferences",
+      "Others"
+    ]
+  }],
   monthlyRevenue: {
     type: Number,
     default: 0
