@@ -27,7 +27,6 @@ const registerHandler: express.RequestHandler = async (req, res) => {
     clientsServed, 
     targetAudience,
     idealClientProfile,
-    offer, 
     bigBrands, 
     stepByStepProcess, 
     timelineToResults, 
@@ -73,7 +72,6 @@ const registerHandler: express.RequestHandler = async (req, res) => {
         clientsServed: clientsServed || 0, 
         targetAudience: targetAudience || '',
         idealClientProfile: idealClientProfile || '',
-        offer: offer || '', 
         bigBrands: bigBrands || '', 
         stepByStepProcess: stepByStepProcess || [], 
         timelineToResults: timelineToResults || [], 
@@ -106,7 +104,6 @@ const registerHandler: express.RequestHandler = async (req, res) => {
           clientsServed: user.clientsServed,
           targetAudience: user.targetAudience,
           idealClientProfile: user.idealClientProfile,
-          offer: user.offer,
           bigBrands: user.bigBrands,
           stepByStepProcess: user.stepByStepProcess,
           timelineToResults: user.timelineToResults,
@@ -180,7 +177,7 @@ const loginHandler: express.RequestHandler = async (req, res) => {
           clientsServed: user.clientsServed,
           targetAudience: user.targetAudience,
           idealClientProfile: user.idealClientProfile,
-          offer: user.offer,
+
           bigBrands: user.bigBrands,
           stepByStepProcess: user.stepByStepProcess,
           timelineToResults: user.timelineToResults,
@@ -208,12 +205,11 @@ authRouter.post('/logout', logoutHandler);
 authRouter.get('/me', authMiddleware, (req, res) => {
   // Only support users for now
   if ((req as any).user) {
-    const { _id, email, username, picture, tier, totalCredits, usedCredits, userType, usageType, agencyName, services, website, pricingPackages, currentOffers, caseStudies, clientsServed, targetAudience, idealClientProfile, offer, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
+    const { _id, email, username, tier, totalCredits, usedCredits, userType, usageType, agencyName, services, website, pricingPackages, currentOffers, caseStudies, clientsServed, targetAudience, idealClientProfile, bigBrands, stepByStepProcess, timelineToResults, leadSources, monthlyRevenue } = (req as any).user;
     res.json({ 
       id: _id, 
       email, 
       username, 
-      picture, 
       tier,
       totalCredits,
       usedCredits,
@@ -228,7 +224,6 @@ authRouter.get('/me', authMiddleware, (req, res) => {
       clientsServed,
       targetAudience,
       idealClientProfile,
-      offer,
       bigBrands,
       stepByStepProcess,
       timelineToResults,
