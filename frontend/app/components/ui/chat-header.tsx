@@ -92,22 +92,42 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
                 
                 {/* Agency Information Section */}
                 <div className="space-y-3 text-xs">
+                  {user.userType && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">User Type:</span>
+                        <span className="text-muted-foreground ml-1 capitalize">{user.userType}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.usageType && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-green-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">Usage:</span>
+                        <span className="text-muted-foreground ml-1 capitalize">{user.usageType === 'personal' ? 'Personal/Team' : 'For Clients'}</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {user.agencyName && (
                     <div className="flex items-start gap-2">
                       <Building2 className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <span className="font-medium text-foreground">Agency:</span>
+                        <span className="font-medium text-foreground">{user.userType === 'agency' ? 'Agency:' : 'Business:'}</span>
                         <span className="text-muted-foreground ml-1">{user.agencyName}</span>
                       </div>
                     </div>
                   )}
                   
-                  {user.services && (
+                  {user.services && user.services.length > 0 && (
                     <div className="flex items-start gap-2">
                       <div className="h-3 w-3 bg-green-500 rounded-full mt-0.5 flex-shrink-0"></div>
                       <div>
                         <span className="font-medium text-foreground">Services:</span>
-                        <span className="text-muted-foreground ml-1">{user.services}</span>
+                        <span className="text-muted-foreground ml-1">{user.services.map(s => s.name).join(', ')}</span>
                       </div>
                     </div>
                   )}
@@ -132,12 +152,12 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
                     </div>
                   )}
                   
-                  {user.targetAudience && (
+                  {user.idealClientProfile && (
                     <div className="flex items-start gap-2">
                       <Target className="h-3 w-3 text-orange-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <span className="font-medium text-foreground">Target Audience:</span>
-                        <span className="text-muted-foreground ml-1">{user.targetAudience}</span>
+                        <span className="font-medium text-foreground">Ideal Client Profile:</span>
+                        <span className="text-muted-foreground ml-1">{user.idealClientProfile.substring(0, 50)}...</span>
                       </div>
                     </div>
                   )}
@@ -152,52 +172,62 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
                     </div>
                   )}
                   
-                  {user.leadSources && (
+                  {user.leadSources && user.leadSources.length > 0 && (
                     <div className="flex items-start gap-2">
                       <div className="h-3 w-3 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
                       <div>
                         <span className="font-medium text-foreground">Lead Sources:</span>
-                        <span className="text-muted-foreground ml-1">{user.leadSources}</span>
+                        <span className="text-muted-foreground ml-1">{user.leadSources.join(', ')}</span>
                       </div>
                     </div>
                   )}
                   
-                  {user.stepByStepProcess && (
-                    <div className="flex items-start gap-2">
-                      <div className="h-3 w-3 bg-indigo-500 rounded-full mt-0.5 flex-shrink-0"></div>
-                      <div>
-                        <span className="font-medium text-foreground">Process:</span>
-                        <span className="text-muted-foreground ml-1">{user.stepByStepProcess.substring(0, 50)}...</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {user.offer && (
-                    <div className="flex items-start gap-2">
-                      <Target className="h-3 w-3 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium text-foreground">Offer:</span>
-                        <span className="text-muted-foreground ml-1">{user.offer}</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {user.caseStudies && (
-                    <div className="flex items-start gap-2">
-                      <div className="h-3 w-3 bg-purple-500 rounded-full mt-0.5 flex-shrink-0"></div>
-                      <div>
-                        <span className="font-medium text-foreground">Case Studies:</span>
-                        <span className="text-muted-foreground ml-1">{user.caseStudies}</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {user.pricingPackages && (
+                  {user.pricingPackages && user.pricingPackages.length > 0 && (
                     <div className="flex items-start gap-2">
                       <div className="h-3 w-3 bg-yellow-500 rounded-full mt-0.5 flex-shrink-0"></div>
                       <div>
                         <span className="font-medium text-foreground">Pricing Packages:</span>
-                        <span className="text-muted-foreground ml-1">{user.pricingPackages}</span>
+                        <span className="text-muted-foreground ml-1">{user.pricingPackages.map(p => `${p.name}: ${p.price}`).join(', ')}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.currentOffers && user.currentOffers.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-indigo-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">Current Offers:</span>
+                        <span className="text-muted-foreground ml-1">{user.currentOffers.map(o => o.name).join(', ')}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.stepByStepProcess && user.stepByStepProcess.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-purple-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">Process Steps:</span>
+                        <span className="text-muted-foreground ml-1">{user.stepByStepProcess.length} package(s) with steps</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.timelineToResults && user.timelineToResults.length > 0 && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-teal-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">Timelines:</span>
+                        <span className="text-muted-foreground ml-1">{user.timelineToResults.length} package(s) with timelines</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.bigBrands && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-3 w-3 bg-purple-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-medium text-foreground">Big Brands:</span>
+                        <span className="text-muted-foreground ml-1">{user.bigBrands.substring(0, 50)}...</span>
                       </div>
                     </div>
                   )}
