@@ -666,6 +666,8 @@ function ChatPageContent() {
                                                                 regeneratingFeature
                                                             }
                                                         />
+
+                                                        {/* Follow-up Questions for Featured Responses */}
                                                         {message.followUpQuestions &&
                                                             message
                                                                 .followUpQuestions
@@ -750,42 +752,7 @@ function ChatPageContent() {
                                                                   )
                                                                 : message.content}
                                                         </div>
-                                                        {message.followUpQuestions &&
-                                                            message
-                                                                .followUpQuestions
-                                                                .length > 0 && (
-                                                                <div className="mt-4 pt-4 border-t border-border/30">
-                                                                    <div className="text-sm font-medium text-muted-foreground mb-3">
-                                                                        Follow-up
-                                                                        Questions:
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        {message.followUpQuestions.map(
-                                                                            (
-                                                                                question,
-                                                                                index
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        index
-                                                                                    }
-                                                                                    className="text-sm text-foreground"
-                                                                                >
-                                                                                    {index +
-                                                                                        1}
-                                                                                    .{" "}
-                                                                                    {question
-                                                                                        .replace(
-                                                                                            /\\n/g,
-                                                                                            "\n"
-                                                                                        )
-                                                                                        .trim()}
-                                                                                </div>
-                                                                            )
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
+
                                                     </>
                                                 )}
                                             </div>
