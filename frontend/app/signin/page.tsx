@@ -24,6 +24,7 @@ export default function SignInPage() {
     const [agencyName, setAgencyName] = useState('');
     const [website, setWebsite] = useState('');
     const [clientsServed, setClientsServed] = useState('');
+    const [targetAudience, setTargetAudience] = useState('');
     const [idealClientProfile, setIdealClientProfile] = useState('');
     const [bigBrands, setBigBrands] = useState('');
     const [caseStudies, setCaseStudies] = useState('');
@@ -225,7 +226,7 @@ export default function SignInPage() {
                     currentOffers: skipStep3 ? [] : currentOffers,
                     caseStudies: skipStep2 ? '' : caseStudies,
                     clientsServed: skipStep2 ? 0 : (clientsServed ? parseInt(clientsServed) : 0),
-                    targetAudience: '',
+                    targetAudience: skipStep2 ? '' : targetAudience,
                     idealClientProfile: skipStep2 ? '' : idealClientProfile,
                     bigBrands: skipStep2 ? '' : bigBrands,
                     stepByStepProcess: skipStep3 ? [] : stepByStepProcess,
@@ -490,6 +491,20 @@ export default function SignInPage() {
                                             placeholder="Describe your ideal client"
                                             rows={3}
                                             className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover resize-none"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label htmlFor="targetAudience" className="block text-sm font-medium mb-1">
+                                    Target Audience
+                                </label>
+                                <input
+                                    type="text"
+                                    id="targetAudience"
+                                    value={targetAudience}
+                                    onChange={(e) => setTargetAudience(e.target.value)}
+                                    placeholder="Who is your target audience?"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
                                 />
                             </div>
                             

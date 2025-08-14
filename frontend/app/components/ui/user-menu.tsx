@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import SettingsPopup from '../settings-popup';
 import { useAuth } from '../../context/AuthContext';
 import { Settings, ArrowUpCircle, LogOut, Info, History } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,7 +16,6 @@ interface UserMenuProps {
 
 export default function UserMenu({ name, email, picture }: UserMenuProps) {
   const [open, setOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showUsageHistory, setShowUsageHistory] = useState(false);
   const { logout } = useAuth();
   const router = useRouter();
@@ -27,6 +25,7 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
     toast.success('Logged out successfully');
     setOpen(false);
   }
+
   return (
     <div className="relative inline-block text-left">
       <button
@@ -52,12 +51,15 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
 
           <div className="border-t border-[var(--border)]">
             <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
-            onClick={() => setShowSettings(true)}>
+            onClick={() => {
+              setOpen(false);
+              router.push('/settings');
+            }}>
                 <Settings className="inline mr-2 w-4 h-4" />
               Settings
             </button>
             <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
-            onClick={() => router.push('/upgrade')}>
+            onClick={() => router.push('/upgrade')}>  
                 <ArrowUpCircle className="inline mr-2 w-4 h-4" />
               Upgrade plan
             </button>
@@ -77,10 +79,6 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
           </div>
         </div>
       )}
-    {showSettings && typeof window !== 'undefined' && ReactDOM.createPortal(
-      <SettingsPopup onClose={() => setShowSettings(false)} />,
-      document.body
-    )}
     {showUsageHistory && typeof window !== 'undefined' && ReactDOM.createPortal(
       <UsageHistoryPopup onClose={() => setShowUsageHistory(false)} />,
       document.body
