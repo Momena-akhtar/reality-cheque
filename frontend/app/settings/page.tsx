@@ -397,7 +397,7 @@ export default function SettingsPage() {
               <p className='text-sm text-primary-text-faded'>Remaining Credits</p>
               <div className='flex items-center gap-1 relative'>
                 <span className="text-sm">
-                  {user?.totalCredits !== undefined && user?.usedCredits !== undefined 
+                  ${user?.totalCredits !== undefined && user?.usedCredits !== undefined 
                     ? (user.totalCredits - user.usedCredits).toFixed(3)
                     : '0.000'
                   } credits remaining
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                   <Info className='w-4 h-4 cursor-pointer text-primary-text-faded hover:text-foreground transition-colors' />
                   {showCreditsTooltip && (
                     <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-background border border-border rounded-lg shadow-lg text-xs text-primary-text-faded whitespace-nowrap z-10">
-                      Credits represent your remaining API usage. Each AI generation consumes credits based on the model used.
+                      Credits represent your remaining API usage. Each AI generation consumes credits worth o3 API calls.
                       <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-border"></div>
                     </div>
                   )}
@@ -425,7 +425,7 @@ export default function SettingsPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Profile Setup</h2>
             <button
-              className="px-4 py-2 text-sm bg-primary text-foreground rounded-lg hover:bg-primary-hover transition-all"
+              className="px-4 py-2 text-sm border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all"
               onClick={() => setShowProfileSetup(!showProfileSetup)}
             >
               {showProfileSetup ? 'Hide Setup' : 'Complete Profile'}
@@ -444,7 +444,7 @@ export default function SettingsPage() {
                       type="text"
                       value={agencyName}
                       onChange={(e) => setAgencyName(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="Enter your agency name"
                     />
                   </div>
@@ -454,7 +454,7 @@ export default function SettingsPage() {
                       type="url"
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="https://yourwebsite.com"
                     />
                   </div>
@@ -463,7 +463,7 @@ export default function SettingsPage() {
                     <textarea
                       value={caseStudies}
                       onChange={(e) => setCaseStudies(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       rows={3}
                       placeholder="Describe your case studies and success stories"
                     />
@@ -474,7 +474,7 @@ export default function SettingsPage() {
                       type="number"
                       value={clientsServed}
                       onChange={(e) => setClientsServed(parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="0"
                     />
                   </div>
@@ -484,7 +484,7 @@ export default function SettingsPage() {
                       type="text"
                       value={targetAudience}
                       onChange={(e) => setTargetAudience(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="Who is your target audience?"
                     />
                   </div>
@@ -493,7 +493,7 @@ export default function SettingsPage() {
                     <textarea
                       value={idealClientProfile}
                       onChange={(e) => setIdealClientProfile(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       rows={3}
                       placeholder="Describe your ideal client profile"
                     />
@@ -504,7 +504,7 @@ export default function SettingsPage() {
                       type="text"
                       value={bigBrands}
                       onChange={(e) => setBigBrands(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="List notable brands you've worked with"
                     />
                   </div>
@@ -514,7 +514,7 @@ export default function SettingsPage() {
                       type="number"
                       value={monthlyRevenue}
                       onChange={(e) => setMonthlyRevenue(parseInt(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                       placeholder="0"
                     />
                   </div>
@@ -543,19 +543,19 @@ export default function SettingsPage() {
                       placeholder="Service name"
                       value={newService.name}
                       onChange={(e) => setNewService(prev => ({...prev, name: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <input
                       type="text"
                       placeholder="Description (optional)"
                       value={newService.description}
                       onChange={(e) => setNewService(prev => ({...prev, description: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <button
                       type="button"
                       onClick={addService}
-                      className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                      className="p-2 border border-border  text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -585,26 +585,26 @@ export default function SettingsPage() {
                       placeholder="Package name"
                       value={newPackage.name}
                       onChange={(e) => setNewPackage(prev => ({...prev, name: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <input
                       type="text"
                       placeholder="Price ($)"
                       value={newPackage.price}
                       onChange={(e) => setNewPackage(prev => ({...prev, price: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-32 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <input
                       type="text"
                       placeholder="Description (optional)"
                       value={newPackage.description}
                       onChange={(e) => setNewPackage(prev => ({...prev, description: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <button
                       type="button"
                       onClick={addPackage}
-                      className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                      className="p-2 border border-border text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -637,7 +637,7 @@ export default function SettingsPage() {
                     <select
                       value={newOffer.packageId}
                       onChange={(e) => setNewOffer(prev => ({...prev, packageId: e.target.value}))}
-                      className="w-48 px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 bg-card px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     >
                       <option value="">Package</option>
                       {pricingPackages.map((pkg, pkgIndex) => (
@@ -651,19 +651,19 @@ export default function SettingsPage() {
                       placeholder="Offer name"
                       value={newOffer.name}
                       onChange={(e) => setNewOffer(prev => ({...prev, name: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 px-3 py-2 border border-border rounded-lg  focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <input
                       type="text"
                       placeholder="Description (optional)"
                       value={newOffer.description}
                       onChange={(e) => setNewOffer(prev => ({...prev, description: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <button
                       type="button"
                       onClick={addOffer}
-                      className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                      className="p-2 border border-border text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -699,7 +699,7 @@ export default function SettingsPage() {
                     <select
                       value={newStep.packageId}
                       onChange={(e) => setNewStep(prev => ({...prev, packageId: e.target.value}))}
-                      className="w-48 px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 bg-card px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     >
                       <option value="">Package</option>
                       {pricingPackages.map((pkg, pkgIndex) => (
@@ -713,19 +713,19 @@ export default function SettingsPage() {
                       placeholder="Step order"
                       value={newStep.order || ''}
                       onChange={(e) => setNewStep(prev => ({...prev, order: parseInt(e.target.value) || 0}))}
-                      className="w-24 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-24 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <input
                       type="text"
                       placeholder="Step description"
                       value={newStep.description}
                       onChange={(e) => setNewStep(prev => ({...prev, description: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <button
                       type="button"
                       onClick={addStep}
-                      className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                      className="p-2 border border-border text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -753,7 +753,7 @@ export default function SettingsPage() {
                     <select
                       value={newTimeline.packageId}
                       onChange={(e) => setNewTimeline(prev => ({...prev, packageId: e.target.value}))}
-                      className="w-48 px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="w-48 bg-card px-3 py-2 border border-border text-muted-foreground cursor-pointer rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     >
                       <option value="">Package</option>
                       {pricingPackages.map((pkg, pkgIndex) => (
@@ -767,12 +767,12 @@ export default function SettingsPage() {
                       placeholder="Timeline"
                       value={newTimeline.timeline}
                       onChange={(e) => setNewTimeline(prev => ({...prev, timeline: e.target.value}))}
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                     />
                     <button
                       type="button"
                       onClick={addTimeline}
-                      className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                      className="p-2 border border-border text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -809,10 +809,10 @@ export default function SettingsPage() {
               </div>
 
               {/* Save Profile Setup Button */}
-              <div className="pt-4">
+              <div className="pt-4 flex justify-center">
                 <button
                   onClick={handleSaveProfileSetup}
-                  className="w-full px-6 py-3 bg-primary text-foreground rounded-lg hover:bg-primary-hover transition-all font-medium"
+                  className="w-[50%] sm:w-[full] px-6 py-3 border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all font-medium"
                 >
                   Save Profile Setup
                 </button>
