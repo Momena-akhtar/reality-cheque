@@ -11,9 +11,6 @@ export const plans: Record<string, PlanDetails> = {
       "Upwork Tools", 
       "Fiverr Tools",
       "Basic AI models",
-      "Limited citations",
-      "Community support",
-      "Basic file uploads"
     ],
   },
   tier2: {
@@ -38,9 +35,6 @@ export const plans: Record<string, PlanDetails> = {
       "Everything in Tier 2",
       "High-Ticket Sales Tools",
       "Client Onboarding Tools",
-      "Email Marketing Tools",
-      "Ad / Landing Creative Vault",
-      "Resources & Leaderboard",
       "All AI models"
     ]
   }
