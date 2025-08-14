@@ -5,22 +5,46 @@ interface User {
   id: string;
   email: string;
   username: string;
-  picture?: string;
   tier?: "tier1" | "tier2" | "tier3";
   totalCredits?: number;
   usedCredits?: number;
+  // New user type fields
+  userType?: "agency" | "freelancer";
+  usageType?: "personal" | "clients";
+  // Updated agency/freelancer fields
   agencyName?: string;
-  services?: string;
+  services?: Array<{
+    name: string;
+    description?: string;
+  }>;
   website?: string;
-  pricingPackages?: string;
+  pricingPackages?: Array<{
+    name: string;
+    price: string;
+    description?: string;
+  }>;
+  currentOffers?: Array<{
+    name: string;
+    description?: string;
+    packageId?: string;
+  }>;
   caseStudies?: string;
   clientsServed?: number;
   targetAudience?: string;
-  offer?: string;
+  idealClientProfile?: string;
   bigBrands?: string;
-  stepByStepProcess?: string;
-  timelineToResults?: string;
-  leadSources?: string;
+  stepByStepProcess?: Array<{
+    packageId: string;
+    steps: Array<{
+      order: number;
+      description: string;
+    }>;
+  }>;
+  timelineToResults?: Array<{
+    packageId: string;
+    timeline: string;
+  }>;
+  leadSources?: Array<string>;
   monthlyRevenue?: number;
   createdAt?: string;
   updatedAt?: string;
