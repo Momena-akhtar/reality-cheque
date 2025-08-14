@@ -130,20 +130,43 @@ export interface FeaturePrompt {
 export interface UserContext {
   username: string;
   email: string;
+  userType: "agency" | "freelancer";
+  usageType: "personal" | "clients";
   agencyName?: string;
-  services?: string;
+  services?: Array<{
+    name: string;
+    description?: string;
+  }>;
   website?: string;
-  pricingPackages?: string;
+  pricingPackages?: Array<{
+    name: string;
+    price: string;
+    description?: string;
+  }>;
+  currentOffers?: Array<{
+    name: string;
+    description?: string;
+    packageId?: string;
+  }>;
   caseStudies?: string;
   clientsServed?: number;
   targetAudience?: string;
-  offer?: string;
+  idealClientProfile?: string;
   bigBrands?: string;
-  stepByStepProcess?: string;
-  timelineToResults?: string;
-  leadSources?: string;
+  stepByStepProcess?: Array<{
+    packageId: string;
+    steps: Array<{
+      order: number;
+      description: string;
+    }>;
+  }>;
+  timelineToResults?: Array<{
+    packageId: string;
+    timeline: string;
+  }>;
+  leadSources?: Array<string>;
   monthlyRevenue?: number;
-  tier: 'tier1' | 'tier2' | 'tier3';
+  tier: string;
   totalCredits: number;
 }
 
