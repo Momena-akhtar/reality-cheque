@@ -123,14 +123,17 @@ class GenerateService {
     const userContext: UserContext = {
       username: user.username,
       email: user.email,
+      userType: user.userType,
+      usageType: user.usageType,
       agencyName: user.agencyName,
       services: user.services,
       website: user.website,
       pricingPackages: user.pricingPackages,
+      currentOffers: user.currentOffers,
       caseStudies: user.caseStudies,
       clientsServed: user.clientsServed,
       targetAudience: user.targetAudience,
-      offer: user.offer,
+      idealClientProfile: user.idealClientProfile,
       bigBrands: user.bigBrands,
       stepByStepProcess: user.stepByStepProcess,
       timelineToResults: user.timelineToResults,
@@ -143,21 +146,27 @@ class GenerateService {
     let context = `User Information:\n`;
     context += `- Username: ${userContext.username}\n`;
     context += `- Email: ${userContext.email}\n`;
+    context += `- User Type: ${userContext.userType}\n`;
+    context += `- Usage Type: ${userContext.usageType}\n`;
     
     if (userContext.agencyName) {
       context += `- Agency Name: ${userContext.agencyName}\n`;
     }
     
-    if (userContext.services) {
-      context += `- Services: ${userContext.services}\n`;
+    if (userContext.services && userContext.services.length > 0) {
+      context += `- Services: ${userContext.services.map(s => s.name).join(', ')}\n`;
     }
     
     if (userContext.website) {
       context += `- Website: ${userContext.website}\n`;
     }
     
-    if (userContext.pricingPackages) {
-      context += `- Pricing Packages: ${userContext.pricingPackages}\n`;
+    if (userContext.pricingPackages && userContext.pricingPackages.length > 0) {
+      context += `- Pricing Packages: ${userContext.pricingPackages.map(p => `${p.name}: ${p.price}`).join(', ')}\n`;
+    }
+    
+    if (userContext.currentOffers && userContext.currentOffers.length > 0) {
+      context += `- Current Offers: ${userContext.currentOffers.map(o => o.name).join(', ')}\n`;
     }
     
     if (userContext.caseStudies) {
@@ -172,24 +181,30 @@ class GenerateService {
       context += `- Target Audience: ${userContext.targetAudience}\n`;
     }
     
-    if (userContext.offer) {
-      context += `- Offer: ${userContext.offer}\n`;
+    if (userContext.idealClientProfile) {
+      context += `- Ideal Client Profile: ${userContext.idealClientProfile}\n`;
     }
     
     if (userContext.bigBrands) {
       context += `- Big Brands & Results: ${userContext.bigBrands}\n`;
     }
     
-    if (userContext.stepByStepProcess) {
-      context += `- Step-by-Step Process: ${userContext.stepByStepProcess}\n`;
+    if (userContext.stepByStepProcess && userContext.stepByStepProcess.length > 0) {
+      context += `- Step-by-Step Process:\n`;
+      userContext.stepByStepProcess.forEach(process => {
+        context += `  Package ${process.packageId}: ${process.steps.map(s => s.description).join(' → ')}\n`;
+      });
     }
     
-    if (userContext.timelineToResults) {
-      context += `- Timeline to Results: ${userContext.timelineToResults}\n`;
+    if (userContext.timelineToResults && userContext.timelineToResults.length > 0) {
+      context += `- Timeline to Results:\n`;
+      userContext.timelineToResults.forEach(timeline => {
+        context += `  Package ${timeline.packageId}: ${timeline.timeline}\n`;
+      });
     }
     
-    if (userContext.leadSources) {
-      context += `- Lead Sources: ${userContext.leadSources}\n`;
+    if (userContext.leadSources && userContext.leadSources.length > 0) {
+      context += `- Lead Sources: ${userContext.leadSources.join(', ')}\n`;
     }
     
     if (userContext.monthlyRevenue) {
