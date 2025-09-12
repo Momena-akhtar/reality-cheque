@@ -13,7 +13,7 @@ export const customGPTData = {
         {
             name: "Fiverr Tools",
             description: "Tools for freelancers on Fiverr platform",
-            tierAccess: "tier1"
+            tierAccess: "tier2"
         },
         {
             name: "Offer & Pricing Builder",
