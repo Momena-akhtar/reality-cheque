@@ -261,6 +261,7 @@ class GenerateService {
     prompt += `IMPORTANT: Your response must be a valid JSON object where each key is a feature name and each value is the generated content for that feature. `;
     prompt += `Additionally, include a "Follow-up Questions" feature that contains 3-5 thoughtful questions to help improve the content. `;
     prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here", "Follow-up Questions": "1. Would you like me to make the headline more attention-grabbing?\\n2. Should I adjust the tone?\\n3. Would you like more specific details?"}\n\n`;
+    prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
     prompt += `Response (JSON only):`;
 
     return prompt;
@@ -285,6 +286,7 @@ class GenerateService {
     prompt += `Please regenerate ONLY the "${featureName}" section while keeping ALL other sections exactly the same. `;
     prompt += `Your response must be a valid JSON object with the same structure as the current response, `;
     prompt += `but with only the "${featureName}" section updated based on the user's feedback.\n\n`;
+    prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
     prompt += `Response (JSON only):`;
 
     return prompt;
@@ -321,6 +323,7 @@ class GenerateService {
     prompt += `1. [Your first question]\n`;
     prompt += `2. [Your second question]\n`;
     prompt += `3. [Your third question]\n\n`;
+    prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
     prompt += `Response:`;
 
     return prompt;
