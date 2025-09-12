@@ -88,6 +88,7 @@ function ChatPageContent() {
     const [showHistory, setShowHistory] = useState(false);
     const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
     const [regeneratingFeature, setRegeneratingFeature] = useState(false);
+    const [showAllFeatures, setShowAllFeatures] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -560,18 +561,6 @@ function ChatPageContent() {
 
                                     {/* Content Card */}
                                     <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-8 shadow-xl">
-                                        {/* AI Icon with Glow */}
-                                        <div className="flex justify-center mb-6">
-                                            <div className="relative">
-                                                <div className="absolute inset-0 bg-primary/30 rounded-xl blur-lg animate-pulse"></div>
-                                                <div className="relative h-16 w-16 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300 hover:scale-105 flex items-center justify-center">
-                                                    <span className="text-primary-foreground font-bold text-xl">
-                                                        AI
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                         {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
                                             <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
@@ -584,19 +573,48 @@ function ChatPageContent() {
                                             {model.description}
                                         </p>
 
-                                        {/* Features List if model has features */}
+                                        {/* Features Cards if model has features */}
                                         {modelFeatures.length > 0 && (
-                                            <div className="flex justify-center mb-4">
-                                                <div className="flex flex-wrap gap-2 justify-center max-w-sm">
-                                                    {modelFeatures.map((feature) => (
-                                                        <span
-                                                            key={feature._id}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-foreground text-xs font-medium rounded-full border border-border/10"
-                                                        >
-                                                            <div className="w-1 h-1 bg-green-700 rounded-full"></div>
-                                                            {feature.name}
-                                                        </span>
-                                                    ))}
+                                            <div className="mb-4">
+                                                <div className="relative">
+                                                    <div className={`grid gap-3 ${showAllFeatures ? 'grid-cols-1 max-h-80 overflow-y-auto scrollbar-hide' : 'grid-cols-1 max-h-48 overflow-hidden'}`}>
+                                                        {modelFeatures.map((feature, index) => (
+                                                            <div
+                                                                key={feature._id}
+                                                                className={`bg-muted/30 border border-border/20 rounded-lg p-3 transition-all duration-200 ${
+                                                                    !showAllFeatures && index >= 3 ? 'opacity-60' : ''
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-start gap-2">
+                                                                    <div className="w-2 h-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0"></div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h4 className="text-sm font-medium text-foreground mb-1">
+                                                                            {feature.name}
+                                                                        </h4>
+                                                                        <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                            {feature.description}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    
+                                                    {/* Gradient overlay and expand button for overflow */}
+                                                    {modelFeatures.length > 3 && !showAllFeatures && (
+                                                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background/80 to-transparent pointer-events-none"></div>
+                                                    )}
+                                                    
+                                                    {modelFeatures.length > 3 && (
+                                                        <div className="flex justify-center mt-3">
+                                                            <button
+                                                                onClick={() => setShowAllFeatures(!showAllFeatures)}
+                                                                className="text-xs cursor-pointer border border-border rounded-lg px-2 py-1 transition-colors font-medium"
+                                                            >
+                                                                {showAllFeatures ? 'Show Less' : 'Expand'}
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
