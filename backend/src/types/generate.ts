@@ -20,6 +20,13 @@ export interface GenerateResponse {
   structuredResponse?: StructuredFeatureResponse;
   hasFeatures?: boolean;
   followUpQuestions?: string[];
+  generatedGigs?: {
+    title: string;
+    description: string;
+    tags: string[];
+    price: string;
+    status: string;
+  };
 }
 
 // New types for structured feature responses
