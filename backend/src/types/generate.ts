@@ -43,6 +43,21 @@ export interface RegenerateFeatureResponse {
   outputTokens?: number;
 }
 
+export interface RegenerateFollowUpQuestionsRequest {
+  modelId: string;
+  userAnswers: { [questionIndex: number]: string };
+  currentResponse: StructuredFeatureResponse;
+  chatId: string;
+  userId: string;
+}
+
+export interface RegenerateFollowUpQuestionsResponse {
+  updatedResponse: StructuredFeatureResponse;
+  cost?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
 // Chat Management Types
 export interface ChatSession {
   id: string;
