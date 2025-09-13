@@ -6,6 +6,7 @@ import { IUser } from "../models/user";
 import Chat from "../models/chat";
 import Message from "../models/message";
 import mongoose from "mongoose";
+import upworkScraperService from "./upworkScraperService";
 import {
   GenerateRequest,
   GenerateResponse,
@@ -119,6 +120,16 @@ class GenerateService {
       }));
     }
     return this.memoryStore.get(sessionId)!;
+  }
+
+  private isUpworkUrl(input: string): boolean {
+    try {
+      const url = new URL(input.trim());
+      return url.hostname.includes('upwork.com') && 
+             url.pathname.includes('/freelancers/');
+    } catch {
+      return false;
+    }
   }
 
   private buildUserContext(user: IUser): string {
@@ -247,14 +258,40 @@ class GenerateService {
       prompt += `- ${featureName}: ${featurePrompt}\n`;
     });
     
+    // Special handling for Upwork Profile Optimizer
+    let processedUserInput = userInput;
+    if (model.name === "Profile Optimizer" && userInput && userInput.trim() !== '') {
+      // Check if input is a URL
+      if (this.isUpworkUrl(userInput.trim())) {
+        try {
+          const scrapedData = await upworkScraperService.scrapeUpworkProfile(userInput.trim());
+          if (scrapedData.success) {
+            processedUserInput = `Upwork Profile Data (scraped from ${userInput}):\n\n` +
+              `Title: ${scrapedData.title}\n` +
+              `Summary: ${scrapedData.summary}\n` +
+              `Skills: ${scrapedData.skills.join(', ')}\n` +
+              `Hourly Rate: ${scrapedData.hourlyRate || 'Not specified'}\n` +
+              `Location: ${scrapedData.location || 'Not specified'}\n` +
+              `Availability: ${scrapedData.availability || 'Not specified'}\n` +
+              `Portfolio Items:\n${scrapedData.portfolio.map(item => `- ${item.title}: ${item.description}`).join('\n')}\n\n` +
+              `Please analyze this profile data and provide optimization suggestions.`;
+          } else {
+            processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error: ${scrapedData.error}\n\nPlease provide your profile content manually for analysis.`;
+          }
+        } catch (error) {
+          processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error. Please provide your profile content manually for analysis.`;
+        }
+      }
+    }
+    
     // Handle empty user input
-    if (!userInput || userInput.trim() === '') {
+    if (!processedUserInput || processedUserInput.trim() === '') {
       prompt += `\nUser Input: [No specific instructions provided]\n\n`;
       prompt += `Since no specific instructions were provided, please generate a generic but high-quality response based on this model's purpose. `;
       prompt += `Use the user's agency information to personalize the content appropriately. `;
       prompt += `Create content that would be useful and relevant for the user's business context.\n\n`;
     } else {
-      prompt += `\nUser Input: ${userInput}\n\n`;
+      prompt += `\nUser Input: ${processedUserInput}\n\n`;
       prompt += `Please generate a response based on the user's specific input and the available features. `;
       prompt += `Use the user's agency information to personalize the response. `;
       prompt += `If the user is asking for specific content generation, use the appropriate feature prompts to guide your response.\n\n`;
@@ -335,14 +372,40 @@ class GenerateService {
     
     prompt += `User Context:\n${userContext}\n`;
     
+    // Special handling for Upwork Profile Optimizer
+    let processedUserInput = userInput;
+    if (model.name === "Profile Optimizer" && userInput && userInput.trim() !== '') {
+      // Check if input is a URL
+      if (this.isUpworkUrl(userInput.trim())) {
+        try {
+          const scrapedData = await upworkScraperService.scrapeUpworkProfile(userInput.trim());
+          if (scrapedData.success) {
+            processedUserInput = `Upwork Profile Data (scraped from ${userInput}):\n\n` +
+              `Title: ${scrapedData.title}\n` +
+              `Summary: ${scrapedData.summary}\n` +
+              `Skills: ${scrapedData.skills.join(', ')}\n` +
+              `Hourly Rate: ${scrapedData.hourlyRate || 'Not specified'}\n` +
+              `Location: ${scrapedData.location || 'Not specified'}\n` +
+              `Availability: ${scrapedData.availability || 'Not specified'}\n` +
+              `Portfolio Items:\n${scrapedData.portfolio.map(item => `- ${item.title}: ${item.description}`).join('\n')}\n\n` +
+              `Please analyze this profile data and provide optimization suggestions.`;
+          } else {
+            processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error: ${scrapedData.error}\n\nPlease provide your profile content manually for analysis.`;
+          }
+        } catch (error) {
+          processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error. Please provide your profile content manually for analysis.`;
+        }
+      }
+    }
+    
     // Handle empty user input
-    if (!userInput || userInput.trim() === '') {
+    if (!processedUserInput || processedUserInput.trim() === '') {
       prompt += `User Input: [No specific instructions provided]\n\n`;
       prompt += `Since no specific instructions were provided, please generate a generic but high-quality response based on this model's purpose and master prompt. `;
       prompt += `Use the user's agency information to personalize the content appropriately. `;
       prompt += `Create content that would be useful and relevant for the user's business context.\n\n`;
     } else {
-      prompt += `User Input: ${userInput}\n\n`;
+      prompt += `User Input: ${processedUserInput}\n\n`;
       prompt += `Please generate a response based on the master prompt and user input. `;
       prompt += `Use the user's agency information to personalize the response.\n\n`;
     }

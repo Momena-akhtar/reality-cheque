@@ -1,5 +1,6 @@
 import express from 'express';
 import generateService from '../services/generateService';
+import upworkScraperService from '../services/upworkScraperService';
 import { authMiddleware } from '../middleware/authMiddleware';
 import Message from '../models/message';
 
@@ -456,6 +457,37 @@ router.post('/regenerate-from-answers', authMiddleware, checkCredits, async (req
     res.status(500).json({ 
       message: error instanceof Error ? error.message : 'Internal server error',
       error: 'FOLLOWUP_REGENERATION_FAILED'
+    });
+  }
+});
+
+// Scrape Upwork profile
+router.post('/scrape-upwork-profile', authMiddleware, async (req, res): Promise<any> => {
+  try {
+    const { profileUrl } = req.body;
+    const userId = (req as any).user.id;
+
+    // Validate required fields
+    if (!profileUrl) {
+      return res.status(400).json({ 
+        message: 'Profile URL is required' 
+      });
+    }
+
+    // Scrape the Upwork profile
+    const profileData = await upworkScraperService.scrapeUpworkProfile(profileUrl);
+
+    res.json({
+      success: true,
+      data: profileData,
+      message: profileData.success ? 'Profile scraped successfully' : 'Profile scraping failed'
+    });
+
+  } catch (error) {
+    console.error('Error scraping Upwork profile:', error);
+    res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Internal server error',
+      error: 'UPWORK_SCRAPING_FAILED'
     });
   }
 }); 
