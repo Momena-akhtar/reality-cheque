@@ -701,7 +701,7 @@ function ChatPageContent() {
                                                                             onClick={() => setShowFollowUpForm(
                                                                                 showFollowUpForm === message.id ? null : message.id
                                                                             )}
-                                                                            className="text-xs px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                                                                         >
                                                                             {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
                                                                         </button>
@@ -858,16 +858,16 @@ function ChatPageContent() {
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-2xl max-h-[80vh] bg-background border border-border rounded-xl shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-2xl h-[80vh] bg-background border border-border rounded-xl shadow-2xl flex flex-col"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30">
+
+                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30 flex-shrink-0">
                             <h3 className="text-xl font-semibold text-foreground">
                                 Answer Follow-up Questions
                             </h3>
                             <button
                                 onClick={() => setShowFollowUpForm(null)}
-                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                className="p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -875,8 +875,7 @@ function ChatPageContent() {
                             </button>
                         </div>
                         
-                        {/* Scrollable Content */}
-                        <div className="overflow-y-auto max-h-[calc(90vh-160px)] p-6">
+                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
                             {(() => {
                                 const message = messages.find(m => m.id === showFollowUpForm);
                                 if (!message?.followUpQuestions) return null;
@@ -910,8 +909,7 @@ function ChatPageContent() {
                             })()}
                         </div>
                         
-                        {/* Footer */}
-                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
+                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
                             <button
                                 onClick={() => setShowFollowUpForm(null)}
                                 className="px-6 py-2 text-sm font-medium cursor-pointer border border-border rounded-lg hover:bg-muted transition-colors"
