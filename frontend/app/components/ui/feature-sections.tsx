@@ -145,7 +145,7 @@ export default function FeatureSections({
                   ) : (
                     <div className="prose prose-sm max-w-none">
                       <div className="whitespace-pre-wrap text-foreground leading-relaxed">
-                        {content.replace(/\\n/g, '\n').trim()}
+                        {typeof content === 'string' ? content.replace(/\\n/g, '\n').trim() : String(content)}
                       </div>
                     </div>
                   )}

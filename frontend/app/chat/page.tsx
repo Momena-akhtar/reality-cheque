@@ -21,6 +21,13 @@ interface Message {
     structuredResponse?: { [key: string]: string };
     hasFeatures?: boolean;
     followUpQuestions?: string[];
+    generatedGigs?: {
+        title: string;
+        description: string;
+        tags: string[];
+        price: string;
+        status: string;
+    };
 }
 
 interface Model {
@@ -75,7 +82,7 @@ function ChatPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const botId = searchParams.get("id");
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, addGig } = useAuth();
 
     // All hooks must be called before any conditional returns
     const [messages, setMessages] = useState<Message[]>([]);
@@ -91,6 +98,8 @@ function ChatPageContent() {
     const [showAllFeatures, setShowAllFeatures] = useState(false);
     const [followUpAnswers, setFollowUpAnswers] = useState<{ [messageId: string]: { [questionIndex: number]: string } }>({});
     const [showFollowUpForm, setShowFollowUpForm] = useState<string | null>(null);
+    const [editingGig, setEditingGig] = useState<{ messageId: string; gig: any } | null>(null);
+    const [savingGig, setSavingGig] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -319,6 +328,28 @@ function ChatPageContent() {
         setShowHistory(true);
     };
 
+    const handleSaveGig = async (gig: any) => {
+        if (!user || savingGig) return;
+
+        setSavingGig(true);
+        try {
+            const success = await addGig(user.id, gig);
+            if (success) {
+                // Remove the gig from the message since it's been saved
+                setMessages(prev => prev.map(msg => 
+                    msg.id === editingGig?.messageId 
+                        ? { ...msg, generatedGigs: undefined }
+                        : msg
+                ));
+                setEditingGig(null);
+            }
+        } catch (error) {
+            console.error('Error saving gig:', error);
+        } finally {
+            setSavingGig(false);
+        }
+    };
+
     const handleRegenerateFeature = async (
         featureName: string,
         feedback: string
@@ -456,6 +487,7 @@ function ChatPageContent() {
                     structuredResponse: data.data.structuredResponse,
                     hasFeatures: data.data.hasFeatures,
                     followUpQuestions: data.data.followUpQuestions,
+                    generatedGigs: data.data.generatedGigs,
                 };
 
                 setMessages((prev) => [...prev, aiMessage]);
@@ -781,6 +813,127 @@ function ChatPageContent() {
                                                                   )
                                                                 : message.content}
                                                         </div>
+
+                                                        {/* AI Generated Gigs Section */}
+                                                        {message.generatedGigs && (
+                                                            <div className="mt-6 pt-4 border-t border-border/30">
+                                                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                                                                    <div className="flex items-center gap-2 mb-3">
+                                                                        <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                                                                            <span className="text-white text-xs font-bold">AI</span>
+                                                                        </div>
+                                                                        <h4 className="text-sm font-semibold text-green-800 dark:text-green-200">
+                                                                            Generated Fiverr Gig
+                                                                        </h4>
+                                                                    </div>
+                                                                    
+                                                                    <div className="space-y-3">
+                                                                        <div>
+                                                                            <label className="block text-xs font-medium text-green-700 dark:text-green-300 mb-1">Title</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editingGig?.messageId === message.id ? editingGig.gig.title : message.generatedGigs.title}
+                                                                                onChange={(e) => {
+                                                                                    if (editingGig?.messageId === message.id) {
+                                                                                        setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, title: e.target.value } } : null);
+                                                                                    } else {
+                                                                                        setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, title: e.target.value } });
+                                                                                    }
+                                                                                }}
+                                                                                className="w-full px-3 py-2 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                            />
+                                                                        </div>
+                                                                        
+                                                                        <div>
+                                                                            <label className="block text-xs font-medium text-green-700 dark:text-green-300 mb-1">Description</label>
+                                                                            <textarea
+                                                                                value={editingGig?.messageId === message.id ? editingGig.gig.description : message.generatedGigs.description}
+                                                                                onChange={(e) => {
+                                                                                    if (editingGig?.messageId === message.id) {
+                                                                                        setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, description: e.target.value } } : null);
+                                                                                    } else {
+                                                                                        setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, description: e.target.value } });
+                                                                                    }
+                                                                                }}
+                                                                                rows={3}
+                                                                                className="w-full px-3 py-2 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                                                                            />
+                                                                        </div>
+                                                                        
+                                                                        <div className="grid grid-cols-2 gap-3">
+                                                                            <div>
+                                                                                <label className="block text-xs font-medium text-green-700 dark:text-green-300 mb-1">Price</label>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={editingGig?.messageId === message.id ? editingGig.gig.price : message.generatedGigs.price}
+                                                                                    onChange={(e) => {
+                                                                                        if (editingGig?.messageId === message.id) {
+                                                                                            setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, price: e.target.value } } : null);
+                                                                                        } else {
+                                                                                            setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, price: e.target.value } });
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-full px-3 py-2 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                                />
+                                                                            </div>
+                                                                            
+                                                                            <div>
+                                                                                <label className="block text-xs font-medium text-green-700 dark:text-green-300 mb-1">Status</label>
+                                                                                <select
+                                                                                    value={editingGig?.messageId === message.id ? editingGig.gig.status : message.generatedGigs.status}
+                                                                                    onChange={(e) => {
+                                                                                        if (editingGig?.messageId === message.id) {
+                                                                                            setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, status: e.target.value } } : null);
+                                                                                        } else {
+                                                                                            setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, status: e.target.value } });
+                                                                                        }
+                                                                                    }}
+                                                                                    className="w-full px-3 py-2 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                                >
+                                                                                    <option value="Active">Active</option>
+                                                                                    <option value="Paused">Paused</option>
+                                                                                    <option value="Inactive">Inactive</option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                        
+                                                                        <div>
+                                                                            <label className="block text-xs font-medium text-green-700 dark:text-green-300 mb-1">Tags</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editingGig?.messageId === message.id ? editingGig.gig.tags.join(', ') : message.generatedGigs.tags.join(', ')}
+                                                                                onChange={(e) => {
+                                                                                    const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                                                                                    if (editingGig?.messageId === message.id) {
+                                                                                        setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, tags: tagsArray } } : null);
+                                                                                    } else {
+                                                                                        setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, tags: tagsArray } });
+                                                                                    }
+                                                                                }}
+                                                                                placeholder="tag1, tag2, tag3"
+                                                                                className="w-full px-3 py-2 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                            />
+                                                                        </div>
+                                                                        
+                                                                        <div className="flex gap-2 pt-2">
+                                                                            <button
+                                                                                onClick={() => handleSaveGig(editingGig?.messageId === message.id ? editingGig.gig : message.generatedGigs)}
+                                                                                disabled={savingGig}
+                                                                                className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                                            >
+                                                                                {savingGig ? 'Saving...' : 'Save to Profile'}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => setEditingGig(null)}
+                                                                                className="px-4 py-2 text-sm font-medium border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors"
+                                                                            >
+                                                                                Cancel
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
 
                                                         {/* Follow-up Questions for Non-Featured Responses */}
                                                         {message.followUpQuestions &&
