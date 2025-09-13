@@ -89,6 +89,8 @@ function ChatPageContent() {
     const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
     const [regeneratingFeature, setRegeneratingFeature] = useState(false);
     const [showAllFeatures, setShowAllFeatures] = useState(false);
+    const [followUpAnswers, setFollowUpAnswers] = useState<{ [messageId: string]: { [questionIndex: number]: string } }>({});
+    const [showFollowUpForm, setShowFollowUpForm] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -691,9 +693,18 @@ function ChatPageContent() {
                                                                 .followUpQuestions
                                                                 .length > 0 && (
                                                                 <div className="mt-6 pt-4 border-t border-border/30">
-                                                                    <div className="text-sm font-medium text-muted-foreground mb-3">
-                                                                        Follow-up
-                                                                        Questions:
+                                                                    <div className="flex items-center justify-between mb-3">
+                                                                        <div className="text-sm font-medium text-muted-foreground">
+                                                                            Follow-up Questions:
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => setShowFollowUpForm(
+                                                                                showFollowUpForm === message.id ? null : message.id
+                                                                            )}
+                                                                            className="text-xs px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                                                        >
+                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
+                                                                        </button>
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         {message.followUpQuestions.map(
@@ -771,6 +782,39 @@ function ChatPageContent() {
                                                                 : message.content}
                                                         </div>
 
+                                                        {/* Follow-up Questions for Non-Featured Responses */}
+                                                        {message.followUpQuestions &&
+                                                            message.followUpQuestions.length > 0 && (
+                                                                <div className="mt-6 pt-4 border-t border-border/30">
+                                                                    <div className="flex items-center justify-between mb-3">
+                                                                        <div className="text-sm font-medium text-muted-foreground">
+                                                                            Follow-up Questions:
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => setShowFollowUpForm(
+                                                                                showFollowUpForm === message.id ? null : message.id
+                                                                            )}
+                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                                                        >
+                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        {message.followUpQuestions.map(
+                                                                            (question, index) => (
+                                                                                <div
+                                                                                    key={index}
+                                                                                    className="text-sm text-foreground"
+                                                                                >
+                                                                                    {index + 1}. {question
+                                                                                        .replace(/\\n/g, "\n")
+                                                                                        .trim()}
+                                                                                </div>
+                                                                            )
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                     </>
                                                 )}
                                             </div>
@@ -794,6 +838,81 @@ function ChatPageContent() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            {/* Follow-up Questions Form */}
+            {showFollowUpForm && (
+                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-background border border-border rounded-lg p-6 shadow-lg"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-foreground">
+                                Answer Follow-up Questions
+                            </h3>
+                            <button
+                                onClick={() => setShowFollowUpForm(null)}
+                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        
+                        {(() => {
+                            const message = messages.find(m => m.id === showFollowUpForm);
+                            if (!message?.followUpQuestions) return null;
+                            
+                            return (
+                                <div className="space-y-4">
+                                    {message.followUpQuestions.map((question, index) => (
+                                        <div key={index} className="space-y-2">
+                                            <label className="text-sm font-medium text-foreground">
+                                                {index + 1}. {question.replace(/\\n/g, "\n").trim()}
+                                            </label>
+                                            <textarea
+                                                value={followUpAnswers[message.id]?.[index] || ""}
+                                                onChange={(e) => {
+                                                    setFollowUpAnswers(prev => ({
+                                                        ...prev,
+                                                        [message.id]: {
+                                                            ...prev[message.id],
+                                                            [index]: e.target.value
+                                                        }
+                                                    }));
+                                                }}
+                                                placeholder="Your answer..."
+                                                className="w-full p-3 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                                                rows={2}
+                                            />
+                                        </div>
+                                    ))}
+                                    
+                                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                                        <button
+                                            onClick={() => setShowFollowUpForm(null)}
+                                            className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                // Here you can handle the submission of answers
+                                                console.log('Follow-up answers:', followUpAnswers[message.id]);
+                                                setShowFollowUpForm(null);
+                                            }}
+                                            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                        >
+                                            Submit Answers
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </motion.div>
+                </div>
+            )}
 
             <div className="flex-none px-4 max-w-4xl mx-auto w-full">
                 <ChatBar
