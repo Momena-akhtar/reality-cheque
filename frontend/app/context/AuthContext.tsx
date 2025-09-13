@@ -46,6 +46,13 @@ interface User {
   }>;
   leadSources?: Array<string>;
   monthlyRevenue?: number;
+  fiverrGigs?: Array<{
+    title: string;
+    description?: string;
+    tags: Array<string>;
+    price: string;
+    status: string;
+  }>;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -58,6 +65,10 @@ interface AuthContextType {
   updateUserTier: (userId: string, tier: "tier1" | "tier2" | "tier3") => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   refreshUser: () => Promise<void>;
+  // Gig management functions
+  addGig: (userId: string, gigData: any) => Promise<boolean>;
+  updateGig: (userId: string, gigIndex: number, gigData: any) => Promise<boolean>;
+  removeGig: (userId: string, gigIndex: number) => Promise<boolean>;
   loading: boolean;
 }
 
@@ -177,6 +188,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Gig management functions
+  const addGig = async (userId: string, gigData: any): Promise<boolean> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/gigs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(gigData),
+      });
+
+      if (res.ok) {
+        const updatedGigs = await res.json();
+        setUser(prev => prev ? { ...prev, fiverrGigs: updatedGigs } : null);
+        return true;
+      } else {
+        console.error("Failed to add gig:", await res.text());
+        return false;
+      }
+    } catch (error) {
+      console.error("Error adding gig:", error);
+      return false;
+    }
+  };
+
+  const updateGig = async (userId: string, gigIndex: number, gigData: any): Promise<boolean> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/gigs/${gigIndex}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(gigData),
+      });
+
+      if (res.ok) {
+        const updatedGigs = await res.json();
+        setUser(prev => prev ? { ...prev, fiverrGigs: updatedGigs } : null);
+        return true;
+      } else {
+        console.error("Failed to update gig:", await res.text());
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating gig:", error);
+      return false;
+    }
+  };
+
+  const removeGig = async (userId: string, gigIndex: number): Promise<boolean> => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}/gigs/${gigIndex}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const updatedGigs = await res.json();
+        setUser(prev => prev ? { ...prev, fiverrGigs: updatedGigs } : null);
+        return true;
+      } else {
+        console.error("Failed to remove gig:", await res.text());
+        return false;
+      }
+    } catch (error) {
+      console.error("Error removing gig:", error);
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -185,7 +268,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateUser, 
       updateUserTier,
       deleteUser, 
-      refreshUser, 
+      refreshUser,
+      addGig,
+      updateGig,
+      removeGig,
       loading 
     }}>
       {children}
