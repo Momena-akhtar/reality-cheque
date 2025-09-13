@@ -327,6 +327,125 @@ export class UserService {
     }
   }
 
+  // Gig management methods
+  async addGig(userId: string, gigData: any) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      const newGig = {
+        title: gigData.title,
+        description: gigData.description || '',
+        tags: gigData.tags || [],
+        price: gigData.price,
+        status: gigData.status || 'Active'
+      };
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $push: { fiverrGigs: newGig } },
+        { new: true }
+      );
+
+      return {
+        success: true,
+        data: updatedUser?.fiverrGigs
+      };
+    } catch (error) {
+      console.error('Error adding gig:', error);
+      return { success: false, message: 'Failed to add gig' };
+    }
+  }
+
+  async updateGig(userId: string, gigIndex: number, gigData: any) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      if (!user.fiverrGigs || gigIndex >= user.fiverrGigs.length) {
+        return { success: false, message: 'Gig not found' };
+      }
+
+      const updatedGig = {
+        title: gigData.title,
+        description: gigData.description || '',
+        tags: gigData.tags || [],
+        price: gigData.price,
+        status: gigData.status || 'Active'
+      };
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $set: { [`fiverrGigs.${gigIndex}`]: updatedGig } },
+        { new: true }
+      );
+
+      return {
+        success: true,
+        data: updatedUser?.fiverrGigs
+      };
+    } catch (error) {
+      console.error('Error updating gig:', error);
+      return { success: false, message: 'Failed to update gig' };
+    }
+  }
+
+  async removeGig(userId: string, gigIndex: number) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      if (!user.fiverrGigs || gigIndex >= user.fiverrGigs.length) {
+        return { success: false, message: 'Gig not found' };
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $unset: { [`fiverrGigs.${gigIndex}`]: 1 } },
+        { new: true }
+      );
+
+      // Clean up null values
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { fiverrGigs: null } },
+        { new: true }
+      );
+
+      const finalUser = await User.findById(userId);
+      return {
+        success: true,
+        data: finalUser?.fiverrGigs || []
+      };
+    } catch (error) {
+      console.error('Error removing gig:', error);
+      return { success: false, message: 'Failed to remove gig' };
+    }
+  }
+
+  async getGigs(userId: string) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      return {
+        success: true,
+        data: user.fiverrGigs || []
+      };
+    } catch (error) {
+      console.error('Error fetching gigs:', error);
+      return { success: false, message: 'Failed to fetch gigs' };
+    }
+  }
+
   private buildUserContext(user: IUser): string {
     const userContext: UserContext = {
       username: user.username,

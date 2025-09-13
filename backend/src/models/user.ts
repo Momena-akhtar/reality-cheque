@@ -47,6 +47,13 @@ export interface IUser extends Document {
   bigBrands?: string;
   leadSources?: Array<string>;
   monthlyRevenue?: number;
+  fiverrGigs: Array<{
+    title: string;
+    description: string;
+    tags: Array<string>;
+    price: string;
+    status: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -221,7 +228,32 @@ const userSchema = new Schema<IUser>({
   monthlyRevenue: {
     type: Number,
     default: 0
-  }
+  },
+  fiverrGigs: [{
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    },
+    tags: {
+      type: [String],
+      trim: true
+    },
+    price: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    status: {
+      type: String,
+      required: true,
+      trim: true
+    }
+  }]
 }, {
   timestamps: true,
 });

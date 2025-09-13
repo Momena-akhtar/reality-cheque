@@ -181,5 +181,93 @@ router.post("/:id/sync-tier", authMiddleware, async (req, res): Promise<any> => 
   }
 });
 
+// Gig management routes
+router.get("/:id/gigs", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    const result = await userService.getGigs(userId);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error("Error fetching gigs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/:id/gigs", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  const gigData = req.body;
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    const result = await userService.addGig(userId, gigData);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error("Error adding gig:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.put("/:id/gigs/:gigIndex", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  const gigIndex = parseInt(req.params.gigIndex);
+  const gigData = req.body;
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    const result = await userService.updateGig(userId, gigIndex, gigData);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error("Error updating gig:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.delete("/:id/gigs/:gigIndex", authMiddleware, async (req, res): Promise<any> => {
+  const userId = req.params.id;
+  const gigIndex = parseInt(req.params.gigIndex);
+  
+  try {
+    const authenticatedUser = (req as any).user;
+    if (authenticatedUser._id.toString() !== userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    
+    const result = await userService.removeGig(userId, gigIndex);
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ message: result.message });
+    }
+  } catch (error) {
+    console.error("Error removing gig:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default router;
