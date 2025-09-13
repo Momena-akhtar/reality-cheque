@@ -323,6 +323,8 @@ class GenerateService {
     prompt += `1. [Your first question]\n`;
     prompt += `2. [Your second question]\n`;
     prompt += `3. [Your third question]\n\n`;
+    prompt += `4. [Your fourth question]\n`;
+    prompt += `5. [Your fifth question]\n`;
     prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
     prompt += `Response:`;
 
