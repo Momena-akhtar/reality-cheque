@@ -839,79 +839,101 @@ function ChatPageContent() {
                 </div>
             </div>
 
-            {/* Follow-up Questions Form */}
+            {/* Follow-up Questions Modal Overlay */}
             {showFollowUpForm && (
-                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                >
+                    {/* Blurred Background */}
+                    <div 
+                        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                        onClick={() => setShowFollowUpForm(null)}
+                    />
+                    
+                    {/* Modal Content */}
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-background border border-border rounded-lg p-6 shadow-lg"
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-2xl max-h-[80vh] bg-background border border-border rounded-xl shadow-2xl overflow-hidden"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-foreground">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30">
+                            <h3 className="text-xl font-semibold text-foreground">
                                 Answer Follow-up Questions
                             </h3>
                             <button
                                 onClick={() => setShowFollowUpForm(null)}
-                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             >
-                                ✕
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                             </button>
                         </div>
                         
-                        {(() => {
-                            const message = messages.find(m => m.id === showFollowUpForm);
-                            if (!message?.followUpQuestions) return null;
-                            
-                            return (
-                                <div className="space-y-4">
-                                    {message.followUpQuestions.map((question, index) => (
-                                        <div key={index} className="space-y-2">
-                                            <label className="text-sm font-medium text-foreground">
-                                                {index + 1}. {question.replace(/\\n/g, "\n").trim()}
-                                            </label>
-                                            <textarea
-                                                value={followUpAnswers[message.id]?.[index] || ""}
-                                                onChange={(e) => {
-                                                    setFollowUpAnswers(prev => ({
-                                                        ...prev,
-                                                        [message.id]: {
-                                                            ...prev[message.id],
-                                                            [index]: e.target.value
-                                                        }
-                                                    }));
-                                                }}
-                                                placeholder="Your answer..."
-                                                className="w-full p-3 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                                                rows={2}
-                                            />
-                                        </div>
-                                    ))}
-                                    
-                                    <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                                        <button
-                                            onClick={() => setShowFollowUpForm(null)}
-                                            className="px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                // Here you can handle the submission of answers
-                                                console.log('Follow-up answers:', followUpAnswers[message.id]);
-                                                setShowFollowUpForm(null);
-                                            }}
-                                            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                                        >
-                                            Submit Answers
-                                        </button>
+                        {/* Scrollable Content */}
+                        <div className="overflow-y-auto max-h-[calc(90vh-160px)] p-6">
+                            {(() => {
+                                const message = messages.find(m => m.id === showFollowUpForm);
+                                if (!message?.followUpQuestions) return null;
+                                
+                                return (
+                                    <div className="space-y-6">
+                                        {message.followUpQuestions.map((question, index) => (
+                                            <div key={index} className="space-y-3">
+                                                <label className="block text-sm font-medium text-foreground">
+                                                    {index + 1}. {question.replace(/\\n/g, "\n").trim()}
+                                                </label>
+                                                <textarea
+                                                    value={followUpAnswers[message.id]?.[index] || ""}
+                                                    onChange={(e) => {
+                                                        setFollowUpAnswers(prev => ({
+                                                            ...prev,
+                                                            [message.id]: {
+                                                                ...prev[message.id],
+                                                                [index]: e.target.value
+                                                            }
+                                                        }));
+                                                    }}
+                                                    placeholder="Type your answer here..."
+                                                    className="w-full p-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
+                                                    rows={3}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-                            );
-                        })()}
+                                );
+                            })()}
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
+                            <button
+                                onClick={() => setShowFollowUpForm(null)}
+                                className="px-6 py-2 text-sm font-medium cursor-pointer border border-border rounded-lg hover:bg-muted transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Here you can handle the submission of answers
+                                    const message = messages.find(m => m.id === showFollowUpForm);
+                                    if (message) {
+                                        console.log('Follow-up answers:', followUpAnswers[message.id]);
+                                    }
+                                    setShowFollowUpForm(null);
+                                }}
+                                className="px-6 py-2 text-sm font-medium cursor-pointer bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                                Submit Answers
+                            </button>
+                        </div>
                     </motion.div>
-                </div>
+                </motion.div>
             )}
 
             <div className="flex-none px-4 max-w-4xl mx-auto w-full">
