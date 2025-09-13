@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import AdminSignInPopup from "../components/admin-signin";
+import Logo from '../components/ui/logo';
+import Theme from '../components/ui/theme';
 
 export default function AdminPage() {
     const { admin, adminLoading } = useAdminAuth();
@@ -31,6 +33,12 @@ export default function AdminPage() {
 
     return (
         <div>
+        <div 
+             className="fixed h-16 m-auto top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300"
+            >
+                <Logo />
+                <Theme />
+            </div>
             <AdminSignInPopup onClose={() => {}} />
         </div>
     );

@@ -37,8 +37,8 @@ export default function AdminSignInPopup({ onClose }: { onClose: () => void }) {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-[100]">
-            <div className="bg-background text-[var(--foreground)] border border-border rounded-lg p-8 w-[400px] shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
+        <div className="fixed inset-0 flex items-center justify-center  z-[100]">
+            <div className="bg-background text-foreground border border-border rounded-lg p-8 w-[400px] shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)]">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">Admin Login</h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700 cursor-pointer">

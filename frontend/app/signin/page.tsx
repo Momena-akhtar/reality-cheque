@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Info, Plus, Minus, Eye, EyeOff } from 'lucide-react';
+import Logo from '../components/ui/logo';
+import Theme from '../components/ui/theme';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -268,8 +270,15 @@ export default function SignInPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div className={`bg-background text-[var(--foreground)] border border-border rounded-lg p-8 shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-[var(--foreground)] [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)] ${isSignUp ? 'w-full max-w-[800px]' : 'w-full max-w-[500px]'}`}>
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-20">
+            {/**Header */}
+            <div 
+             className="fixed h-16 m-auto top-0 left-0 right-0 z-50 flex justify-between items-center p-4 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-all duration-300"
+            >
+                <Logo />
+                <Theme />
+            </div>
+            <div className={`bg-background text-foreground border border-border rounded-lg p-8 shadow-lg [&_input:-webkit-autofill]:bg-background [&_input:-webkit-autofill:hover]:bg-background [&_input:-webkit-autofill:focus]:bg-background [&_input:-webkit-autofill]:text-foreground [&_input:-webkit-autofill]:!transition-[background-color] [&_input:-webkit-autofill]:!duration-[5000s] [&_input:-webkit-autofill]:[text-fill-color:var(--foreground)] [&_input:-webkit-autofill]:[-webkit-text-fill-color:var(--foreground)] ${isSignUp ? 'w-full max-w-[800px]' : 'w-full max-w-[500px]'}`}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
                     <Link href="/" className="text-gray-500 hover:text-gray-700 cursor-pointer">
