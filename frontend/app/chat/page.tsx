@@ -917,13 +917,78 @@ function ChatPageContent() {
                                 Cancel
                             </button>
                             <button
-                                onClick={() => {
-                                    // Here you can handle the submission of answers
+                                onClick={async () => {
                                     const message = messages.find(m => m.id === showFollowUpForm);
-                                    if (message) {
-                                        console.log('Follow-up answers:', followUpAnswers[message.id]);
+                                    if (!message || !user || !model || !currentChatId) return;
+
+                                    try {
+                                        // Prepare the payload
+                                        const payload = {
+                                            modelId: model._id,
+                                            userAnswers: followUpAnswers[message.id] || {},
+                                            currentResponse: message.structuredResponse,
+                                            chatId: currentChatId,
+                                        };
+
+                                        const response = await fetch(
+                                            `${API_BASE}/generate/regenerate-from-answers`,
+                                            {
+                                                method: "POST",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                },
+                                                credentials: "include",
+                                                body: JSON.stringify(payload),
+                                            }
+                                        );
+
+                                        if (!response.ok) {
+                                            const errorData = await response.json();
+                                            throw new Error(
+                                                errorData.message || "Failed to regenerate response"
+                                            );
+                                        }
+
+                                        const data = await response.json();
+
+                                        if (data.success) {
+                                            // Update the message with the new structured response
+                                            setMessages((prev) =>
+                                                prev.map((msg) =>
+                                                    msg.id === message.id
+                                                        ? {
+                                                              ...msg,
+                                                              structuredResponse: data.data.updatedResponse,
+                                                          }
+                                                        : msg
+                                                )
+                                            );
+
+                                            // Update user credits
+                                            if (data.data.cost) {
+                                                setUserCredits((prev) =>
+                                                    Math.max(0, prev - data.data.cost)
+                                                );
+                                            }
+
+                                            // Clear the form answers
+                                            setFollowUpAnswers(prev => ({
+                                                ...prev,
+                                                [message.id]: {}
+                                            }));
+                                        } else {
+                                            throw new Error(data.message || "Failed to regenerate response");
+                                        }
+                                    } catch (error) {
+                                        console.error("Error regenerating response:", error);
+                                        setError(
+                                            error instanceof Error
+                                                ? error.message
+                                                : "Failed to regenerate response"
+                                        );
+                                    } finally {
+                                        setShowFollowUpForm(null);
                                     }
-                                    setShowFollowUpForm(null);
                                 }}
                                 className="px-6 py-2 text-sm font-medium cursor-pointer bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                             >
