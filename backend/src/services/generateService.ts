@@ -259,7 +259,7 @@ class GenerateService {
     }
     
     prompt += `IMPORTANT: Your response must be a valid JSON object where each key is a feature name and each value is the generated content for that feature. `;
-    prompt += `Additionally, include a "Follow-up Questions" feature that contains 3-5 thoughtful questions to help improve the content. `;
+    prompt += `Additionally, include a "Follow-up Questions" feature that contains 5-7 thoughtful questions to help improve the content. `;
     prompt += `For example: {"Primary Headline": "Your headline here", "Subheadline": "Your subheadline here", "Follow-up Questions": "1. Would you like me to make the headline more attention-grabbing?\\n2. Should I adjust the tone?\\n3. Would you like more specific details?"}\n\n`;
     prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
     prompt += `Response (JSON only):`;
@@ -316,7 +316,7 @@ class GenerateService {
       prompt += `Use the user's agency information to personalize the response.\n\n`;
     }
     
-    prompt += `After your main response, please add 3-5 follow-up questions that would help improve or refine the content. `;
+    prompt += `After your main response, please add 5-7 follow-up questions that would help improve or refine the content. `;
     prompt += `Format them like this:\n\n`;
     prompt += `---\n\n`;
     prompt += `**Follow-up Questions:**\n`;
