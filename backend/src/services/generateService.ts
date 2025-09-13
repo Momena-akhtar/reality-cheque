@@ -13,7 +13,9 @@ import {
   UserContext,
   GenerateServiceConfig,
   RegenerateFeatureRequest,
-  RegenerateFeatureResponse
+  RegenerateFeatureResponse,
+  RegenerateFollowUpQuestionsRequest,
+  RegenerateFollowUpQuestionsResponse
 } from "../types/generate";
 
 class GenerateService {
@@ -292,6 +294,35 @@ class GenerateService {
     return prompt;
   }
 
+  private async buildRegenerateFollowUpQuestionsPrompt(
+    model: any,
+    userAnswers: { [questionIndex: number]: string },
+    currentResponse: any,
+    userContext: string
+  ): Promise<string> {
+    let prompt = `Model Information:\n`;
+    prompt += `- Name: ${model.name}\n`;
+    prompt += `- Description: ${model.description}\n\n`;
+    
+    prompt += `User Context:\n${userContext}\n`;
+    
+    prompt += `Current Response:\n${JSON.stringify(currentResponse, null, 2)}\n\n`;
+    
+    prompt += `User has provided answers to follow-up questions:\n`;
+    Object.entries(userAnswers).forEach(([questionIndex, answer]) => {
+      prompt += `Question ${parseInt(questionIndex) + 1}: ${answer}\n`;
+    });
+    prompt += `\n`;
+    
+    prompt += `Based on these answers, please regenerate the entire response to better address the user's feedback and preferences. `;
+    prompt += `Your response must be a valid JSON object with the same structure as the current response, `;
+    prompt += `but updated to incorporate the user's answers and improve the content accordingly.\n\n`;
+    prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
+    prompt += `Response (JSON only):`;
+
+    return prompt;
+  }
+
   private async buildPromptWithoutFeatures(
     model: any,
     userContext: string,
@@ -474,6 +505,75 @@ class GenerateService {
     } catch (error) {
       console.error('Error in generateResponse:', error);
       throw new Error(`Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async regenerateFollowUpQuestions(request: RegenerateFollowUpQuestionsRequest): Promise<RegenerateFollowUpQuestionsResponse> {
+    try {
+      const { modelId, userAnswers, currentResponse, chatId, userId } = request;
+
+      // Fetch model and user data
+      const model = await AIModel.findById(modelId).populate('categoryId');
+      if (!model) {
+        throw new Error('Model not found');
+      }
+
+      const User = mongoose.model('User');
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Build user context
+      const userContext = this.buildUserContext(user);
+      
+      // Build regeneration prompt
+      const prompt = await this.buildRegenerateFollowUpQuestionsPrompt(
+        model, 
+        userAnswers, 
+        currentResponse, 
+        userContext
+      );
+
+      // Generate response without memory (standalone)
+      const response = await this.openai.invoke(prompt);
+
+      // Get token usage
+      const inputTokens = this.lastTokenUsage.inputTokens;
+      const outputTokens = this.lastTokenUsage.outputTokens;
+      const cost = this.calculateCost(inputTokens, outputTokens, model);
+
+      const responseText = response.content as string;
+
+      // Parse the updated response
+      let updatedResponse: any;
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          updatedResponse = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Invalid JSON response');
+        }
+      } catch (error) {
+        console.error('Error parsing regeneration response:', error);
+        throw new Error('Failed to parse regeneration response');
+      }
+
+      // Save the regeneration as a new message
+      const regenerationMessage = `Regenerated response based on follow-up question answers`;
+      await this.saveMessage(chatId, "user", regenerationMessage, inputTokens);
+      await this.saveMessage(chatId, "assistant", responseText, outputTokens, updatedResponse, true);
+
+      return {
+        updatedResponse,
+        cost,
+        inputTokens,
+        outputTokens,
+      };
+    }
+    catch (error) {
+      console.error('Error in regenerateFollowUpQuestions:', error);
+      throw new Error(`Follow-up questions regeneration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

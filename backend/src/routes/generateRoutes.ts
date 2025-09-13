@@ -418,4 +418,44 @@ router.post('/regenerate-feature', authMiddleware, checkCredits, async (req, res
       error: 'FEATURE_REGENERATION_FAILED'
     });
   }
+});
+
+// Regenerate response based on follow-up question answers
+router.post('/regenerate-from-answers', authMiddleware, checkCredits, async (req, res): Promise<any> => {
+  try {
+    const { modelId, userAnswers, currentResponse, chatId } = req.body;
+    const userId = (req as any).user.id;
+
+    // Validate required fields
+    if (!modelId || !userAnswers || !currentResponse || !chatId) {
+      return res.status(400).json({ 
+        message: 'Model ID, user answers, current response, and chat ID are required' 
+      });
+    }
+
+    // Regenerate response based on answers
+    const result = await generateService.regenerateFollowUpQuestions({
+      modelId,
+      userAnswers,
+      currentResponse,
+      chatId,
+      userId
+    });
+
+    // Deduct credits based on actual cost
+    await generateService.updateUserCredits(userId, result.cost || 0);
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Response regenerated successfully based on follow-up answers'
+    });
+
+  } catch (error) {
+    console.error('Error in regenerate from answers endpoint:', error);
+    res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Internal server error',
+      error: 'FOLLOWUP_REGENERATION_FAILED'
+    });
+  }
 }); 
