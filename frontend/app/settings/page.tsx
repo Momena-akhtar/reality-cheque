@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showCreditsTooltip, setShowCreditsTooltip] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const { user, updateUser, deleteUser, logout } = useAuth();
+  const { user, updateUser, deleteUser, logout, addGig, removeGig } = useAuth();
   const router = useRouter();
 
   const [userInfo, setUserInfo] = useState({
@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [timelineToResults, setTimelineToResults] = useState(user?.timelineToResults || []);
   const [leadSources, setLeadSources] = useState(user?.leadSources || []);
   const [monthlyRevenue, setMonthlyRevenue] = useState(user?.monthlyRevenue || 0);
+  const [fiverrGigs, setFiverrGigs] = useState(user?.fiverrGigs || []);
 
   // New item states
   const [newService, setNewService] = useState({ name: '', description: '' });
@@ -49,6 +50,7 @@ export default function SettingsPage() {
   const [newOffer, setNewOffer] = useState({ name: '', description: '', packageId: '' });
   const [newStep, setNewStep] = useState({ packageId: '', description: '', order: 1 });
   const [newTimeline, setNewTimeline] = useState({ packageId: '', timeline: '' });
+  const [newGig, setNewGig] = useState({ title: '', description: '', tags: '', price: '', status: 'Active' });
 
   useEffect(() => {
     if (user) {
@@ -78,6 +80,7 @@ export default function SettingsPage() {
       setTimelineToResults(user.timelineToResults || []);
       setLeadSources(user.leadSources || []);
       setMonthlyRevenue(user.monthlyRevenue || 0);
+      setFiverrGigs(user.fiverrGigs || []);
     }
   }, [user]);
 
@@ -143,7 +146,8 @@ export default function SettingsPage() {
         stepByStepProcess,
         timelineToResults,
         leadSources,
-        monthlyRevenue
+        monthlyRevenue,
+        fiverrGigs
       };
 
       const success = await updateUser(user.id, updateData);
@@ -259,6 +263,55 @@ export default function SettingsPage() {
 
   const removeTimeline = (index: number) => {
     setTimelineToResults(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddGig = async () => {
+    if (!user || !newGig.title.trim() || !newGig.price.trim()) {
+      toast.error('Please fill in title and price');
+      return;
+    }
+
+    try {
+      const tagsArray = newGig.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
+      const gigData = {
+        title: newGig.title.trim(),
+        description: newGig.description.trim(),
+        tags: tagsArray,
+        price: newGig.price.trim(),
+        status: newGig.status
+      };
+
+      const success = await addGig(user.id, gigData);
+      
+      if (success) {
+        toast.success('Gig added successfully');
+        setNewGig({ title: '', description: '', tags: '', price: '', status: 'Active' });
+      } else {
+        toast.error('Failed to add gig');
+      }
+    } catch (error) {
+      toast.error('An error occurred while adding gig');
+    }
+  };
+
+  const handleRemoveGig = async (index: number) => {
+    if (!user) return;
+
+    try {
+      const success = await removeGig(user.id, index);
+      
+      if (success) {
+        toast.success('Gig removed successfully');
+      } else {
+        toast.error('Failed to remove gig');
+      }
+    } catch (error) {
+      toast.error('An error occurred while removing gig');
+    }
+  };
+
+  const editGig = (index: number, updatedGig: any) => {
+    setFiverrGigs((prev: any[]) => prev.map((gig: any, i: number) => i === index ? updatedGig : gig));
   };
 
   const getTierColor = (str: string | undefined | null) => {
@@ -805,6 +858,128 @@ export default function SettingsPage() {
                       <span className="text-sm">{source}</span>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Fiverr Gigs */}
+              <div>
+                <h3 className="text-lg font-medium mb-3">Fiverr Gigs</h3>
+                <div className="space-y-4">
+                  {/* Display existing gigs */}
+                  <div className="space-y-3">
+                    <h4 className="text-md font-medium text-primary-text-faded">Your Gigs</h4>
+                    {fiverrGigs.length > 0 ? (
+                      fiverrGigs.map((gig: any, index: number) => (
+                        <div key={index} className="p-4 bg-muted/20 rounded-lg border border-border">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-sm">{gig.title}</h5>
+                              <p className="text-xs text-primary-text-faded mb-2">{gig.description}</p>
+                              <div className="flex items-center gap-4 text-xs">
+                                <span className="text-green-600 font-medium">${gig.price}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  gig.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                                  gig.status === 'Paused' ? 'bg-yellow-100 text-yellow-800' : 
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {gig.status}
+                                </span>
+                              </div>
+                              {gig.tags && gig.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {gig.tags.map((tag: string, tagIndex: number) => (
+                                    <span key={tagIndex} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGig(index)}
+                              className="text-red-500 cursor-pointer border border-red-700 p-1 rounded-full hover:text-foreground transition-colors ml-2"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-6 bg-muted/10 rounded-lg border border-border text-center">
+                        <p className="text-primary-text-faded mb-4">No gigs available yet</p>
+                        <p className="text-xs text-primary-text-faded">Add your first gig below to get started</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add new gig form */}
+                  <div className="space-y-3">
+                    <h4 className="text-md font-medium text-primary-text-faded">Add New Gig</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Gig Title</label>
+                        <input
+                          type="text"
+                          placeholder="Enter gig title"
+                          value={newGig.title}
+                          onChange={(e) => setNewGig(prev => ({...prev, title: e.target.value}))}
+                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Description</label>
+                        <textarea
+                          placeholder="Describe your gig"
+                          value={newGig.description}
+                          onChange={(e) => setNewGig(prev => ({...prev, description: e.target.value}))}
+                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Price</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., $50"
+                            value={newGig.price}
+                            onChange={(e) => setNewGig(prev => ({...prev, price: e.target.value}))}
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">Status</label>
+                          <select
+                            value={newGig.status}
+                            onChange={(e) => setNewGig(prev => ({...prev, status: e.target.value}))}
+                            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover bg-card"
+                          >
+                            <option value="Active">Active</option>
+                            <option value="Paused">Paused</option>
+                            <option value="Inactive">Inactive</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Tags (comma-separated)</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., web design, logo, branding"
+                          value={newGig.tags}
+                          onChange={(e) => setNewGig(prev => ({...prev, tags: e.target.value}))}
+                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddGig}
+                        className="w-full px-4 py-2 border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all font-medium"
+                      >
+                        Add Gig
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
