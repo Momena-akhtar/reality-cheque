@@ -483,6 +483,11 @@ function ChatPageContent() {
 
         setSending(true);
 
+        // Auto-hide gig selector when generate button is clicked
+        if (model?.name === "Auto-Responder & Delivery Messages") {
+            setShowGigSelector(false);
+        }
+
         try {
             // Prepare request payload
             const payload = {
@@ -1373,11 +1378,11 @@ function ChatPageContent() {
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {selectedGigs.map((gig, index) => (
-                                                <div key={index} className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                                                <div key={index} className="flex border border-border items-center gap-2 px-3 py-1 bg-primary/10 text-foreground rounded-full text-xs">
                                                     <span className="truncate max-w-32">{gig.title}</span>
                                                     <button
                                                         onClick={() => setSelectedGigs(prev => prev.filter((_, i) => i !== index))}
-                                                        className="text-primary hover:text-primary/70 transition-colors"
+                                                        className="text-foreground cursor-pointer hover:text-primary/70 transition-colors"
                                                     >
                                                         ×
                                                     </button>
