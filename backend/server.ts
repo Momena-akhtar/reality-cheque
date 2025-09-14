@@ -10,6 +10,7 @@ import aiModelRouter from './src/routes/aiModelRoutes';
 import generateRouter from './src/routes/generateRoutes';
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { connectRedis } from "./src/config/redis";
 const nodeEnv = process.env.NODE_ENV || "development";
 dotenv.config({ path: `.env.${nodeEnv}` });
 
@@ -21,6 +22,11 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 const PORT = process.env.PORT || 3000;
+
+connectToDb(); 
+connectRedis().catch((err) => {
+    console.error("Failed to connect to Redis:", err);
+});
 
 app.get("/", (req: Request, res: Response) => {
     res.send(`<!DOCTYPE html>
@@ -46,7 +52,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/voucher', voucherRouter);
 app.use('/api/ai-models', aiModelRouter);
 app.use('/api/generate', generateRouter);
-connectToDb(); 
+
 app.listen(PORT, () => {
     console.log(`[${nodeEnv}] Server is running on port ${PORT}`);
 });
