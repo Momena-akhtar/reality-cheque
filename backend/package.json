@@ -32,6 +32,8 @@
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.30",
     "mongoose": "^8.16.4",
+    "puppeteer-real-browser": "^1.4.4",
+    "rebrowser-puppeteer-core": "^24.8.1",
     "stripe": "^18.4.0"
   },
   "devDependencies": {
