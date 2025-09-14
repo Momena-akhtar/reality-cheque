@@ -1,6 +1,7 @@
 import express from 'express';
 import { UserService } from '../services/userService';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { verifyOTP } from '../services/emailService';
 
 const router = express.Router();
 const userService = UserService.getInstance();
@@ -68,6 +69,50 @@ router.get('/token-info', authMiddleware, async (req, res): Promise<any> => {
   } catch (error) {
     console.error('Error fetching token info:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Password reset route (no auth required)
+router.post("/reset-password", async (req, res): Promise<any> => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email, OTP, and new password are required" 
+      });
+    }
+
+    // Verify OTP first
+    const isOtpValid = await verifyOTP(email, otp);
+    if (!isOtpValid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired OTP" 
+      });
+    }
+
+    // Reset the password
+    const result = await userService.resetPassword(email, newPassword);
+    
+    if (result.success) {
+      res.status(200).json({ 
+        success: true, 
+        message: "Password reset successfully" 
+      });
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        message: result.message 
+      });
+    }
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 });
 

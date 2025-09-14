@@ -446,6 +446,38 @@ export class UserService {
     }
   }
 
+  // Password reset methods
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      // Update the password - the pre-save hook will handle hashing
+      user.password = newPassword;
+      await user.save();
+
+      return {
+        success: true,
+        message: 'Password reset successfully'
+      };
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      return { success: false, message: 'Failed to reset password' };
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<IUser | null> {
+    try {
+      const user = await User.findOne({ email: email.toLowerCase() });
+      return user;
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      return null;
+    }
+  }
+
   private buildUserContext(user: IUser): string {
     const userContext: UserContext = {
       username: user.username,
