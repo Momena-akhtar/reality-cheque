@@ -236,6 +236,70 @@ class GenerateService {
     userContext: string,
     userInput: string
   ): Promise<string> {
+    // Special handling for Gig Builder - return gig object instead of feature-wise response
+    if (model.name === "Gig Builder") {
+      let prompt = `Model Information:\n`;
+      prompt += `- Name: ${model.name}\n`;
+      prompt += `- Description: ${model.description}\n\n`;
+      
+      prompt += `User Context:\n${userContext}\n`;
+      
+      // Special handling for Upwork Profile Optimizer
+      let processedUserInput = userInput;
+      if (userInput && userInput.trim() !== '') {
+        // Check if input is a URL
+        if (this.isUpworkUrl(userInput.trim())) {
+          try {
+            const scrapedData = await upworkScraperService.scrapeUpworkProfile(userInput.trim());
+            if (scrapedData.success) {
+              processedUserInput = `Upwork Profile Data (scraped from ${userInput}):\n\n` +
+                `Title: ${scrapedData.title}\n` +
+                `Summary: ${scrapedData.summary}\n` +
+                `Skills: ${scrapedData.skills.join(', ')}\n` +
+                `Hourly Rate: ${scrapedData.hourlyRate || 'Not specified'}\n` +
+                `Location: ${scrapedData.location || 'Not specified'}\n` +
+                `Availability: ${scrapedData.availability || 'Not specified'}\n` +
+                `Portfolio Items:\n${scrapedData.portfolio.map(item => `- ${item.title}: ${item.description}`).join('\n')}\n\n` +
+                `Please analyze this profile data and provide optimization suggestions.`;
+            } else {
+              processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error: ${scrapedData.error}\n\nPlease provide your profile content manually for analysis.`;
+            }
+          } catch (error) {
+            processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error. Please provide your profile content manually for analysis.`;
+          }
+        }
+      }
+      
+      // Handle empty user input
+      if (!processedUserInput || processedUserInput.trim() === '') {
+        prompt += `\nUser Input: [No specific instructions provided]\n\n`;
+        prompt += `Since no specific instructions were provided, please generate a high-quality Fiverr gig based on this model's purpose. `;
+        prompt += `Use the user's agency information to personalize the gig appropriately. `;
+        prompt += `Create a gig that would be useful and relevant for the user's business context.\n\n`;
+      } else {
+        prompt += `\nUser Input: ${processedUserInput}\n\n`;
+        prompt += `Please generate a Fiverr gig based on the user's specific input. `;
+        prompt += `Use the user's agency information to personalize the gig. `;
+        prompt += `Create a compelling gig that would attract clients.\n\n`;
+      }
+      
+      prompt += `IMPORTANT: Your response must be a valid JSON object with the following structure for a Fiverr gig:\n`;
+      prompt += `{\n`;
+      prompt += `  "title": "Compelling gig title with keywords",\n`;
+      prompt += `  "description": "Detailed gig description explaining benefits and what customer gets",\n`;
+      prompt += `  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],\n`;
+      prompt += `  "price": "Starting from $5",\n`;
+      prompt += `  "status": "Active",\n`;
+      prompt += `  "followUpQuestions": "1. Would you like me to adjust the pricing?\\n2. Should I modify the description?\\n3. Would you like different tags?\\n4. Should I change the title?\\n5. Would you like me to add more details?"\n`;
+      prompt += `}\n\n`;
+      prompt += `Make sure the gig is professional, compelling, and tailored to the user's business. `;
+      prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
+      prompt += `Response (JSON only):`;
+
+      return prompt;
+    }
+
+    // Regular feature-wise response for other models
     // Create feature prompts object
     const featurePrompts: FeaturePrompt = {};
     
@@ -497,20 +561,46 @@ class GenerateService {
           if (jsonMatch) {
             const parsedResponse = JSON.parse(jsonMatch[0]);
             
-            // Extract follow-up questions if they exist as a feature
-            if (parsedResponse["Follow-up Questions"]) {
-              const questionsText = parsedResponse["Follow-up Questions"];
-              followUpQuestions = questionsText
-                .split('\n')
-                .filter((line: string) => line.trim().match(/^\d+\./))
-                .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
-                .filter((q: string) => q.length > 0);
+            // Special handling for Gig Builder - it returns a gig object directly
+            if (model.name === "Gig Builder") {
+              // Extract follow-up questions if they exist
+              if (parsedResponse.followUpQuestions) {
+                const questionsText = parsedResponse.followUpQuestions;
+                followUpQuestions = questionsText
+                  .split('\n')
+                  .filter((line: string) => line.trim().match(/^\d+\./))
+                  .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+                  .filter((q: string) => q.length > 0);
+              }
               
-              // Remove follow-up questions from the structured response
-              const { "Follow-up Questions": _, ...featuresWithoutQuestions } = parsedResponse;
-              structuredResponse = featuresWithoutQuestions;
+              // Create gig object from the parsed response
+              generatedGigs = {
+                title: parsedResponse.title || "",
+                description: parsedResponse.description || "",
+                tags: parsedResponse.tags || [],
+                price: parsedResponse.price || "Starting from $5",
+                status: parsedResponse.status || "Active"
+              };
+              
+              // Don't set structuredResponse for Gig Builder
+              structuredResponse = undefined;
             } else {
-              structuredResponse = parsedResponse;
+              // Regular feature-wise response for other models
+              // Extract follow-up questions if they exist as a feature
+              if (parsedResponse["Follow-up Questions"]) {
+                const questionsText = parsedResponse["Follow-up Questions"];
+                followUpQuestions = questionsText
+                  .split('\n')
+                  .filter((line: string) => line.trim().match(/^\d+\./))
+                  .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+                  .filter((q: string) => q.length > 0);
+                
+                // Remove follow-up questions from the structured response
+                const { "Follow-up Questions": _, ...featuresWithoutQuestions } = parsedResponse;
+                structuredResponse = featuresWithoutQuestions;
+              } else {
+                structuredResponse = parsedResponse;
+              }
             }
           } else {
             // Fallback: create a simple structure with the full response
@@ -538,35 +628,6 @@ class GenerateService {
         }
       }
 
-      // Special handling for Gig Builder model - convert structured response to gig format
-      if (model.name === "Gig Builder" && structuredResponse) {
-        try {
-          // Extract gig data from structured response
-          const title = structuredResponse["Title"] || "";
-          const tags = structuredResponse["Tags"] || "";
-          const description = structuredResponse["Description"] || "";
-          const faqRequirements = structuredResponse["FAQ & Requirements"] || "";
-          
-          if (title && description) {
-            // Convert tags string to array
-            const tagsArray = tags.split(',')
-              .map((tag: string) => tag.trim())
-              .filter((tag: string) => tag.length > 0);
-            
-            // Create gig object
-            generatedGigs = {
-              title: title,
-              description: description,
-              tags: tagsArray,
-              price: "Starting from $5", // Default price
-              status: "Active"
-            };
-          }
-        } catch (error) {
-          console.error('Error converting Gig Builder response to gig format:', error);
-        }
-      }
-
       // Save user message to database only if userInput is not empty
       if (userInput && userInput.trim() !== '') {
         await this.saveMessage(chat._id, "user", userInput, inputTokens);
@@ -591,7 +652,7 @@ class GenerateService {
         inputTokens: inputTokens,
         outputTokens: outputTokens,
         structuredResponse,
-        hasFeatures,
+        hasFeatures: model.name === "Gig Builder" ? false : hasFeatures,
         followUpQuestions,
         generatedGigs,
       };
