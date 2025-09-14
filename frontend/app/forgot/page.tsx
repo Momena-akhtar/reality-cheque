@@ -15,6 +15,7 @@ export default function ForgotPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [resendCooldown, setResendCooldown] = useState(0);
     
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();    
@@ -64,12 +65,31 @@ export default function ForgotPage() {
         setIsLoading(true);
         setErrors({});
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/email/send-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setCurrentStep(2);
+                toast.success("OTP sent successfully! Please check your email.");
+            } else {
+                setErrors({ email: data.message || "Failed to send OTP" });
+                toast.error(data.message || "Failed to send OTP");
+            }
+        } catch (error) {
+            console.error('Error sending OTP:', error);
+            setErrors({ email: "Network error. Please try again." });
+            toast.error("Network error. Please try again.");
+        } finally {
             setIsLoading(false);
-            setCurrentStep(2);
-            toast.success("OTP sent successfully! Please check your email.");
-        }, 1500);
+        }
     };
 
     // Step 2: Verify OTP
@@ -83,12 +103,72 @@ export default function ForgotPage() {
         setIsLoading(true);
         setErrors({});
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/email/verify-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, otp: otpString }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setCurrentStep(3);
+                toast.success("OTP verified successfully! Please reset your password.");
+            } else {
+                setErrors({ otp: data.message || "Invalid or expired OTP" });
+                toast.error(data.message || "Invalid or expired OTP");
+            }
+        } catch (error) {
+            console.error('Error verifying OTP:', error);
+            setErrors({ otp: "Network error. Please try again." });
+            toast.error("Network error. Please try again.");
+        } finally {
             setIsLoading(false);
-            setCurrentStep(3);
-            toast.success("OTP verified successfully! Please reset your password.");
-        }, 1500);
+        }
+    };
+
+    // Resend OTP functionality
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0) return;
+        
+        setIsLoading(true);
+        setErrors({});
+        
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/email/send-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("OTP resent successfully!");
+                setResendCooldown(60); // 60 seconds cooldown
+                const interval = setInterval(() => {
+                    setResendCooldown((prev) => {
+                        if (prev <= 1) {
+                            clearInterval(interval);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            } else {
+                toast.error(data.message || "Failed to resend OTP");
+            }
+        } catch (error) {
+            console.error('Error resending OTP:', error);
+            toast.error("Network error. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Step 3: Reset Password
@@ -111,18 +191,46 @@ export default function ForgotPage() {
         setIsLoading(true);
         setErrors({});
         
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            const otpString = otp.join("");
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    otp: otpString, 
+                    newPassword 
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                toast.success("Password reset successful! Please sign in with your new password.");
+                router.push("/signin");
+            } else {
+                setErrors({ newPassword: data.message || "Failed to reset password" });
+                toast.error(data.message || "Failed to reset password");
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            setErrors({ newPassword: "Network error. Please try again." });
+            toast.error("Network error. Please try again.");
+        } finally {
             setIsLoading(false);
-            toast.success("Password reset successful! Please sign in with your new password.");
-            router.push("/signin");
-        }, 1500);
+        }
     };
 
     const goBack = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
             setErrors({});
+            // Clear OTP when going back from step 3 to step 2
+            if (currentStep === 3) {
+                setOtp(["", "", "", "", "", ""]);
+            }
         }
     };
 
@@ -237,6 +345,20 @@ export default function ForgotPage() {
                             {errors.otp && (
                                 <p className="text-sm text-red-500 text-center mt-1">{errors.otp}</p>
                             )}
+                        </div>
+                        
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={resendCooldown > 0 || isLoading}
+                                className="text-sm text-[#757575] cursor-pointer disabled:text-muted-foreground disabled:cursor-not-allowed"
+                            >
+                                {resendCooldown > 0 
+                                    ? `Resend OTP in ${resendCooldown}s` 
+                                    : "Didn't receive the code? Resend OTP"
+                                }
+                            </button>
                         </div>
                         
                         <div className="flex gap-2">
