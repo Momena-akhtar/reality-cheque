@@ -5,18 +5,24 @@ export interface GenerateRequest {
   userInput: string;
   userId: string;
   sessionId?: string; // Now represents chatId
+  selectedGigs?: Array<{
+    title: string;
+    description: string;
+    tags: string[];
+    price: string;
+    status: string;
+  }>;
 }
 
 export interface GenerateResponse {
   response: string;
   sessionId: string;
-  chatId?: string; // Database chat ID
+  chatId?: string; 
   modelName: string;
   features?: string[];
-  cost?: number; // Cost in dollars
-  inputTokens?: number; // Number of input tokens used
-  outputTokens?: number; // Number of output tokens used
-  // New fields for structured responses
+  cost?: number; // in dollars
+  inputTokens?: number; // tokens used
+  outputTokens?: number; // tokens used
   structuredResponse?: StructuredFeatureResponse;
   hasFeatures?: boolean;
   followUpQuestions?: string[];
@@ -29,7 +35,6 @@ export interface GenerateResponse {
   };
 }
 
-// New types for structured feature responses
 export interface StructuredFeatureResponse {
   [featureName: string]: string; // Feature name -> content
 }
@@ -65,7 +70,6 @@ export interface RegenerateFollowUpQuestionsResponse {
   outputTokens?: number;
 }
 
-// Chat Management Types
 export interface ChatSession {
   id: string;
   title: string;
@@ -215,7 +219,6 @@ export interface GenerateError {
   error: 'INSUFFICIENT_CREDITS' | 'MODEL_NOT_FOUND' | 'GENERATION_FAILED' | 'HISTORY_RETRIEVAL_FAILED' | 'SESSION_CLEAR_FAILED' | 'CREDITS_RETRIEVAL_FAILED' | 'MODEL_INFO_RETRIEVAL_FAILED' | 'BATCH_GENERATION_FAILED' | 'CHATS_RETRIEVAL_FAILED' | 'CHAT_HISTORY_RETRIEVAL_FAILED' | 'CHAT_CLEAR_FAILED' | 'CHAT_STATS_RETRIEVAL_FAILED';
 }
 
-// Memory Types
 export interface MemoryMessage {
   role: 'human' | 'ai';
   content: string;
@@ -226,7 +229,6 @@ export interface MemoryStore {
   [sessionId: string]: MemoryMessage[];
 }
 
-// Service Configuration
 export interface GenerateServiceConfig {
   openaiApiKey: string;
   modelName: string;
@@ -234,7 +236,6 @@ export interface GenerateServiceConfig {
   maxTokens?: number;
 }
 
-// Feature Types
 export interface Feature {
   id: string;
   name: string;
@@ -254,7 +255,6 @@ export interface AIModel {
   isActive: boolean;
 }
 
-// Prompt Building Types
 export interface PromptContext {
   model: AIModel;
   userContext: UserContext;
