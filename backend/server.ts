@@ -8,6 +8,7 @@ import stripeRouter from './src/routes/stripeRoutes';
 import voucherRouter from './src/routes/voucherRoutes';
 import aiModelRouter from './src/routes/aiModelRoutes';
 import generateRouter from './src/routes/generateRoutes';
+import emailRouter from "./src/routes/emailRoutes";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectRedis } from "./src/config/redis";
@@ -52,6 +53,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/voucher', voucherRouter);
 app.use('/api/ai-models', aiModelRouter);
 app.use('/api/generate', generateRouter);
+app.use('/api/email', emailRouter);
 
 app.listen(PORT, () => {
     console.log(`[${nodeEnv}] Server is running on port ${PORT}`);
