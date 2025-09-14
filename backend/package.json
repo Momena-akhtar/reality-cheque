@@ -33,6 +33,7 @@
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.30",
     "mongoose": "^8.16.4",
+    "nodemailer": "^7.0.6",
     "puppeteer-real-browser": "^1.4.4",
     "rebrowser-puppeteer-core": "^24.8.1",
     "stripe": "^18.4.0"
@@ -41,6 +42,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
+    "@types/nodemailer": "^7.0.1",
     "cross-env": "^7.0.3",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
