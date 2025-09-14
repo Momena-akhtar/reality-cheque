@@ -234,7 +234,8 @@ class GenerateService {
     model: any,
     features: Feature[],
     userContext: string,
-    userInput: string
+    userInput: string,
+    selectedGigs?: any[]
   ): Promise<string> {
     // Special handling for Gig Builder - return gig object instead of feature-wise response
     if (model.name === "Gig Builder") {
@@ -293,6 +294,78 @@ class GenerateService {
       prompt += `  "followUpQuestions": "1. Would you like me to adjust the pricing?\\n2. Should I modify the description?\\n3. Would you like different tags?\\n4. Should I change the title?\\n5. Would you like me to add more details?"\n`;
       prompt += `}\n\n`;
       prompt += `Make sure the gig is professional, compelling, and tailored to the user's business. `;
+      prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
+      prompt += `Response (JSON only):`;
+
+      return prompt;
+    }
+
+    // Special handling for Auto-Responder - include selected gigs context
+    if (model.name === "Auto-Responder & Delivery Messages" && selectedGigs && selectedGigs.length > 0) {
+      let prompt = `Model Information:\n`;
+      prompt += `- Name: ${model.name}\n`;
+      prompt += `- Description: ${model.description}\n\n`;
+      
+      prompt += `User Context:\n${userContext}\n`;
+      
+      // Add selected gigs context
+      prompt += `\nSelected Fiverr Gigs Context:\n`;
+      selectedGigs.forEach((gig, index) => {
+        prompt += `Gig ${index + 1}:\n`;
+        prompt += `- Title: ${gig.title}\n`;
+        prompt += `- Description: ${gig.description}\n`;
+        prompt += `- Tags: ${gig.tags.join(', ')}\n`;
+        prompt += `- Price: ${gig.price}\n`;
+        prompt += `- Status: ${gig.status}\n\n`;
+      });
+      
+      // Special handling for Upwork Profile Optimizer
+      let processedUserInput = userInput;
+      if (userInput && userInput.trim() !== '') {
+        // Check if input is a URL
+        if (this.isUpworkUrl(userInput.trim())) {
+          try {
+            const scrapedData = await upworkScraperService.scrapeUpworkProfile(userInput.trim());
+            if (scrapedData.success) {
+              processedUserInput = `Upwork Profile Data (scraped from ${userInput}):\n\n` +
+                `Title: ${scrapedData.title}\n` +
+                `Summary: ${scrapedData.summary}\n` +
+                `Skills: ${scrapedData.skills.join(', ')}\n` +
+                `Hourly Rate: ${scrapedData.hourlyRate || 'Not specified'}\n` +
+                `Location: ${scrapedData.location || 'Not specified'}\n` +
+                `Availability: ${scrapedData.availability || 'Not specified'}\n` +
+                `Portfolio Items:\n${scrapedData.portfolio.map(item => `- ${item.title}: ${item.description}`).join('\n')}\n\n` +
+                `Please analyze this profile data and provide optimization suggestions.`;
+            } else {
+              processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error: ${scrapedData.error}\n\nPlease provide your profile content manually for analysis.`;
+            }
+          } catch (error) {
+            processedUserInput = `I tried to scrape the Upwork profile from ${userInput}, but encountered an error. Please provide your profile content manually for analysis.`;
+          }
+        }
+      }
+      
+      // Handle empty user input
+      if (!processedUserInput || processedUserInput.trim() === '') {
+        prompt += `\nUser Input: [No specific instructions provided]\n\n`;
+        prompt += `Since no specific instructions were provided, please generate auto-responder messages based on the selected gigs above. `;
+        prompt += `Use the gig information to create personalized and relevant auto-responder templates. `;
+        prompt += `Create messages that would be appropriate for the specific gigs selected.\n\n`;
+      } else {
+        prompt += `\nUser Input: ${processedUserInput}\n\n`;
+        prompt += `Please generate auto-responder messages based on the user's specific input and the selected gigs above. `;
+        prompt += `Use the gig information to create personalized and relevant auto-responder templates. `;
+        prompt += `Create messages that would be appropriate for the specific gigs selected.\n\n`;
+      }
+      
+      prompt += `IMPORTANT: Your response must be a valid JSON object with the following structure for auto-responder messages:\n`;
+      prompt += `{\n`;
+      prompt += `  "Project Start": "Welcome message for when an order begins",\n`;
+      prompt += `  "Delivery": "Message for when the work is delivered",\n`;
+      prompt += `  "Revision Follow-Up": "Message to use after a client asks for a revision",\n`;
+      prompt += `  "followUpQuestions": "1. Would you like me to adjust the tone?\\n2. Should I modify the length?\\n3. Would you like different variations?\\n4. Should I add more personalization?\\n5. Would you like me to focus on specific gig aspects?"\n`;
+      prompt += `}\n\n`;
+      prompt += `Make sure the messages are professional, friendly, and tailored to the selected gigs. `;
       prompt += `Do NOT sugarcoat your responses or automatically agree with everything the user says. Provide honest, constructive feedback and suggestions. If something could be improved, say so directly. If the user's request has potential issues or could be better approached differently, provide your honest assessment. Be helpful but truthful.\n\n`;
       prompt += `Response (JSON only):`;
 
@@ -491,7 +564,7 @@ class GenerateService {
 
   async generateResponse(request: GenerateRequest): Promise<GenerateResponse> {
     try {
-      const { modelId, userInput, userId, sessionId } = request;
+      const { modelId, userInput, userId, sessionId, selectedGigs } = request;
       
       // Get or create chat session
       const chat = await this.getOrCreateChat(userId, modelId, sessionId);
@@ -524,7 +597,7 @@ class GenerateService {
       if (model.featureIds && model.featureIds.length > 0) {
         // Fetch features
         features = await Feature.find({ _id: { $in: model.featureIds } });
-        prompt = await this.buildPromptWithFeatures(model, features, userContext, userInput);
+        prompt = await this.buildPromptWithFeatures(model, features, userContext, userInput, selectedGigs);
         hasFeatures = true;
       } else {
         // Use master prompt
@@ -584,6 +657,22 @@ class GenerateService {
               
               // Don't set structuredResponse for Gig Builder
               structuredResponse = undefined;
+            } else if (model.name === "Auto-Responder & Delivery Messages") {
+              // Special handling for Auto-Responder - extract follow-up questions and create structured response
+              if (parsedResponse.followUpQuestions) {
+                const questionsText = parsedResponse.followUpQuestions;
+                followUpQuestions = questionsText
+                  .split('\n')
+                  .filter((line: string) => line.trim().match(/^\d+\./))
+                  .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+                  .filter((q: string) => q.length > 0);
+                
+                // Remove follow-up questions from the structured response
+                const { followUpQuestions: _, ...featuresWithoutQuestions } = parsedResponse;
+                structuredResponse = featuresWithoutQuestions;
+              } else {
+                structuredResponse = parsedResponse;
+              }
             } else {
               // Regular feature-wise response for other models
               // Extract follow-up questions if they exist as a feature
@@ -652,7 +741,7 @@ class GenerateService {
         inputTokens: inputTokens,
         outputTokens: outputTokens,
         structuredResponse,
-        hasFeatures: model.name === "Gig Builder" ? false : hasFeatures,
+        hasFeatures: model.name === "Gig Builder" ? false : (model.name === "Auto-Responder & Delivery Messages" ? true : hasFeatures),
         followUpQuestions,
         generatedGigs,
       };
