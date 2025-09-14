@@ -102,6 +102,9 @@ function ChatPageContent() {
     const [showFollowUpForm, setShowFollowUpForm] = useState<string | null>(null);
     const [editingGig, setEditingGig] = useState<{ messageId: string; gig: any } | null>(null);
     const [savingGig, setSavingGig] = useState(false);
+    const [userGigs, setUserGigs] = useState<any[]>([]);
+    const [selectedGigs, setSelectedGigs] = useState<any[]>([]);
+    const [showGigSelector, setShowGigSelector] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -201,7 +204,6 @@ function ChatPageContent() {
         fetchModel();
     }, [botId, API_BASE, user]);
 
-    // Fetch user credits
     useEffect(() => {
         const fetchCredits = async () => {
             if (!user) return;
@@ -224,6 +226,31 @@ function ChatPageContent() {
 
         fetchCredits();
     }, [user, API_BASE]);
+
+    // for Auto-Responder model
+    useEffect(() => {
+        const fetchUserGigs = async () => {
+            if (!user || !model || model.name !== "Auto-Responder & Delivery Messages") return;
+
+            try {
+                const response = await fetch(`${API_BASE}/user/${user.id}/gigs`, {
+                    credentials: "include",
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Fetched user gigs:', data);
+                    setUserGigs(data || []);
+                } else {
+                    console.error('Failed to fetch gigs:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error("Error fetching user gigs:", error);
+            }
+        };
+
+        fetchUserGigs();
+    }, [user, model, API_BASE]);
 
     // Load chat history if chatId is provided in URL
     useEffect(() => {
@@ -302,7 +329,6 @@ function ChatPageContent() {
         );
     }
 
-    // Don't render anything if user is not authenticated (will redirect)
     if (!user) {
         return null;
     }
@@ -312,7 +338,6 @@ function ChatPageContent() {
     };
 
     const handleSelectChat = (chatId: string) => {
-        // Navigate to the chat with the selected chatId
         router.push(`/chat?id=${botId}&chatId=${chatId}`);
     };
 
@@ -465,6 +490,7 @@ function ChatPageContent() {
                 userInput: text,
                 userId: user.id,
                 ...(currentChatId && { sessionId: currentChatId }),
+                ...(model.name === "Auto-Responder & Delivery Messages" && selectedGigs.length > 0 && { selectedGigs }),
             };
 
             const response = await fetch(`${API_BASE}/generate/generate`, {
@@ -808,6 +834,71 @@ function ChatPageContent() {
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                    </>
+                                                ) : message.role === "assistant" && 
+                                                  model?.name === "Auto-Responder & Delivery Messages" && 
+                                                  message.structuredResponse ? (
+                                                    <>
+                                                        {/* Auto-Responder Messages Card */}
+                                                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                                                            <div className="flex items-center gap-2 mb-4">
+                                                                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                                                                    <span className="text-white text-xs font-bold">AR</span>
+                                                                </div>
+                                                                <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                                                                    Auto-Responder Messages
+                                                                </h4>
+                                                            </div>
+                                                            
+                                                            <div className="space-y-4">
+                                                                {Object.entries(message.structuredResponse).map(([key, value]) => (
+                                                                    <div key={key} className="space-y-2">
+                                                                        <label className="block text-sm font-medium text-blue-700 dark:text-blue-300">
+                                                                            {key}
+                                                                        </label>
+                                                                        <div className="p-4 bg-background/50 border border-blue-200 dark:border-blue-700 rounded-lg">
+                                                                            <div className="whitespace-pre-wrap text-sm text-foreground">
+                                                                                {value}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Follow-up Questions for Auto-Responder */}
+                                                        {message.followUpQuestions &&
+                                                            message.followUpQuestions.length > 0 && (
+                                                                <div className="mt-6 pt-4 border-t border-border/30">
+                                                                    <div className="flex items-center justify-between mb-3">
+                                                                        <div className="text-sm font-medium text-muted-foreground">
+                                                                            Follow-up Questions:
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => setShowFollowUpForm(
+                                                                                showFollowUpForm === message.id ? null : message.id
+                                                                            )}
+                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                                                        >
+                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        {message.followUpQuestions.map(
+                                                                            (question, index) => (
+                                                                                <div
+                                                                                    key={index}
+                                                                                    className="text-sm text-foreground"
+                                                                                >
+                                                                                    {index + 1}. {question
+                                                                                        .replace(/\\n/g, "\n")
+                                                                                        .trim()}
+                                                                                </div>
+                                                                            )
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                     </>
                                                 ) : message.role === "assistant" && 
                                                   model?.name === "Gig Builder" && 
@@ -1210,6 +1301,97 @@ function ChatPageContent() {
                 </motion.div>
             )}
 
+            {/* Gig Selector for Auto-Responder Model */}
+            {model?.name === "Auto-Responder & Delivery Messages" && (
+                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
+                    <div className="bg-muted/30 border border-border/30 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                                <h3 className="text-sm font-medium text-foreground">Select Gigs for Context</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowGigSelector(!showGigSelector)}
+                                className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                            >
+                                {showGigSelector ? 'Hide' : 'Select Gigs'}
+                            </button>
+                        </div>
+                        
+                        {showGigSelector && (
+                            <div className="space-y-3">
+                                <div className="text-xs text-muted-foreground">
+                                    Select the gigs you want to use as context for generating auto-responder messages:
+                                </div>
+                                {userGigs.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <div className="text-sm mb-2">No gigs found</div>
+                                        <div className="text-xs">You need to create some Fiverr gigs first to use this feature.</div>
+                                        <div className="text-xs mt-1">Go to your profile settings to add gigs.</div>
+                                    </div>
+                                ) : (
+                                    <div className="grid gap-2 max-h-40 overflow-y-auto scrollbar-thin">
+                                        {userGigs.map((gig, index) => (
+                                        <label key={index} className="flex items-start gap-3 p-3 bg-background/50 border border-border/20 rounded-lg cursor-pointer hover:bg-background/80 transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedGigs.some(selected => selected.title === gig.title)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedGigs(prev => [...prev, gig]);
+                                                    } else {
+                                                        setSelectedGigs(prev => prev.filter(selected => selected.title !== gig.title));
+                                                    }
+                                                }}
+                                                className="mt-1 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium text-foreground truncate">
+                                                    {gig.title}
+                                                </div>
+                                                <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                                    {gig.description}
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                                                        {gig.price}
+                                                    </span>
+                                                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+                                                        {gig.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        ))}
+                                    </div>
+                                )}
+                                
+                                {selectedGigs.length > 0 && (
+                                    <div className="pt-3 border-t border-border/30">
+                                        <div className="text-xs text-muted-foreground mb-2">
+                                            Selected {selectedGigs.length} gig{selectedGigs.length !== 1 ? 's' : ''}:
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedGigs.map((gig, index) => (
+                                                <div key={index} className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs">
+                                                    <span className="truncate max-w-32">{gig.title}</span>
+                                                    <button
+                                                        onClick={() => setSelectedGigs(prev => prev.filter((_, i) => i !== index))}
+                                                        className="text-primary hover:text-primary/70 transition-colors"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <div className="flex-none px-4 max-w-4xl mx-auto w-full">
                 <ChatBar
                     onSendMessage={handleSendMessage}
@@ -1217,12 +1399,24 @@ function ChatPageContent() {
                     placeholder={
                         userCredits <= 0.01
                             ? "Insufficient credits"
+                            : model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0
+                            ? "Select gigs above, then add instructions or click Generate..."
                             : "Add anything or click Generate..."
                     }
                 />
                 {userCredits <= 0.01 && (
                     <div className="text-center text-sm text-red-500 mt-2">
                         Insufficient credits. Please upgrade your plan.
+                    </div>
+                )}
+                {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
+                    <div className="text-center text-sm text-amber-500 mt-2">
+                        Please select at least one gig to provide context for auto-responder generation.
+                    </div>
+                )}
+                {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
+                    <div className="text-center text-sm text-amber-500 mt-2">
+                        No gigs found. Please add some Fiverr gigs to your profile first.
                     </div>
                 )}
             </div>
