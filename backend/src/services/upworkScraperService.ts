@@ -1,5 +1,6 @@
-import axios, { AxiosRequestConfig } from 'axios';
-import * as cheerio from 'cheerio';
+import { connect, type PageWithCursor } from "puppeteer-real-browser";
+import type { Browser } from "rebrowser-puppeteer-core";
+import * as cheerio from "cheerio";
 
 export interface UpworkProfileData {
   title: string;
@@ -17,158 +18,223 @@ export interface UpworkProfileData {
   error?: string;
 }
 
-class UpworkScraperService {
-  private readonly USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
-  ];
+class EnhancedUpworkScraper {
+  private readonly DEFAULT_TIMEOUT = 60000;
+  private readonly WAIT_DELAY = 5000;
 
-  private getRandomUserAgent(): string {
-    return this.USER_AGENTS[Math.floor(Math.random() * this.USER_AGENTS.length)];
-  }
+  async scrapeUpworkProfile(profileUrl: string): Promise<UpworkProfileData> {
+    let browser: any;
+    let page: PageWithCursor | undefined;
 
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  async scrapeUpworkProfile(profileUrl: string, retries = 3): Promise<UpworkProfileData> {
-    // Add random delay to avoid rate limiting
-    await this.delay(Math.random() * 2000 + 1000); // 1-3 seconds
-
-    for (let attempt = 0; attempt < retries; attempt++) {
-      try {
-        if (!this.isValidUpworkUrl(profileUrl)) {
-          return this.createErrorResponse('Invalid Upwork profile URL');
-        }
-
-        const config: AxiosRequestConfig = {
-          headers: {
-            'User-Agent': this.getRandomUserAgent(),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1',
-            'Connection': 'keep-alive',
-            'DNT': '1',
-            'Sec-GPC': '1',
-            // Add referer to appear more legitimate
-            'Referer': 'https://www.upwork.com/'
-          },
-          timeout: 15000,
-          maxRedirects: 5,
-          // Handle cookies if needed
-          withCredentials: false,
-          // Validate status to handle various response codes
-          validateStatus: (status) => status < 500
-        };
-
-        const response = await axios.get(profileUrl, config);
-
-        if (response.status === 403) {
-          if (attempt < retries - 1) {
-            // Exponential backoff
-            await this.delay(Math.pow(2, attempt) * 2000);
-            continue;
-          }
-          throw new Error('Access forbidden - profile may be private or require authentication');
-        }
-
-        if (response.status === 404) {
-          return this.createErrorResponse('Profile not found. Please check the URL.');
-        }
-
-        if (response.status !== 200) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const $ = cheerio.load(response.data);
-        
-        // Check if we got a valid profile page
-        if (this.isBlockedOrEmpty($)) {
-          if (attempt < retries - 1) {
-            await this.delay(Math.pow(2, attempt) * 3000);
-            continue;
-          }
-          return this.createErrorResponse('Unable to access profile content. Profile may be private or require login.');
-        }
-
-        return {
-          title: this.extractTitle($),
-          summary: this.extractSummary($),
-          skills: this.extractSkills($),
-          portfolio: this.extractPortfolio($),
-          hourlyRate: this.extractHourlyRate($),
-          availability: this.extractAvailability($),
-          location: this.extractLocation($),
-          success: true
-        };
-
-      } catch (error) {
-        console.error(`Attempt ${attempt + 1} failed:`, error);
-        
-        if (attempt === retries - 1) {
-          return this.createErrorResponse(
-            error instanceof Error ? error.message : 'Failed to scrape profile'
-          );
-        }
-        
-        // Wait before retry
-        await this.delay(Math.pow(2, attempt) * 2000);
-      }
-    }
-
-    return this.createErrorResponse('Max retries exceeded');
-  }
-
-  private createErrorResponse(error: string): UpworkProfileData {
-    return {
-      title: '',
-      summary: '',
-      skills: [],
-      portfolio: [],
-      success: false,
-      error
-    };
-  }
-
-  private isValidUpworkUrl(url: string): boolean {
     try {
-      const urlObj = new URL(url);
-      return urlObj.hostname.includes('upwork.com') && 
-             (urlObj.pathname.includes('/freelancers/') || 
-              urlObj.pathname.includes('/fl/'));
+      if (!this.isValidUpworkUrl(profileUrl)) {
+        return this.createErrorResponse('Invalid Upwork profile URL');
+      }
+
+      // Initialize browser with Cloudflare bypass
+      const connection = await this.initializeBrowser();
+      browser = connection.browser;
+      page = connection.page;
+
+      // Navigate to profile
+      console.log(`Navigating to ${profileUrl}`);
+      await page.goto(profileUrl, { waitUntil: "networkidle2" });
+
+      // Check for Cloudflare block and handle it
+      if (await this.isCloudflareBlocked(page)) {
+        console.log("Cloudflare challenge detected, waiting for resolution...");
+        await this.handleCloudflareChallenge(page, browser, profileUrl);
+        
+        // Wait a bit more after Cloudflare resolution
+        await this.delay(3000);
+      }
+
+      // Wait for page to stabilize
+      await this.delay(this.WAIT_DELAY);
+
+      // Get page content and parse
+      const htmlContent = await page.content();
+      const $ = cheerio.load(htmlContent);
+
+      // Debug: Log page title and some basic info
+      const pageTitle = await page.title();
+      console.log(`Page title: ${pageTitle}`);
+      console.log(`Page content length: ${htmlContent.length}`);
+
+      // Validate we have profile content
+      if (this.isEmptyOrBlocked($)) {
+        console.log('Profile appears to be blocked or empty');
+        throw new Error('Profile content not accessible or blocked');
+      }
+
+      console.log('Profile content detected, extracting data...');
+      const profileData = this.extractProfileData($);
+      
+      await this.closeBrowser(page, browser);
+      
+      return {
+        ...profileData,
+        success: true
+      };
+
+    } catch (error) {
+      console.error('Scraping failed:', error);
+      
+      await this.closeBrowser(page, browser);
+      
+      return this.createErrorResponse(
+        error instanceof Error ? error.message : 'Failed to scrape profile'
+      );
+    }
+  }
+
+  private async initializeBrowser() {
+    const connectOptions = {
+      headless: false,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ],
+      customConfig: {},
+      turnstile: true,
+      connectOption: {},
+      disableXvfb: false,
+      ignoreAllFlags: false,
+    };
+
+    const connection = await connect(connectOptions);
+    connection.page.setDefaultTimeout(this.DEFAULT_TIMEOUT);
+    
+    return connection;
+  }
+
+  private async isCloudflareBlocked(page: PageWithCursor): Promise<boolean> {
+    try {
+      // Check for Cloudflare challenge page indicators
+      const challengeIndicators = [
+        'h1',
+        '[data-testid="cf-challenge-running"]',
+        '.cf-browser-verification',
+        '#cf-challenge-running',
+        '.cf-wrapper'
+      ];
+      
+      for (const selector of challengeIndicators) {
+        try {
+          await page.waitForSelector(selector, { timeout: 2000 });
+          const element = await page.$(selector);
+          if (element) {
+            const text = await page.evaluate(el => el.textContent?.trim() || '', element);
+            if (text.includes('Please verify you are a human') ||
+                text.includes('Checking your browser') ||
+                text.includes('Sorry, you have been blocked') ||
+                text.includes('Just a moment')) {
+              return true;
+            }
+          }
+        } catch {
+          // Continue to next selector
+        }
+      }
+      
+      // Check for Cloudflare-specific elements in the HTML
+      const htmlContent = await page.content();
+      const hasCloudflareElements = htmlContent.includes('cf-') || 
+                                   htmlContent.includes('cloudflare') ||
+                                   htmlContent.includes('challenge-platform') ||
+                                   htmlContent.includes('cf-browser-verification');
+      
+      return hasCloudflareElements;
     } catch {
       return false;
     }
   }
 
-  private isBlockedOrEmpty($: cheerio.CheerioAPI): boolean {
-    // Check for common blocking indicators
-    const blockingIndicators = [
-      'Access Denied',
-      'Forbidden',
-      'Please verify you are a human',
-      'captcha',
-      'blocked',
-      'security check'
-    ];
-    
-    const pageText = $('body').text().toLowerCase();
-    return blockingIndicators.some(indicator => 
-      pageText.includes(indicator.toLowerCase())
-    );
+  private async handleCloudflareChallenge(
+    page: PageWithCursor, 
+    browser: Browser, 
+    url: string
+  ): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      let isResolved = false;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 attempts * 2 seconds = 60 seconds max
+      
+      // Wait for Cloudflare challenge to be resolved
+      const checkInterval = setInterval(async () => {
+        try {
+          attempts++;
+          
+          // Check if we're still on a Cloudflare challenge page
+          const isStillBlocked = await this.isCloudflareBlocked(page);
+          
+          if (!isStillBlocked) {
+            console.log("Cloudflare challenge resolved!");
+            isResolved = true;
+            clearInterval(checkInterval);
+            clearTimeout(timeout);
+            resolve();
+            return;
+          }
+          
+          // Check if we have valid profile content
+          const htmlContent = await page.content();
+          const $ = cheerio.load(htmlContent);
+          
+          if (!this.isEmptyOrBlocked($)) {
+            console.log("Profile content detected, Cloudflare resolved!");
+            isResolved = true;
+            clearInterval(checkInterval);
+            clearTimeout(timeout);
+            resolve();
+            return;
+          }
+          
+          if (attempts >= maxAttempts) {
+            console.log("Max attempts reached, assuming Cloudflare resolved");
+            isResolved = true;
+            clearInterval(checkInterval);
+            clearTimeout(timeout);
+            resolve();
+            return;
+          }
+          
+          console.log(`Waiting for Cloudflare resolution... (${attempts}/${maxAttempts})`);
+          
+        } catch (e) {
+          console.error('Cloudflare check error:', e);
+        }
+      }, 2000); // Check every 2 seconds
+
+      const timeout = setTimeout(() => {
+        if (!isResolved) {
+          clearInterval(checkInterval);
+          reject(new Error("Cloudflare challenge timeout"));
+        }
+      }, this.DEFAULT_TIMEOUT);
+    });
+  }
+
+  private extractProfileData($: cheerio.CheerioAPI): Omit<UpworkProfileData, 'success' | 'error'> {
+    return {
+      title: this.extractTitle($),
+      summary: this.extractSummary($),
+      skills: this.extractSkills($),
+      portfolio: this.extractPortfolio($),
+      hourlyRate: this.extractHourlyRate($),
+      availability: this.extractAvailability($),
+      location: this.extractLocation($)
+    };
   }
 
   private extractTitle($: cheerio.CheerioAPI): string {
     const selectors = [
+      'h2[itemprop="name"]', // From working scraper
       '[data-qa="freelancer-profile-title"]',
       '[data-test="freelancer-title"]',
       'h1[data-qa="title"]',
@@ -177,7 +243,6 @@ class UpworkScraperService {
       '.profile-title h1',
       'h1'
     ];
-
     return this.extractBySelectors($, selectors);
   }
 
@@ -188,9 +253,9 @@ class UpworkScraperService {
       '.freelancer-overview',
       '.up-card-section p',
       '.profile-overview',
-      '.overview-text'
+      '.overview-text',
+      '[data-test="OverviewTile"] div[data-test="Description"]'
     ];
-
     return this.extractBySelectors($, selectors);
   }
 
@@ -202,7 +267,8 @@ class UpworkScraperService {
       '[data-test="skill-tag"]',
       '.skill-tag',
       '.up-skill-badge',
-      '.freelancer-skills .skill'
+      '.freelancer-skills .skill',
+      '[data-test="Skill"]'
     ];
 
     selectors.forEach(selector => {
@@ -224,22 +290,33 @@ class UpworkScraperService {
       '[data-qa="work-item"]',
       '.portfolio-item',
       '.work-item',
-      '.project-item'
+      '.project-item',
+      '[data-test="PortfolioItem"]'
     ];
 
     containerSelectors.forEach(containerSelector => {
       $(containerSelector).each((_, element) => {
         const $item = $(element);
         
-        const title = $item.find('[data-qa="work-title"], .portfolio-title, .work-title, h3, h4')
-          .first().text().trim();
+        const title = $item.find([
+          '[data-qa="work-title"]',
+          '.portfolio-title',
+          '.work-title',
+          'h3', 'h4'
+        ].join(', ')).first().text().trim();
         
-        const description = $item.find('[data-qa="work-description"], .portfolio-description, .work-description, p')
-          .first().text().trim();
+        const description = $item.find([
+          '[data-qa="work-description"]',
+          '.portfolio-description', 
+          '.work-description',
+          'p'
+        ].join(', ')).first().text().trim();
         
         let imageUrl = $item.find('img').attr('src');
         if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = imageUrl.startsWith('//') ? `https:${imageUrl}` : `https://www.upwork.com${imageUrl}`;
+          imageUrl = imageUrl.startsWith('//') ? 
+            `https:${imageUrl}` : 
+            `https://www.upwork.com${imageUrl}`;
         }
 
         if (title || description) {
@@ -260,9 +337,9 @@ class UpworkScraperService {
       '[data-qa="hourly-rate"]',
       '[data-test="hourly-rate"]',
       '.hourly-rate',
-      '.rate-display'
+      '.rate-display',
+      '[data-test="HourlyRate"]'
     ];
-
     const rate = this.extractBySelectors($, selectors);
     return rate.includes('$') ? rate : '';
   }
@@ -274,7 +351,6 @@ class UpworkScraperService {
       '.availability-status',
       '.freelancer-status'
     ];
-
     return this.extractBySelectors($, selectors);
   }
 
@@ -285,7 +361,6 @@ class UpworkScraperService {
       '.freelancer-location',
       '.location-text'
     ];
-
     return this.extractBySelectors($, selectors);
   }
 
@@ -298,6 +373,107 @@ class UpworkScraperService {
     }
     return '';
   }
+
+  private isValidUpworkUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.includes('upwork.com') && 
+             (urlObj.pathname.includes('/freelancers/') || 
+              urlObj.pathname.includes('/fl/'));
+    } catch {
+      return false;
+    }
+  }
+
+  private isEmptyOrBlocked($: cheerio.CheerioAPI): boolean {
+    const blockingIndicators = [
+      'Access Denied',
+      'Forbidden',
+      'Please verify you are a human',
+      'captcha',
+      'blocked',
+      'security check',
+      'sorry, you have been blocked',
+      'checking your browser',
+      'please wait while we check your browser'
+    ];
+    
+    const pageText = $('body').text().toLowerCase();
+    
+    // Check for blocking indicators
+    const hasBlockingIndicators = blockingIndicators.some(indicator => 
+      pageText.includes(indicator.toLowerCase())
+    );
+    
+    // Check for very little content (likely blocked or empty)
+    const hasMinimalContent = pageText.length < 200;
+    
+    // Check for Cloudflare-specific elements
+    const bodyHtml = $('body').html() || '';
+    const hasCloudflareElements = bodyHtml.includes('cf-') || 
+                                 bodyHtml.includes('cloudflare') ||
+                                 bodyHtml.includes('challenge-platform');
+    
+    // Check if we have any Upwork profile-specific elements
+    const hasProfileElements = $('[data-qa="freelancer-profile-title"]').length > 0 ||
+                              $('h2[itemprop="name"]').length > 0 ||
+                              $('[data-qa="overview"]').length > 0 ||
+                              $('[data-qa="skill"]').length > 0 ||
+                              $('.freelancer-title').length > 0;
+    
+    // If we have profile elements, we're not blocked
+    if (hasProfileElements) {
+      return false;
+    }
+    
+    // If we have blocking indicators or minimal content, we're blocked
+    return hasBlockingIndicators || hasMinimalContent || hasCloudflareElements;
+  }
+
+  private createErrorResponse(error: string): UpworkProfileData {
+    return {
+      title: '',
+      summary: '',
+      skills: [],
+      portfolio: [],
+      success: false,
+      error
+    };
+  }
+
+  private async closeBrowser(
+    page?: PageWithCursor, 
+    browser?: { connected: boolean; close: () => Promise<void> }
+  ): Promise<void> {
+    try {
+      if (page && !page.isClosed()) {
+        await page.close();
+      }
+      if (browser?.connected) {
+        await browser.close();
+      }
+    } catch (error) {
+      console.error('Error closing browser:', error);
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 }
 
-export default new UpworkScraperService();
+// Usage example
+export default new EnhancedUpworkScraper();
+
+// Example usage:
+/*
+const scraper = new EnhancedUpworkScraper();
+scraper.scrapeUpworkProfile("https://www.upwork.com/freelancers/~0157c5ba50d278cc2a")
+  .then(result => {
+    if (result.success) {
+      console.log('Profile Data:', result);
+    } else {
+      console.error('Error:', result.error);
+    }
+  });
+*/
