@@ -488,6 +488,7 @@ class GenerateService {
       // Parse structured response if model has features
       let structuredResponse = undefined;
       let followUpQuestions: string[] = [];
+      let generatedGigs = undefined;
       
       if (hasFeatures) {
         try {
@@ -537,6 +538,35 @@ class GenerateService {
         }
       }
 
+      // Special handling for Gig Builder model - convert structured response to gig format
+      if (model.name === "Gig Builder" && structuredResponse) {
+        try {
+          // Extract gig data from structured response
+          const title = structuredResponse["Title"] || "";
+          const tags = structuredResponse["Tags"] || "";
+          const description = structuredResponse["Description"] || "";
+          const faqRequirements = structuredResponse["FAQ & Requirements"] || "";
+          
+          if (title && description) {
+            // Convert tags string to array
+            const tagsArray = tags.split(',')
+              .map((tag: string) => tag.trim())
+              .filter((tag: string) => tag.length > 0);
+            
+            // Create gig object
+            generatedGigs = {
+              title: title,
+              description: description,
+              tags: tagsArray,
+              price: "Starting from $5", // Default price
+              status: "Active"
+            };
+          }
+        } catch (error) {
+          console.error('Error converting Gig Builder response to gig format:', error);
+        }
+      }
+
       // Save user message to database only if userInput is not empty
       if (userInput && userInput.trim() !== '') {
         await this.saveMessage(chat._id, "user", userInput, inputTokens);
@@ -563,6 +593,7 @@ class GenerateService {
         structuredResponse,
         hasFeatures,
         followUpQuestions,
+        generatedGigs,
       };
 
     } catch (error) {
