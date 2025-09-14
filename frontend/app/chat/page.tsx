@@ -11,6 +11,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { MessageSquare, Lock, Crown } from "lucide-react";
 import { isCategoryAccessible, getUpgradeMessage } from "../utils/tier-access";
+import { toast } from "sonner";
 
 interface Message {
     id: string;
@@ -27,6 +28,7 @@ interface Message {
         tags: string[];
         price: string;
         status: string;
+        saved?: boolean;
     };
 }
 
@@ -335,16 +337,20 @@ function ChatPageContent() {
         try {
             const success = await addGig(user.id, gig);
             if (success) {
-                // Remove the gig from the message since it's been saved
+                // Keep the gig in the message but mark it as saved
                 setMessages(prev => prev.map(msg => 
-                    msg.id === editingGig?.messageId 
-                        ? { ...msg, generatedGigs: undefined }
+                    msg.id === editingGig?.messageId && msg.generatedGigs
+                        ? { ...msg, generatedGigs: { ...msg.generatedGigs, saved: true } }
                         : msg
                 ));
+                toast.success('Gig saved successfully');
                 setEditingGig(null);
+            } else {
+                toast.error('Failed to save gig');
             }
         } catch (error) {
             console.error('Error saving gig:', error);
+            toast.error('Failed to save gig');
         } finally {
             setSavingGig(false);
         }
@@ -809,13 +815,23 @@ function ChatPageContent() {
                                                     <>
                                                         {/* AI Generated Gig Card for Gig Builder */}
                                                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-                                                            <div className="flex items-center gap-2 mb-4">
-                                                                <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                                                                    <span className="text-white text-xs font-bold">AI</span>
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                                                                        <span className="text-white text-xs font-bold">AI</span>
+                                                                    </div>
+                                                                    <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                                                                        Generated Fiverr Gig
+                                                                    </h4>
                                                                 </div>
-                                                                <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                                                                    Generated Fiverr Gig
-                                                                </h4>
+                                                                {message.generatedGigs?.saved && (
+                                                                    <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
+                                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                        Saved
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             
                                                             <div className="space-y-4">
@@ -831,7 +847,8 @@ function ChatPageContent() {
                                                                                 setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, title: e.target.value } });
                                                                             }
                                                                         }}
-                                                                        className="w-full bg-background px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                        disabled={message.generatedGigs?.saved}
+                                                                        className={`w-full bg-background px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                                     />
                                                                 </div>
                                                                 
@@ -847,7 +864,8 @@ function ChatPageContent() {
                                                                             }
                                                                         }}
                                                                         rows={4}
-                                                                        className="w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                                                                        disabled={message.generatedGigs?.saved}
+                                                                        className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                                     />
                                                                 </div>
                                                                 
@@ -864,7 +882,8 @@ function ChatPageContent() {
                                                                                     setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, price: e.target.value } });
                                                                                 }
                                                                             }}
-                                                                            className="w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                            disabled={message.generatedGigs?.saved}
+                                                                            className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                                         />
                                                                     </div>
                                                                     
@@ -879,7 +898,8 @@ function ChatPageContent() {
                                                                                     setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, status: e.target.value } });
                                                                                 }
                                                                             }}
-                                                                            className="w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                            disabled={message.generatedGigs?.saved}
+                                                                            className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                                         >
                                                                             <option value="Active">Active</option>
                                                                             <option value="Paused">Paused</option>
@@ -902,25 +922,28 @@ function ChatPageContent() {
                                                                             }
                                                                         }}
                                                                         placeholder="tag1, tag2, tag3"
-                                                                        className="w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                                        disabled={message.generatedGigs?.saved}
+                                                                        className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                                     />
                                                                 </div>
                                                                 
-                                                                <div className="flex gap-3 pt-4">
-                                                                    <button
-                                                                        onClick={() => handleSaveGig(editingGig?.messageId === message.id ? editingGig.gig : message.generatedGigs)}
-                                                                        disabled={savingGig}
-                                                                        className="px-6 py-3 text-sm cursor-pointer font-medium bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                                                    >
-                                                                        {savingGig ? 'Saving...' : 'Save to Profile'}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => setEditingGig(null)}
-                                                                        className="px-6 py-3 text-sm font-medium border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-full cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors"
-                                                                    >
-                                                                        Cancel
-                                                                    </button>
-                                                                </div>
+                                                                {!message.generatedGigs?.saved && (
+                                                                    <div className="flex gap-3 pt-4">
+                                                                        <button
+                                                                            onClick={() => handleSaveGig(editingGig?.messageId === message.id ? editingGig.gig : message.generatedGigs)}
+                                                                            disabled={savingGig}
+                                                                            className="px-6 py-3 text-sm cursor-pointer font-medium bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                                        >
+                                                                            {savingGig ? 'Saving...' : 'Save to Profile'}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setEditingGig(null)}
+                                                                            className="px-6 py-3 text-sm font-medium border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-full cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors"
+                                                                        >
+                                                                            Cancel
+                                                                        </button>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
 
