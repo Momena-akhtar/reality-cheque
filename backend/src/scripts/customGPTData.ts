@@ -15,36 +15,17 @@ export const customGPTData = {
             description: "Tools for freelancers on Fiverr platform",
             tierAccess: "tier2"
         },
-        {
-            name: "Offer & Pricing Builder",
-            description: "Tools for creating offers and pricing strategies",
-            tierAccess: "tier2"
-        },
+        // {
+        //     name: "Offer & Pricing Builder",
+        //     description: "Tools for creating offers and pricing strategies",
+        //     tierAccess: "tier2"
+        // },
         {
             name: "Cold Email Outreach",
             description: "Tools for cold email campaigns",
             tierAccess: "tier2"
         },
-        {
-            name: "Cold DM Outreach",
-            description: "Tools for social media outreach",
-            tierAccess: "tier2"
-        },
-        {
-            name: "FB Ads",
-            description: "Tools for Facebook advertising",
-            tierAccess: "tier2"
-        },
-        {
-            name: "High-Ticket Sales",
-            description: "Tools for high-value sales processes",
-            tierAccess: "tier3"
-        },
-        {
-            name: "Client Onboarding",
-            description: "Tools for client onboarding processes",
-            tierAccess: "tier3"
-        },
+        // j
     ],
     models: [
         // 1. Website Builder
