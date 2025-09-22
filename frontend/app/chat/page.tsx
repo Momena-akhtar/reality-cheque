@@ -1,6 +1,5 @@
 "use client";
 
-import ChatBar from "../components/ui/chat-bar";
 import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
@@ -9,7 +8,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { MessageSquare, Lock, Crown } from "lucide-react";
+import { MessageSquare, Lock, Crown, Sparkles } from "lucide-react";
 import { isCategoryAccessible, getUpgradeMessage } from "../utils/tier-access";
 import { toast } from "sonner";
 
@@ -626,12 +625,12 @@ function ChatPageContent() {
                                 className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
                             >
                                 {/* Main Container with Gradient Background */}
-                                <div className="relative max-w-md w-full">
+                                <div className="relative max-w-2xl w-full">
                                     {/* Gradient Background */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl blur-xl"></div>
 
                                     {/* Content Card */}
-                                    <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-8 shadow-xl">
+                                    <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-10 shadow-2xl">
                                         {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
                                             <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
@@ -640,9 +639,41 @@ function ChatPageContent() {
                                         </h1>
 
                                         {/* Model Description */}
-                                        <p className="text-sm text-muted-foreground text-center leading-relaxed mb-6">
+                                        <p className="text-base text-muted-foreground text-center leading-relaxed mb-8">
                                             {model.description}
                                         </p>
+
+                                        {/* Generate Button */}
+                                        <div className="flex flex-col items-center gap-3 mb-8">
+                                            <button
+                                                onClick={() => handleSendMessage("")}
+                                                disabled={
+                                                    sending ||
+                                                    userCredits <= 0.01 ||
+                                                    (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
+                                                }
+                                                className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
+                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer shadow-[0_10px_30px_-10px_rgba(16,185,129,0.6)] hover:shadow-[0_12px_35px_-10px_rgba(16,185,129,0.75)] hover:translate-y-[-1px]"
+                                            >
+                                                <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
+                                                {sending ? "Generating..." : "Generate"}
+                                            </button>
+                                            {userCredits <= 0.01 && (
+                                                <div className="text-center text-xs text-red-500">
+                                                    Insufficient credits. Please upgrade your plan.
+                                                </div>
+                                            )}
+                                            {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
+                                                <div className="text-center text-xs text-amber-500">
+                                                    Please select at least one gig to provide context for auto-responder generation.
+                                                </div>
+                                            )}
+                                            {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
+                                                <div className="text-center text-xs text-amber-500">
+                                                    No gigs found. Please add some Fiverr gigs to your profile first.
+                                                </div>
+                                            )}
+                                        </div>
 
                                         {/* Features Cards if model has features */}
                                         {modelFeatures.length > 0 && (
@@ -696,7 +727,7 @@ function ChatPageContent() {
                             <div className="h-full overflow-y-auto scrollbar-hide px-4">
                                 {/* Small Model Info Card - only when chat has messages AND it's not a history conversation */}
                                 {currentChatId === null && (
-                                    <div className="max-w-4xl mx-auto pt-2 pb-1">
+                                    <div className="max-w-5xl mx-auto pt-2 pb-1">
                                         <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border border-border/30 w-fit">
                                             <div className="h-5 w-5 bg-primary rounded-sm flex items-center justify-center">
                                                 <span className="text-primary-foreground font-bold text-xs">
@@ -710,7 +741,7 @@ function ChatPageContent() {
                                     </div>
                                 )}
 
-                                <div className="max-w-4xl mx-auto space-y-4 py-2">
+                                <div className="max-w-5xl mx-auto space-y-4 py-2">
                                     {messages.map((message) => (
                                         <motion.div
                                             key={message.id}
@@ -731,7 +762,7 @@ function ChatPageContent() {
                                             }`}
                                         >
                                             <div
-                                                className={`max-w-[80%] p-4 rounded-3xl border ${
+                                                className={`max-w-[85%] p-4 rounded-3xl border ${
                                                     message.role === "user"
                                                         ? "bg-primary text-primary-foreground border-primary/30"
                                                         : "bg-muted border-border"
@@ -1397,34 +1428,7 @@ function ChatPageContent() {
                 </div>
             )}
 
-            <div className="flex-none px-4 max-w-4xl mx-auto w-full">
-                <ChatBar
-                    onSendMessage={handleSendMessage}
-                    disabled={sending || userCredits <= 0.01}
-                    placeholder={
-                        userCredits <= 0.01
-                            ? "Insufficient credits"
-                            : model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0
-                            ? "Select gigs above, then add instructions or click Generate..."
-                            : "Add anything or click Generate..."
-                    }
-                />
-                {userCredits <= 0.01 && (
-                    <div className="text-center text-sm text-red-500 mt-2">
-                        Insufficient credits. Please upgrade your plan.
-                    </div>
-                )}
-                {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
-                    <div className="text-center text-sm text-amber-500 mt-2">
-                        Please select at least one gig to provide context for auto-responder generation.
-                    </div>
-                )}
-                {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
-                    <div className="text-center text-sm text-amber-500 mt-2">
-                        No gigs found. Please add some Fiverr gigs to your profile first.
-                    </div>
-                )}
-            </div>
+            {/* Input bar removed as per requirements */}
         </div>
     );
 }
