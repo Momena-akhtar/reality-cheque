@@ -860,42 +860,7 @@ function ChatPageContent() {
                                                                 </div>
                                                             )}
 
-                                                        {/* Instructions */}
-                                                        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                                            <div className="flex items-start gap-3">
-                                                                <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                                                <div>
-                                                                    <h4 className="text-sm font-medium text-foreground mb-1">
-                                                                        How to
-                                                                        use this
-                                                                        interface
-                                                                    </h4>
-                                                                    <p className="text-sm text-foreground">
-                                                                        Hover
-                                                                        over any
-                                                                        section
-                                                                        to see
-                                                                        the edit
-                                                                        button.
-                                                                        Click it
-                                                                        to
-                                                                        provide
-                                                                        feedback
-                                                                        and
-                                                                        regenerate
-                                                                        just
-                                                                        that
-                                                                        specific
-                                                                        section
-                                                                        while
-                                                                        keeping
-                                                                        everything
-                                                                        else
-                                                                        unchanged.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        
                                                     </>
                                                 ) : message.role === "assistant" && 
                                                   model?.name === "Auto-Responder & Delivery Messages" && 
