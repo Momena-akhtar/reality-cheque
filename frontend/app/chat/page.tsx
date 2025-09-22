@@ -105,6 +105,7 @@ function ChatPageContent() {
     const [selectedGigs, setSelectedGigs] = useState<any[]>([]);
     const [showGigSelector, setShowGigSelector] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [upworkLink, setUpworkLink] = useState<string>("");
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -495,6 +496,7 @@ function ChatPageContent() {
                 userId: user.id,
                 ...(currentChatId && { sessionId: currentChatId }),
                 ...(model.name === "Auto-Responder & Delivery Messages" && selectedGigs.length > 0 && { selectedGigs }),
+                ...(model.name === "Profile Optimizer" && upworkLink && { upworkLink }),
             };
 
             const response = await fetch(`${API_BASE}/generate/generate`, {
@@ -645,19 +647,43 @@ function ChatPageContent() {
 
                                         {/* Generate Button */}
                                         <div className="flex flex-col items-center gap-3 mb-8">
-                                            <button
-                                                onClick={() => handleSendMessage("")}
-                                                disabled={
-                                                    sending ||
-                                                    userCredits <= 0.01 ||
-                                                    (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
-                                                }
-                                                className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
-                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer shadow-[0_10px_30px_-10px_rgba(16,185,129,0.6)] hover:shadow-[0_12px_35px_-10px_rgba(16,185,129,0.75)] hover:translate-y-[-1px]"
-                                            >
-                                                <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
-                                                {sending ? "Generating..." : "Generate"}
-                                            </button>
+                                            {model?.name === "Profile Optimizer" ? (
+                                                <div className="w-full flex flex-col sm:flex-row gap-2">
+                                                    <input
+                                                        type="url"
+                                                        value={upworkLink}
+                                                        onChange={(e) => setUpworkLink(e.target.value)}
+                                                        placeholder="Paste your Upwork profile link"
+                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    />
+                                                    <button
+                                                        onClick={() => handleSendMessage(upworkLink || "")}
+                                                        disabled={
+                                                            sending ||
+                                                            userCredits <= 0.01
+                                                        }
+                                                        className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
+                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer hover:translate-y-[-1px]"
+                                                    >
+                                                        <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
+                                                        {sending ? "Analyzing..." : "Generate"}
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleSendMessage("")}
+                                                    disabled={
+                                                        sending ||
+                                                        userCredits <= 0.01 ||
+                                                        (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
+                                                    }
+                                                    className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
+                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer hover:translate-y-[-1px]"
+                                                >
+                                                    <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
+                                                    {sending ? "Generating..." : "Generate"}
+                                                </button>
+                                            )}
                                             {userCredits <= 0.01 && (
                                                 <div className="text-center text-xs text-red-500">
                                                     Insufficient credits. Please upgrade your plan.
