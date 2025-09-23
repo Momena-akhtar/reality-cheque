@@ -22,13 +22,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
-app.use((req, res, next) => {
-    res.setTimeout(100000, () => {
-      console.log('Request timed out');
-      res.status(504).send('Request timed out');
-    });
-    next();
-  });
 const PORT = process.env.PORT || 3000;
 
 connectToDb(); 
