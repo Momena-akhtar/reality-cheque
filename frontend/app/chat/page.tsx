@@ -709,7 +709,7 @@ function ChatPageContent() {
                                                         {modelFeatures.map((feature, index) => (
                                                             <div
                                                                 key={feature._id}
-                                                                className={`bg-muted/30 border border-border/20 rounded-lg p-3 transition-all duration-200 ${
+                                                                className={`bg-muted/30 border border-foreground/20 rounded-lg p-3 transition-all duration-200 ${
                                                                     !showAllFeatures && index >= 3 ? 'opacity-60' : ''
                                                                 }`}
                                                             >
