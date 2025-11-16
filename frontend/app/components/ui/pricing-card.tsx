@@ -66,10 +66,10 @@ const PricingCard: React.FC<PricingCardProps> = ({
 
       <button
         className={cn(
-          "w-full py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm transition-colors",
+          "w-full py-2 px-4 rounded-full cursor-pointer font-semibold text-sm transition-colors",
           highlight
             ? "bg-green-700/30 border border-green-700 hover:bg-green-700 text-foreground"
-            : "bg-primary hover:bg-primary-hover text-foreground"
+            : "bg-primary text-background hover:bg-primary/90",
         )}
         disabled={current}
         onClick={() => !current && onSelect && onSelect(id)}

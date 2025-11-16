@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
+import { Button } from "./button";
 
 export default function GetStarted() {
     const { user } = useAuth();
@@ -22,12 +23,14 @@ export default function GetStarted() {
     };
 
     return (
-        <button 
+        <Button 
             onClick={handleClick}
-            className="px-6 py-3 text-md cursor-pointer font-semibold bg-primary border-1 border-border text-foreground rounded-xl hover:bg-primary-hover hover:border-primary-hover transition-all duration-300 flex items-center gap-3 shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] hover:-translate-y-[1px]"
+            size="lg"
+            className="gap-2 hover:gap-3 transition-all duration-200 border-2 border-border "
+
         >
-            <ArrowRight className="w-5 h-5" />
             Get Started
-        </button>
+            <ArrowRight className="w-5 h-5" />
+        </Button>
     )
 }

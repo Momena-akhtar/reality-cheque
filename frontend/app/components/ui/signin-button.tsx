@@ -1,5 +1,6 @@
 import React from 'react';
 import UserMenu from './user-menu';
+import { Button } from './button';
 
 interface SignInButtonProps {
   onSignInClick: () => void;
@@ -19,11 +20,10 @@ export default function SignInButton({ onSignInClick, user, loading }: SignInBut
     );
   }
   return (
-    <button
+    <Button
       onClick={onSignInClick}
-      className="px-4 py-2 cursor-pointer rounded-xl border border-border bg-background text-foreground hover:bg-primary-hover transition-colors"
-    >
+>
       Sign In
-    </button>
+    </Button>
   );
 }

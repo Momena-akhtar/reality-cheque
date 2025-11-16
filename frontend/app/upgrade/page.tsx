@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import PricingGrid from "../components/ui/pricing-grid";
 import { toast } from "sonner";
+import { Button } from "../components/ui/button";
 
 export default function Upgrade() {
   const { user, loading: authLoading } = useAuth();
@@ -116,13 +117,13 @@ export default function Upgrade() {
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
                 />
                 <div className="flex space-x-2">
-                  <button
+                  <Button
                     type="submit"
                     disabled={voucherLoading}
                     className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
                   >
                     {voucherLoading ? "Applying..." : "Apply Voucher"}
-                  </button>
+                  </Button>
                   <button
                     type="button"
                     onClick={() => {

@@ -339,7 +339,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
               <input
                 type="text"
                 placeholder="Enter voucher code"
-                className="flex-1 border border-border p-2 rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
+                className="flex-1 border border-border p-2 rounded-full text-sm text-foreground outline-none focus:ring-2 focus:ring-primary-hover"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 disabled={applyingPromo}
@@ -348,7 +348,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
                 type="button"
                 onClick={applyPromoCode}
                 disabled={applyingPromo || !promoCode.trim()}
-                className="py-2 px-4 rounded-xl bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="py-2 px-4 rounded-full bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {applyingPromo ? 'Applying...' : 'Apply'}
               </button>
@@ -375,7 +375,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 px-4 rounded-xl bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 px-4 rounded-full bg-green-700/30 border border-green-700 cursor-pointer hover:bg-green-800 text-foreground font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Processing...' : 'Subscribe'}
         </button>

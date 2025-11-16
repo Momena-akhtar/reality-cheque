@@ -11,12 +11,10 @@ const PricingGrid = () => {
 
   const handlePlanSelect = async (planId: string) => {
     if (!user) {
-      // If no user, redirect to signin first
       router.push('/signin');
       return;
     }
 
-    // For credit-based system, all selections go to payment
     router.push(`/payment?plan=${planId}`);
   };
 

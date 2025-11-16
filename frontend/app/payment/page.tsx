@@ -43,7 +43,6 @@ const PaymentPageContent = () => {
     );
   }
 
-  // Don't render anything if user is not authenticated (will redirect)
   if (!user) {
     return null;
   }

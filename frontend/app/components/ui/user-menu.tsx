@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/navigation';
 import UsageHistoryPopup from '../usage-history';
+import { Button } from './button';
 
 interface UserMenuProps {
   name: string;
@@ -28,19 +29,19 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
 
   return (
     <div className="relative inline-block text-left">
-      <button
+      <Button
+        className='gap-2'
         onClick={() => setOpen(!open)}
-        className="flex items-center cursor-pointer space-x-2 rounded-xl px-4 py-1.5 border border-border bg-primary text-foreground hover:bg-primary-hover transition-colors"
       >
         {picture ? (
           <img src={picture} alt={name} className="w-6 h-6 rounded-full border border-border" />
         ) : (
-          <div className="w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center font-bold uppercase">
+          <div className="w-5 h-5 rounded-full bg-background text-foreground flex items-center justify-center font-bold uppercase">
             {name?.charAt(0)}
           </div>
         )}
-        <span className="text-sm">{name}</span>
-      </button>
+        <span className="text-sm text-background">{name}</span>
+      </Button>
 
       {open && (
         <div className="absolute bg-card right-0 mt-2 w-64 origin-top-right rounded-lg border border-border bg-card shadow-lg z-50">

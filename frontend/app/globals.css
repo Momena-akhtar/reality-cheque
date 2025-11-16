@@ -29,7 +29,7 @@
   --foreground: #ededed;
   --card: #171717;
   --card-hover: #262626;
-  --primary: #181818;
+  --primary: #f5f5f5;
   --primary-hover: #2a2a2a;
   --primary-text-faded: #757575;
   --primary-text-hover: #757575;
@@ -51,7 +51,7 @@
   --foreground: #171717;
   --card: #f5f5f5;
   --card-hover: #ededed;
-  --primary: #ededed;
+  --primary: #171717;
   --primary-hover: #d6d6d6;
   --primary-text-faded: #757575;
   --primary-text-hover: #757575;

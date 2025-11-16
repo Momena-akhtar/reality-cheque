@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Info, Plus, Minus, Eye, EyeOff } from 'lucide-react';
 import Logo from '../components/ui/logo';
 import Theme from '../components/ui/theme';
+import { Button } from '../components/ui/button';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -293,21 +294,21 @@ export default function SignInPage() {
                     <div className="flex items-center justify-center mb-6">
                         <div className="flex items-center space-x-4">
                             <div className={`flex items-center ${signupStep >= 1 ? 'text-foreground' : 'text-muted'}`}>
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 1 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 1 ? 'border-primary bg-primary text-background' : 'border-gray-300'}`}>
                                     1
                                 </div>
                                 <span className="ml-2 text-sm font-medium">Personal Info</span>
                             </div>
                             <div className={`w-8 h-0.5 ${signupStep >= 2 ? 'bg-background' : 'bg-muted'}`}></div>
                             <div className={`flex items-center ${signupStep >= 2 ? 'text-foreground' : 'text-muted'}`}>
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 2 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 2 ? 'border-primary bg-primary text-background' : 'border-gray-300'}`}>
                                     2
                                 </div>
                                 <span className="ml-2 text-sm font-medium">Basic Info</span>
                             </div>
                             <div className={`w-8 h-0.5 ${signupStep >= 3 ? 'bg-background' : 'bg-muted'}`}></div>
                             <div className={`flex items-center ${signupStep >= 3 ? 'text-foreground' : 'text-muted'}`}>
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 3 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${signupStep >= 3 ? 'border-primary bg-primary text-background' : 'border-gray-300'}`}>
                                     3
                                 </div>
                                 <span className="ml-2 text-sm font-medium">Services & Pricing</span>
@@ -671,7 +672,7 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={addService}
-                                                        className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                                                        className="p-2 bg-primary text-background cursor-pointer rounded-full"
                                                     >
                                                         <Plus className="w-5 h-5" />
                                                     </button>
@@ -720,7 +721,7 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={addPackage}
-                                                        className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                                                        className="p-2 bg-primary text-background cursor-pointer rounded-full"
                                                     >
                                                         <Plus className="w-5 h-5" />
                                                     </button>
@@ -779,7 +780,7 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={addOffer}
-                                                        className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                                                        className="p-2 bg-primary text-background cursor-pointer rounded-full"
                                                     >
                                                         <Plus className="w-5 h-5" />
                                                     </button>
@@ -841,7 +842,7 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={addStep}
-                                                        className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                                                        className="p-2 bg-primary text-background cursor-pointer rounded-full"
                                                     >
                                                         <Plus className="w-5 h-5" />
                                                     </button>
@@ -888,7 +889,7 @@ export default function SignInPage() {
                                                     <button
                                                         type="button"
                                                         onClick={addTimeline}
-                                                        className="p-2 bg-primary text-foreground cursor-pointer rounded-full hover:bg-primary-hover transition-colors"
+                                                        className="p-2 bg-primary text-background cursor-pointer rounded-full"
                                                     >
                                                         <Plus className="w-5 h-5" />
                                                     </button>
@@ -928,18 +929,19 @@ export default function SignInPage() {
                     
                     <div className="flex space-x-3">
                         {isSignUp && signupStep > 1 && (
-                            <button 
-                                type="button" 
+                            <Button 
+                                variant='outline'
                                 onClick={() => setSignupStep(signupStep - 1)}
-                                className="flex-1 cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors"
+                                className="flex-1"
                             >
                                 Back
-                            </button>
+                            </Button>
                         )}
-                        <button 
+                        <Button 
+                            size='lg'
                             type="submit" 
                             disabled={loading} 
-                            className={`cursor-pointer mx-auto border border-border text-foreground py-2 rounded-lg hover:bg-primary-hover transition-colors ${isSignUp && signupStep > 1 ? 'flex-1' : 'w-full'}`}
+                            className={` ${isSignUp && signupStep > 1 ? 'flex-1' : 'w-full'}`}
                         >
                             {loading 
                                 ? (isSignUp ? 'Signing Up...' : 'Signing In...') 
@@ -948,7 +950,7 @@ export default function SignInPage() {
                                     : 'Sign In'
                                   )
                             }
-                        </button>
+                        </Button>
                     </div>
                 </form>
 
