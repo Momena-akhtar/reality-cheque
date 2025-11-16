@@ -32,7 +32,27 @@ export default function Navigation() {
           >
             Home
           </button>
+          {!user ? (
+            <>
           <button 
+            onClick={() => {
+              document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-primary-text-hover transition-colors cursor-pointer"
+          >
+            Features
+          </button>
+          <button 
+            onClick={() => {
+              document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="hover:text-primary-text-hover transition-colors cursor-pointer"
+          >
+            How It Works
+          </button>
+          </>
+           ) : (
+            <button 
             onClick={() => {
               document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
             }}
@@ -40,6 +60,7 @@ export default function Navigation() {
           >
             Explore
           </button>
+          )}
           <button 
             onClick={() => {
               document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });

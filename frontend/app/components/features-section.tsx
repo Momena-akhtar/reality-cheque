@@ -27,7 +27,7 @@ export default function FeaturesSection() {
   const prev = () => setSelected((selected - 1 + features.length) % features.length)
 
   return (
-    <section className="w-full max-w-6xl mx-auto px-6 py-24">
+    <section className="w-full max-w-6xl mx-auto px-6 py-24" id="features">
       <div className="text-center max-w-2xl mx-auto mb-20">
         <h2 className="text-4xl font-semibold text-foreground">Build chat assistants that fit your workflow</h2>
         <p className="text-primary-text-faded mt-4 text-sm">Create, customize and share chatbots for sales, support, marketing and more; no infra required.</p>

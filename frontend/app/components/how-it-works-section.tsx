@@ -24,7 +24,7 @@ export default function HowItWorksSection() {
   ]
 
   return (
-    <section className="w-full max-w-6xl mx-auto px-6 py-24 bg-muted/20">
+    <section className="w-full max-w-6xl mx-auto px-6 py-24 bg-muted/20" id="how-it-works">
       <div className="text-center max-w-2xl mx-auto mb-20">
         <h2 className="text-4xl font-semibold text-foreground">How it works</h2>
         <p className="text-primary-text-faded mt-4 text-lg">Three simple steps to build, connect and ship powerful chat assistants.</p>
