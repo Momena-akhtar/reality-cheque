@@ -10,13 +10,13 @@ import {
   SidebarGroupLabel,
 } from "@/app/components/ui/sidebar"
 import Logo from "./ui/logo"
-import { ChevronRight, ChevronDown, ExternalLink, X, Loader2, Lock, Crown } from "lucide-react"
+import { ChevronRight, ChevronDown, ExternalLink, X, Loader2, Lock, Crown, Plus } from "lucide-react"
 import { useSidebar } from "./ui/sidebar"
 import { Button } from "./ui/button"
 import { useAIModels } from "../hooks/useAIModels"
 import { useRouter } from "next/navigation"
 import { useAuth } from "../context/AuthContext"
-import { isCategoryAccessible, getTierColor, getUpgradeMessage } from "../utils/tier-access"
+import { isCategoryAccessible, getTierColor } from "../utils/tier-access"
 import UpgradePrompt from "./ui/upgrade-prompt"
 
 // Custom hook to get all categories (unfiltered)
@@ -120,16 +120,6 @@ export function AppSidebar() {
     return !isCategoryAccessible(user.tier || "tier1", categoryTierAccess);
   }
 
-  // Helper function to get tier color
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case "tier1": return "bg-blue-700/30 border border-blue-700/30 text-foreground";
-      case "tier2": return "bg-green-700/30 border border-green-700/30 text-foreground";
-      case "tier3": return "bg-purple-700/30 border border-purple-700/30 text-foreground";
-      default: return "bg-gray-700/30 border border-gray-700/30 text-foreground";
-    }
-  }
-
   // Show sign-in prompt for unauthenticated users
   if (!user && !loading) {
     return (
@@ -195,6 +185,30 @@ export function AppSidebar() {
           </SidebarHeader>
         )}
         <SidebarContent className="overflow-y-auto scrollbar-hide">
+
+          {/* Profiles section */}
+          <SidebarGroup>
+            <SidebarGroupLabel className="mt-1">Profiles</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <div className="px-4 py-2">
+                <div>
+                  <div className="text-sm font-bold">
+                    {user?.username || user?.email || 'Profile'}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/signin')}
+                    className="mt-2 w-full justify-start gap-2"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span className="text-sm">Add profile</span>
+                  </Button>
+                </div>
+              </div>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
           <SidebarGroup>
             <SidebarGroupLabel className="mt-1">Tools</SidebarGroupLabel>
             <SidebarGroupContent>
