@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Info, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { Button } from '../components/ui/button';
 
 export default function SettingsPage() {
   const [editMode, setEditMode] = useState(false);
@@ -398,19 +399,18 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex gap-2">
-              <button
-                className="px-4 py-2 text-sm hover:bg-primary-hover text-foreground rounded-lg border border-border cursor-pointer transition-all"
+              <Button
                 onClick={editMode ? handleSaveChanges : () => {
                   setEditMode(true);
                   setShowPassword(false);
                 }}
               >
                 {editMode ? 'Save Changes' : 'Update Info'}
-              </button>
+              </Button>
 
               {editMode && (
-                <button
-                  className="px-4 py-2 text-sm hover:bg-gray-600 text-foreground rounded-lg border border-border cursor-pointer transition-all"
+                <Button
+                variant='outline'
                   onClick={() => {
                     setEditMode(false);
                     setShowPassword(false);
@@ -422,7 +422,7 @@ export default function SettingsPage() {
                   }}
                 >
                   Cancel
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -477,12 +477,12 @@ export default function SettingsPage() {
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Profile Setup</h2>
-            <button
-              className="px-4 py-2 text-sm border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all"
+            <Button
+              variant="outline"
               onClick={() => setShowProfileSetup(!showProfileSetup)}
             >
               {showProfileSetup ? 'Hide Setup' : 'Complete Profile'}
-            </button>
+            </Button>
           </div>
 
           {showProfileSetup && (
@@ -971,13 +971,14 @@ export default function SettingsPage() {
                           className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-hover"
                         />
                       </div>
-                      <button
+                      <Button
+                      variant='outline'
+                      className="mt-2"
                         type="button"
                         onClick={handleAddGig}
-                        className="w-full px-4 py-2 border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all font-medium"
                       >
                         Add Gig
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -985,12 +986,11 @@ export default function SettingsPage() {
 
               {/* Save Profile Setup Button */}
               <div className="pt-4 flex justify-center">
-                <button
+                <Button
                   onClick={handleSaveProfileSetup}
-                  className="w-[50%] sm:w-[full] px-6 py-3 border border-border cursor-pointer text-foreground rounded-lg hover:bg-primary-hover transition-all font-medium"
                 >
                   Save Profile Setup
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -1002,17 +1002,16 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className='flex justify-between items-center'>
               <p className='text-sm text-primary-text-faded'>Log out of all devices</p>
-              <button 
-                className="px-3 py-2 border border-border text-sm hover:bg-primary-hover cursor-pointer text-foreground rounded-lg w-fit"
+              <Button 
                 onClick={handleLogout}
               >
                 Log out
-              </button>
+              </Button>
             </div>
             <div className='flex justify-between items-center'>
               <p className='text-sm text-primary-text-faded'>Delete your account</p>
               <button 
-                className="px-3 py-2 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-sm text-foreground rounded-lg w-fit"
+                className="px-3 py-2 border border-red-600/30 hover:bg-red-600/40 cursor-pointer text-md text-foreground rounded-full w-fit"
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 Delete account

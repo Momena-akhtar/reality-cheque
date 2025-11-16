@@ -69,10 +69,6 @@ export default function UserMenu({ name, email, picture }: UserMenuProps) {
                 <History className="inline mr-2 w-4 h-4" />
               Usage History
             </button>
-            <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
-                <Info className='inline mr-2 w-4 h-4' />
-              Learn more
-            </button>
             <button className="w-full cursor-pointer text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--card-hover)] transition-colors" onClick={handleLogout}>
                 <LogOut className="inline mr-2 w-4 h-4" />
               Log out
