@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Crown, Lock, X } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "./button";
 
 interface UpgradePromptProps {
   isOpen: boolean;
@@ -49,7 +49,6 @@ export default function UpgradePrompt({
       <div className="bg-background text-foreground border border-border rounded-lg p-6 max-w-md w-full shadow-lg relative">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Crown className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">{title}</h2>
           </div>
           <button
@@ -113,18 +112,19 @@ export default function UpgradePrompt({
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
+            <Button
+              variant="outline"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm border border-border hover:bg-primary-hover cursor-pointer text-foreground rounded-lg"
+              className="w-full"
             >
               Maybe Later
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleUpgrade}
-              className="flex-1 px-4 py-2 text-sm bg-primary hover:bg-primary-hover cursor-pointer text-primary-foreground rounded-lg"
+              className="w-full"
             >
               Upgrade Now
-            </button>
+            </Button>
           </div>
         </div>
       </div>

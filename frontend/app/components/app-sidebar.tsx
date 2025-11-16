@@ -4,7 +4,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -13,7 +12,6 @@ import Logo from "./ui/logo"
 import { ChevronRight, ChevronDown, ExternalLink, X, Loader2, Lock, Crown, Plus } from "lucide-react"
 import { useSidebar } from "./ui/sidebar"
 import { Button } from "./ui/button"
-import { useAIModels } from "../hooks/useAIModels"
 import { useRouter } from "next/navigation"
 import { useAuth } from "../context/AuthContext"
 import { isCategoryAccessible, getTierColor } from "../utils/tier-access"
