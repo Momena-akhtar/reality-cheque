@@ -7,6 +7,7 @@ import Logo from "../components/ui/logo";
 import { ArrowLeft, Mail, Shield, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Button } from "../components/ui/button";
 export default function ForgotPage() {
     const [currentStep, setCurrentStep] = useState(1);
     const [email, setEmail] = useState("");
@@ -261,21 +262,21 @@ export default function ForgotPage() {
                     <div className="flex items-center space-x-4">
                         <div className={`flex items-center ${currentStep >= 1 ? 'text-foreground' : 'text-muted'}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep >= 1 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
-                                <Mail className="w-4 h-4" />
+                                <Mail className={`w-4 h-4 ${currentStep >= 1 ? 'text-background' : 'text-muted-foreground'}`} />
                             </div>
                             <span className="ml-2 text-sm font-medium">Email</span>
                         </div>
                         <div className={`w-8 h-0.5 ${currentStep >= 2 ? 'bg-primary' : 'bg-muted'}`}></div>
                         <div className={`flex items-center ${currentStep >= 2 ? 'text-foreground' : 'text-muted'}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep >= 2 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
-                                <Shield className="w-4 h-4" />
+                                <Shield className={`w-4 h-4 ${currentStep >= 2 ? 'text-background' : 'text-muted-foreground'}`} />
                             </div>
                             <span className="ml-2 text-sm font-medium">Verify</span>
                         </div>
                         <div className={`w-8 h-0.5 ${currentStep >= 3 ? 'bg-primary' : 'bg-muted'}`}></div>
                         <div className={`flex items-center ${currentStep >= 3 ? 'text-foreground' : 'text-muted'}`}>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${currentStep >= 3 ? 'border-primary bg-primary text-foreground' : 'border-gray-300'}`}>
-                                <KeyRound className="w-4 h-4" />
+                                <KeyRound className={`w-4 h-4 ${currentStep >= 3 ? 'text-background' : 'text-muted-foreground'}`} />
                             </div>
                             <span className="ml-2 text-sm font-medium">Reset</span>
                         </div>
@@ -301,14 +302,14 @@ export default function ForgotPage() {
                                 <p className="text-sm text-red-500 mt-1">{errors.email}</p>
                             )}
                         </div>
-                        <button
+                        <Button
                             type="button"
+                            className="w-full"
                             onClick={handleSendOtp}
                             disabled={isLoading}
-                            className="w-full bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
+                            >
                             {isLoading ? "Sending..." : "Send Reset OTP"}
-                        </button>
+                        </Button>
                     </div>
                 )}
 
@@ -348,36 +349,37 @@ export default function ForgotPage() {
                         </div>
                         
                         <div className="text-center">
-                            <button
+                            <Button
                                 type="button"
                                 onClick={handleResendOtp}
                                 disabled={resendCooldown > 0 || isLoading}
-                                className="text-sm text-[#757575] cursor-pointer disabled:text-muted-foreground disabled:cursor-not-allowed"
-                            >
+                                className="w-full"
+>
                                 {resendCooldown > 0 
                                     ? `Resend OTP in ${resendCooldown}s` 
                                     : "Didn't receive the code? Resend OTP"
                                 }
-                            </button>
+                            </Button>
                         </div>
                         
                         <div className="flex gap-2">
-                            <button
+                            <Button
+                                variant="outline"
                                 type="button"
                                 onClick={goBack}
-                                className="flex-1 border border-border cursor-pointer hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
+                                className="w-full"
                             >
                                 <ArrowLeft className="w-4 h-4 mr-2" />
                                 Back
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={handleVerifyOtp}
                                 disabled={isLoading}
-                                className="flex-1 bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? "Verifying..." : "Verify OTP"}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -420,22 +422,23 @@ export default function ForgotPage() {
                         </div>
                         
                         <div className="flex gap-2">
-                            <button
+                            <Button
+                                variant="outline"
                                 type="button"
                                 onClick={goBack}
-                                className="flex-1 border border-border cursor-pointer hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
+                                className="w-full"
                             >
                                 <ArrowLeft className="w-4 h-4 mr-2" />
                                 Back
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={handleResetPassword}
                                 disabled={isLoading}
-                                className="flex-1 bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? "Resetting..." : "Reset Password"}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
