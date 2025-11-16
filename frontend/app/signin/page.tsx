@@ -946,6 +946,7 @@ export default function SignInPage() {
                     <div className="flex space-x-3">
                         {isSignUp && signupStep > 1 && (
                             <Button 
+                                type="button"
                                 variant='outline'
                                 onClick={() => setSignupStep(signupStep - 1)}
                                 className="flex-1"
