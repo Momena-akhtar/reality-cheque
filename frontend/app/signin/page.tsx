@@ -40,6 +40,7 @@ export default function SignInPage() {
     const [currentOffers, setCurrentOffers] = useState<Array<{name: string, description: string, packageId: string}>>([]);
     const [stepByStepProcess, setStepByStepProcess] = useState<Array<{packageId: string, steps: Array<{order: number, description: string}>}>>([]);
     const [timelineToResults, setTimelineToResults] = useState<Array<{packageId: string, timeline: string}>>([]);
+    const [profileName, setProfileName] = useState('');
     
     // Service/package management
     const [newService, setNewService] = useState({name: '', description: ''});
@@ -198,7 +199,6 @@ export default function SignInPage() {
             setSignupStep(3);
             return;
         }
-        
         if (isSignUp && signupStep === 3) {
             // If skip is checked, proceed with registration
             if (skipStep3) {
@@ -211,7 +211,7 @@ export default function SignInPage() {
                 }
             }
         }
-        
+
         setLoading(true);
         try {
             let url = `${API_BASE}/auth/${isSignUp ? 'register' : 'login'}`;
@@ -236,7 +236,8 @@ export default function SignInPage() {
                     stepByStepProcess: skipStep3 ? [] : stepByStepProcess,
                     timelineToResults: skipStep3 ? [] : timelineToResults,
                     leadSources: skipStep2 ? [] : leadSources,
-                    monthlyRevenue: skipStep2 ? 0 : (monthlyRevenue ? parseInt(monthlyRevenue) : 0)
+                    monthlyRevenue: skipStep2 ? 0 : (monthlyRevenue ? parseInt(monthlyRevenue) : 0),
+                    profileName: profileName || ''
                   }
                 : { email, password, role: 'user' };
             const res = await fetch(url, {
@@ -899,6 +900,21 @@ export default function SignInPage() {
                                     </div>
                                 </>
                             )}
+
+                            {/* Profile name */}
+                            <div>
+                                <label htmlFor="profileName" className="block text-sm font-medium mb-1">
+                                    Profile Name
+                                </label>
+                                <input
+                                    type="text"
+                                    id="profileName"
+                                    value={profileName}
+                                    onChange={(e) => setProfileName(e.target.value)}
+                                    placeholder="Enter a name for this profile"
+                                    className="w-full px-3 py-2 border border-border rounded-lg bg-background outline-none focus:border-primary-hover focus:ring-1 focus:ring-primary-hover"
+                                />
+                            </div>
                             
                             <div className="flex items-center justify-center space-x-2 mt-4">
                                 <label className="flex items-center space-x-2 cursor-pointer">
