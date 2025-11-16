@@ -21,13 +21,11 @@ export default function GetStarted() {
             router.push("/signin");
         }
     };
-
     return (
         <Button 
             onClick={handleClick}
             size="lg"
-            className="gap-2 hover:gap-3 transition-all duration-200 border-2 border-border "
-
+            className="gap-2 hover:gap-3 transition-all duration-200"
         >
             Get Started
             <ArrowRight className="w-5 h-5" />
