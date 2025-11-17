@@ -111,6 +111,9 @@ function ChatPageContent() {
     const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
     // Per-feature input values (featureId -> text)
     const [featureInputs, setFeatureInputs] = useState<{ [key: string]: string }>({});
+    // Modal state for feature details
+    const [openFeature, setOpenFeature] = useState<Feature | null>(null);
+    const [modalInput, setModalInput] = useState<string>("");
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -688,7 +691,19 @@ function ChatPageContent() {
                                                             {modelFeatures.map((feature, index) => (
                                                                 <div
                                                                     key={feature._id}
-                                                                    className="bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 w-full sm:max-w-[350px] lg:max-w-[320px]"
+                                                                    role="button"
+                                                                    tabIndex={0}
+                                                                    onClick={() => {
+                                                                        setOpenFeature(feature);
+                                                                        setModalInput(featureInputs[feature._id] || "");
+                                                                    }}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Enter") {
+                                                                            setOpenFeature(feature);
+                                                                            setModalInput(featureInputs[feature._id] || "");
+                                                                        }
+                                                                    }}
+                                                                    className="bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 w-full sm:max-w-[350px] lg:max-w-[320px] cursor-pointer"
                                                                 >
                                                                     <div className="flex flex-col gap-5">
                                                                         <div className="flex items-start gap-2">
@@ -702,18 +717,22 @@ function ChatPageContent() {
                                                                             </div>
                                                                         </div>
 
-                                                                        {/* Input bar for each feature */}
-                                                                        <div className="flex items-center gap-2">
+                                                                        {/* Input bar for each feature*/}
+                                                                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                                             <input
                                                                                 type="text"
                                                                                 placeholder={`Ask about ${feature.name}`}
                                                                                 value={featureInputs[feature._id] || ""}
                                                                                 onChange={(e) => setFeatureInputs(prev => ({ ...prev, [feature._id]: e.target.value }))}
+                                                                                onClick={(e) => e.stopPropagation()}
                                                                                 className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                                             />
                                                                             <Button
                                                                                 variant="outline"
-                                                                                onClick={() => handleSendMessage(featureInputs[feature._id] || "")}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleSendMessage(featureInputs[feature._id] || "");
+                                                                                }}
                                                                                 disabled={sending || userCredits <= 0.01}
                                                                             >
                                                                                 <Send className="h-4 w-4" />
@@ -1347,6 +1366,78 @@ function ChatPageContent() {
                                 }}
                             >
                                 Submit Answers
+                            </Button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Feature Detail Modal (opens when a feature card is clicked) */}
+            {openFeature && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') setOpenFeature(null);
+                    }}
+                    tabIndex={-1}
+                >
+                    {/* Blurred Background */}
+                    <div
+                        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                        onClick={() => setOpenFeature(null)}
+                    />
+
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-2xl bg-background border border-border rounded-xl shadow-2xl flex flex-col"
+                    >
+                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30 flex-shrink-0">
+                            <div>
+                                <h3 className="text-xl font-semibold text-foreground">{openFeature.name}</h3>
+                                <p className="text-sm text-muted-foreground mt-1">{openFeature.description}</p>
+                            </div>
+                            <button
+                                onClick={() => setOpenFeature(null)}
+                                className="p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
+                            <label className="block text-sm font-medium text-foreground mb-2">Your prompt</label>
+                            <textarea
+                                value={modalInput}
+                                onChange={(e) => setModalInput(e.target.value)}
+                                placeholder={`Ask about ${openFeature.name}...`}
+                                className="w-full p-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                rows={6}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
+                            <Button variant="outline" onClick={() => setOpenFeature(null)}>Cancel</Button>
+                            <Button
+                                onClick={() => {
+                                    if (!openFeature) return;
+                                    const textToSend = modalInput || featureInputs[openFeature._id] || "";
+                                    handleSendMessage(textToSend);
+                                    // clear both modal and per-feature input
+                                    setFeatureInputs(prev => ({ ...prev, [openFeature._id]: "" }));
+                                    setModalInput("");
+                                    setOpenFeature(null);
+                                }}
+                                disabled={sending || userCredits <= 0.01}
+                            >
+                                {sending ? 'Sending...' : 'Send'}
                             </Button>
                         </div>
                     </motion.div>
