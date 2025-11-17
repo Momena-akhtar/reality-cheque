@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { MessageSquare, Lock, Crown, Sparkles } from "lucide-react";
+import { PlaneTakeoff, Sparkles } from "lucide-react";
 import { isCategoryAccessible, getUpgradeMessage } from "../utils/tier-access";
 import { toast } from "sonner";
 
@@ -106,6 +106,10 @@ function ChatPageContent() {
     const [showGigSelector, setShowGigSelector] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [upworkLink, setUpworkLink] = useState<string>("");
+    // Profile selector state (dropdown placed where Generate button used to be)
+    const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+    // Per-feature input values (featureId -> text)
+    const [featureInputs, setFeatureInputs] = useState<{ [key: string]: string }>({});
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -617,7 +621,7 @@ function ChatPageContent() {
                 modelId={botId}
             />
 
-            <div className="flex-1 overflow-hidden pt-15">
+            <div className="flex-1 overflow-auto pt-15">
                 <div className="h-full relative">
                     <AnimatePresence>
                         {messages.length === 0 && currentChatId === null ? (
@@ -627,12 +631,9 @@ function ChatPageContent() {
                                 className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
                             >
                                 {/* Main Container with Gradient Background */}
-                                <div className="relative max-w-2xl w-full">
-                                    {/* Gradient Background */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl blur-xl"></div>
-
+                                <div className="relative max-w-6xl w-full pt-30 md:pt-25 sm:pt-25">
                                     {/* Content Card */}
-                                    <div className="relative bg-background/80 backdrop-blur-sm border border-primary/20 rounded-2xl p-10 shadow-2xl">
+                                    <div className="relative bg-background/80 backdrop-blur-sm p-10 shadow-2xl">
                                         {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
                                             <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
@@ -645,7 +646,90 @@ function ChatPageContent() {
                                             {model.description}
                                         </p>
 
-                                        {/* Generate Button */}
+                                        {/* Profile selector replacing the Generate button (Generate moved below features) */}
+                                        <div className="flex flex-col items-center gap-3 mb-8">
+                                            <div className="w-full max-w-2xl flex flex-col sm:flex-row items-center gap-3">
+                                                <label className="text-sm text-muted-foreground w-full sm:w-auto">Select profile:</label>
+                                                <select
+                                                    value={selectedProfile ?? ""}
+                                                    onChange={(e) => setSelectedProfile(e.target.value || null)}
+                                                    className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                >
+                                                    <option value="">Default profile</option>
+                                                    {userGigs && userGigs.length > 0 && userGigs.map((g: any, idx: number) => (
+                                                        <option key={idx} value={g.id ?? g.title ?? `gig-${idx}`}>
+                                                            {g.title || `Gig ${idx + 1}`}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {userCredits <= 0.01 && (
+                                                <div className="text-center text-xs text-red-500">
+                                                    Insufficient credits. Please upgrade your plan.
+                                                </div>
+                                            )}
+                                            {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
+                                                <div className="text-center text-xs text-amber-500">
+                                                    Please select at least one gig to provide context for auto-responder generation.
+                                                </div>
+                                            )}
+                                            {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
+                                                <div className="text-center text-xs text-amber-500">
+                                                    No gigs found. Please add some Fiverr gigs to your profile first.
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Features Cards if model has features */}
+                                        {modelFeatures.length > 0 && (
+                                            <div className="mb-4">
+                                                <div className="relative">
+                                                    <div className="grid gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                                        {modelFeatures.map((feature, index) => (
+                                                            <div
+                                                                key={feature._id}
+                                                                className="bg-muted/30 border border-foreground/20 rounded-lg p-3 transition-all duration-200"
+                                                            >
+                                                                <div className="flex flex-col gap-3">
+                                                                    <div className="flex items-start gap-2">
+                                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0"></div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <h4 className="text-sm font-medium text-foreground mb-1">
+                                                                                {feature.name}
+                                                                            </h4>
+                                                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                                                {feature.description}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Input bar for each feature */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder={`Ask about ${feature.name}`}
+                                                                            value={featureInputs[feature._id] || ""}
+                                                                            onChange={(e) => setFeatureInputs(prev => ({ ...prev, [feature._id]: e.target.value }))}
+                                                                            className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => handleSendMessage(featureInputs[feature._id] || "")}
+                                                                            disabled={sending || userCredits <= 0.01}
+                                                                            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                        >
+                                                                            Send
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* --- Moved Generate Button: keep original logic and UI exactly as before --- */}
                                         <div className="flex flex-col items-center gap-3 mb-8">
                                             {model?.name === "Profile Optimizer" ? (
                                                 <div className="w-full flex flex-col sm:flex-row gap-2">
@@ -700,52 +784,6 @@ function ChatPageContent() {
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Features Cards if model has features */}
-                                        {modelFeatures.length > 0 && (
-                                            <div className="mb-4">
-                                                <div className="relative">
-                                                    <div className={`grid gap-3 ${showAllFeatures ? 'grid-cols-1 max-h-80 overflow-y-auto scrollbar-hide' : 'grid-cols-1 max-h-48 overflow-hidden'}`}>
-                                                        {modelFeatures.map((feature, index) => (
-                                                            <div
-                                                                key={feature._id}
-                                                                className={`bg-muted/30 border border-foreground/20 rounded-lg p-3 transition-all duration-200 ${
-                                                                    !showAllFeatures && index >= 3 ? 'opacity-60' : ''
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-start gap-2">
-                                                                    <div className="w-2 h-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0"></div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h4 className="text-sm font-medium text-foreground mb-1">
-                                                                            {feature.name}
-                                                                        </h4>
-                                                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                                                            {feature.description}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    
-                                                    {/* Gradient overlay and expand button for overflow */}
-                                                    {modelFeatures.length > 3 && !showAllFeatures && (
-                                                        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background/80 to-transparent pointer-events-none"></div>
-                                                    )}
-                                                    
-                                                    {modelFeatures.length > 3 && (
-                                                        <div className="flex justify-center mt-3">
-                                                            <button
-                                                                onClick={() => setShowAllFeatures(!showAllFeatures)}
-                                                                className="text-xs cursor-pointer border border-border rounded-lg px-2 py-1 transition-colors font-medium"
-                                                            >
-                                                                {showAllFeatures ? 'Show Less' : 'Expand'}
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </motion.div>
