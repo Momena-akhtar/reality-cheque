@@ -621,8 +621,8 @@ function ChatPageContent() {
                 modelId={botId}
             />
 
-            <div className="flex-1 overflow-auto pt-15">
-                <div className="h-full relative">
+            <div className="flex-1 overflow-auto">
+                <div className="min-h-full flex items-center justify-center py-6">
                     <AnimatePresence>
                         {messages.length === 0 && currentChatId === null ? (
                             <motion.div
@@ -631,9 +631,9 @@ function ChatPageContent() {
                                 className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
                             >
                                 {/* Main Container with Gradient Background */}
-                                <div className="relative max-w-6xl w-full pt-30 md:pt-25 sm:pt-25">
+                                <div className="relative max-w-6xl w-full ">
                                     {/* Content Card */}
-                                    <div className="relative bg-background/80 backdrop-blur-sm p-10 shadow-2xl">
+                                    <div className="relative p-10">
                                         {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
                                             <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
@@ -648,7 +648,7 @@ function ChatPageContent() {
 
                                         {/* Profile selector replacing the Generate button (Generate moved below features) */}
                                         <div className="flex flex-col items-center gap-3 mb-8">
-                                            <div className="w-full max-w-2xl flex flex-col sm:flex-row items-center gap-3">
+                                            <div className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3">
                                                 <label className="text-sm text-muted-foreground w-full sm:w-auto">Select profile:</label>
                                                 <select
                                                     value={selectedProfile ?? ""}
@@ -683,52 +683,50 @@ function ChatPageContent() {
 
                                         {/* Features Cards if model has features */}
                                         {modelFeatures.length > 0 && (
-                                            <div className="mb-4">
-                                                <div className="relative">
-                                                    <div className="grid gap-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                                                        {modelFeatures.map((feature, index) => (
-                                                            <div
-                                                                key={feature._id}
-                                                                className="bg-muted/30 border border-foreground/20 rounded-lg p-3 transition-all duration-200"
-                                                            >
-                                                                <div className="flex flex-col gap-3">
-                                                                    <div className="flex items-start gap-2">
-                                                                        <div className="w-2 h-2 bg-green-600 rounded-full mt-1.5 flex-shrink-0"></div>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h4 className="text-sm font-medium text-foreground mb-1">
-                                                                                {feature.name}
-                                                                            </h4>
-                                                                            <p className="text-xs text-muted-foreground leading-relaxed">
-                                                                                {feature.description}
-                                                                            </p>
+                                                <div className="mb-4">
+                                                    <div className="relative">
+                                                        <div className="flex flex-wrap justify-center gap-3">
+                                                            {modelFeatures.map((feature, index) => (
+                                                                <div
+                                                                    key={feature._id}
+                                                                    className="bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 w-full sm:max-w-[350px] lg:max-w-[320px]"
+                                                                >
+                                                                    <div className="flex flex-col gap-5">
+                                                                        <div className="flex items-start gap-2">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <h4 className="text-sm font-medium text-foreground mb-1">
+                                                                                    {feature.name}
+                                                                                </h4>
+                                                                                <p className="text-xs text-primary-text-faded leading-relaxed">
+                                                                                    {feature.description}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Input bar for each feature */}
+                                                                        <div className="flex items-center gap-2">
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder={`Ask about ${feature.name}`}
+                                                                                value={featureInputs[feature._id] || ""}
+                                                                                onChange={(e) => setFeatureInputs(prev => ({ ...prev, [feature._id]: e.target.value }))}
+                                                                                className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                            />
+                                                                            <button
+                                                                                onClick={() => handleSendMessage(featureInputs[feature._id] || "")}
+                                                                                disabled={sending || userCredits <= 0.01}
+                                                                                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                            >
+                                                                                Send
+                                                                            </button>
                                                                         </div>
                                                                     </div>
-
-                                                                    {/* Input bar for each feature */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder={`Ask about ${feature.name}`}
-                                                                            value={featureInputs[feature._id] || ""}
-                                                                            onChange={(e) => setFeatureInputs(prev => ({ ...prev, [feature._id]: e.target.value }))}
-                                                                            className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                                        />
-                                                                        <button
-                                                                            onClick={() => handleSendMessage(featureInputs[feature._id] || "")}
-                                                                            disabled={sending || userCredits <= 0.01}
-                                                                            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                        >
-                                                                            Send
-                                                                        </button>
-                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-
+                                            )}
                                         {/* --- Moved Generate Button: keep original logic and UI exactly as before --- */}
                                         <div className="flex flex-col items-center gap-3 mb-8">
                                             {model?.name === "Profile Optimizer" ? (
