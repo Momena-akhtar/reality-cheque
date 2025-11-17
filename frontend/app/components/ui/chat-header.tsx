@@ -55,16 +55,16 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
           <div className="relative" ref={userInfoRef}>
             <button
               onClick={() => setShowUserInfo(!showUserInfo)}
-              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
+              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-full hover:bg-primary-hover transition-colors"
               title="User & Agency Info"
             >
-              <Building2 className="h-4 w-4 text-blue-500" />
+              <Building2 className="h-4 w-4" />
             </button>
             
             {showUserInfo && (
               <div className="absolute top-full right-0 mt-2 bg-background border border-border rounded-lg shadow-lg p-4 w-96 z-50 max-h-96 overflow-y-auto scrollbar-thin">
                 <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-blue-500" />
+                  <Building2 className="h-4 w-4" />
                   User & Agency Information
                 </h3>
                 
@@ -241,16 +241,16 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowFeatures(!showFeatures)}
-              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
+              className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-full hover:bg-primary-hover transition-colors"
               title="Model Features"
             >
-              <Star className="h-4 w-4 text-yellow-500" />
+              <Star className="h-4 w-4" />
             </button>
             
             {showFeatures && (
               <div className="absolute top-full right-0 mt-2 bg-background border border-border rounded-lg shadow-lg p-4 w-80 z-50">
                 <h3 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
-                  <Star className="h-4 w-4 text-yellow-500" />
+                  <Star className="h-4 w-4" />
                   Model Features
                 </h3>
                 <div className="space-y-3 max-h-60 overflow-y-auto scrollbar-thin">
@@ -272,7 +272,7 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
         {hasHistory && onShowHistory && (
           <button
             onClick={onShowHistory}
-            className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-xl hover:bg-primary-hover transition-colors"
+            className="px-2 py-2 text-sm border cursor-pointer border-border text-foreground rounded-full hover:bg-primary-hover transition-colors"
             title="Chat History"
           >
             <MessageSquare className="h-4 w-4" />

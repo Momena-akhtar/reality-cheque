@@ -8,9 +8,10 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
-import { PlaneTakeoff, Sparkles } from "lucide-react";
+import { Send,  } from "lucide-react";
 import { isCategoryAccessible, getUpgradeMessage } from "../utils/tier-access";
 import { toast } from "sonner";
+import { Button } from "../components/ui/button";
 
 interface Message {
     id: string;
@@ -636,17 +637,15 @@ function ChatPageContent() {
                                     <div className="relative p-10">
                                         {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
-                                            <span className="text-transparent bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text">
                                                 {model.name}
-                                            </span>
                                         </h1>
 
                                         {/* Model Description */}
-                                        <p className="text-base text-muted-foreground text-center leading-relaxed mb-8">
+                                        <p className="text-base text-primary-text-faded text-center leading-relaxed mb-8">
                                             {model.description}
                                         </p>
 
-                                        {/* Profile selector replacing the Generate button (Generate moved below features) */}
+                                        {/* Profile selector*/}
                                         <div className="flex flex-col items-center gap-3 mb-8">
                                             <div className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3">
                                                 <label className="text-sm text-muted-foreground w-full sm:w-auto">Select profile:</label>
@@ -712,13 +711,13 @@ function ChatPageContent() {
                                                                                 onChange={(e) => setFeatureInputs(prev => ({ ...prev, [feature._id]: e.target.value }))}
                                                                                 className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                                             />
-                                                                            <button
+                                                                            <Button
+                                                                                variant="outline"
                                                                                 onClick={() => handleSendMessage(featureInputs[feature._id] || "")}
                                                                                 disabled={sending || userCredits <= 0.01}
-                                                                                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                                                             >
-                                                                                Send
-                                                                            </button>
+                                                                                <Send className="h-4 w-4" />
+                                                                            </Button>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -727,7 +726,7 @@ function ChatPageContent() {
                                                     </div>
                                                 </div>
                                             )}
-                                        {/* --- Moved Generate Button: keep original logic and UI exactly as before --- */}
+                                        {/* Generate button */}
                                         <div className="flex flex-col items-center gap-3 mb-8">
                                             {model?.name === "Profile Optimizer" ? (
                                                 <div className="w-full flex flex-col sm:flex-row gap-2">
@@ -738,33 +737,27 @@ function ChatPageContent() {
                                                         placeholder="Paste your Upwork profile link"
                                                         className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                     />
-                                                    <button
+                                                    <Button
                                                         onClick={() => handleSendMessage(upworkLink || "")}
                                                         disabled={
                                                             sending ||
                                                             userCredits <= 0.01
                                                         }
-                                                        className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
-                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer hover:translate-y-[-1px]"
                                                     >
-                                                        <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
                                                         {sending ? "Analyzing..." : "Generate"}
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             ) : (
-                                                <button
+                                                <Button
                                                     onClick={() => handleSendMessage("")}
                                                     disabled={
                                                         sending ||
                                                         userCredits <= 0.01 ||
                                                         (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
                                                     }
-                                                    className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed 
-                                                bg-gradient-to-r from-green-600  to-green-700 text-white cursor-pointer hover:translate-y-[-1px]"
                                                 >
-                                                    <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-6" />
                                                     {sending ? "Generating..." : "Generate"}
-                                                </button>
+                                                </Button>
                                             )}
                                             {userCredits <= 0.01 && (
                                                 <div className="text-center text-xs text-red-500">
@@ -859,14 +852,14 @@ function ChatPageContent() {
                                                                         <div className="text-sm font-medium text-muted-foreground">
                                                                             Follow-up Questions:
                                                                         </div>
-                                                                        <button
+                                                                        <Button
                                                                             onClick={() => setShowFollowUpForm(
                                                                                 showFollowUpForm === message.id ? null : message.id
                                                                             )}
-                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                                                                            variant="outline"
                                                                         >
                                                                             {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </button>
+                                                                        </Button>
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         {message.followUpQuestions.map(
@@ -937,14 +930,13 @@ function ChatPageContent() {
                                                                         <div className="text-sm font-medium text-muted-foreground">
                                                                             Follow-up Questions:
                                                                         </div>
-                                                                        <button
+                                                                        <Button
                                                                             onClick={() => setShowFollowUpForm(
                                                                                 showFollowUpForm === message.id ? null : message.id
                                                                             )}
-                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                                                                         >
                                                                             {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </button>
+                                                                        </Button>
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         {message.followUpQuestions.map(
@@ -1083,19 +1075,17 @@ function ChatPageContent() {
                                                                 
                                                                 {!message.generatedGigs?.saved && (
                                                                     <div className="flex gap-3 pt-4">
-                                                                        <button
+                                                                        <Button
                                                                             onClick={() => handleSaveGig(editingGig?.messageId === message.id ? editingGig.gig : message.generatedGigs)}
                                                                             disabled={savingGig}
-                                                                            className="px-6 py-3 text-sm cursor-pointer font-medium bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                                         >
                                                                             {savingGig ? 'Saving...' : 'Save to Profile'}
-                                                                        </button>
-                                                                        <button
+                                                                        </Button>
+                                                                        <Button
                                                                             onClick={() => setEditingGig(null)}
-                                                                            className="px-6 py-3 text-sm font-medium border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 rounded-full cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors"
-                                                                        >
+                                                                            variant="outline">
                                                                             Cancel
-                                                                        </button>
+                                                                        </Button>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1275,13 +1265,13 @@ function ChatPageContent() {
                         </div>
                         
                         <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => setShowFollowUpForm(null)}
-                                className="px-6 py-2 text-sm font-medium cursor-pointer border border-border rounded-lg hover:bg-muted transition-colors"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={async () => {
                                     const message = messages.find(m => m.id === showFollowUpForm);
                                     if (!message || !user || !model || !currentChatId) return;
@@ -1355,10 +1345,9 @@ function ChatPageContent() {
                                         setShowFollowUpForm(null);
                                     }
                                 }}
-                                className="px-6 py-2 text-sm font-medium cursor-pointer bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                             >
                                 Submit Answers
-                            </button>
+                            </Button>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -1373,12 +1362,12 @@ function ChatPageContent() {
                                 <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                                 <h3 className="text-sm font-medium text-foreground">Select Gigs for Context</h3>
                             </div>
-                            <button
+                            <Button
+                                variant="outline"
                                 onClick={() => setShowGigSelector(!showGigSelector)}
-                                className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                             >
                                 {showGigSelector ? 'Hide' : 'Select Gigs'}
-                            </button>
+                            </Button>
                         </div>
                         
                         {showGigSelector && (
