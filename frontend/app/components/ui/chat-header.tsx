@@ -47,7 +47,7 @@ export default function ChatHeader({ onShowHistory, hasHistory = false, modelFea
   const hasFeatures = modelFeatures && modelFeatures.length > 0;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-2 border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+    <div className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 py-2">
       <Logo />
       <div className="flex justify-end gap-2">
         {/* User & Agency Info */}
