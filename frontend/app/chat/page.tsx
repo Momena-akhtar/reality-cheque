@@ -764,7 +764,16 @@ function ChatPageContent() {
 
                                         {/* Features Cards if model has features */}
                                         {modelFeatures.length > 0 && (
-                                                <div className="mb-4">
+                                                <div className="mb-4 relative">
+                                                    {/* Loading overlay for global regeneration */}
+                                                    {sending && !generatingFeatureId && (
+                                                        <div className="absolute inset-0 bg-background/50 rounded-lg flex items-center justify-center z-10">
+                                                            <div className="flex flex-col items-center gap-2">
+                                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                                                <span className="text-sm text-foreground">Working on it...</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                     <div className="relative">
                                                         <div className="flex flex-wrap justify-center gap-3">
                                                             {modelFeatures.map((feature, index) => (
