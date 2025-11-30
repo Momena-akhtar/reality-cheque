@@ -30,7 +30,7 @@ export default function ChatHistorySidebar({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/50 z-40"
             onClick={onClose}
           />
           
@@ -42,8 +42,8 @@ export default function ChatHistorySidebar({
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed left-0 top-0 h-full w-80 bg-background border-r border-border z-50 shadow-xl"
           >
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="text-lg font-semibold">Chat History</h2>
+            <div className="flex items-center justify-between p-4">
+              <h2 className="text-lg font-semibold">History</h2>
               <button
                 onClick={onClose}
                 className="p-2 cursor-pointer text-muted-foreground hover:text-foreground rounded-lg transition-colors"
