@@ -215,6 +215,13 @@ function ChatPageContent() {
         description: ""
     });
     const [proposalResponse, setProposalResponse] = useState<string>("");
+    // Proposal Builder form state
+    const [proposalBuilderFormData, setProposalBuilderFormData] = useState({
+        jobDescription: "",
+        budgetType: "fixed",
+        budget: 0
+    });
+    const [generatedProposal, setGeneratedProposal] = useState<{ [key: string]: string } | string | null>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -627,6 +634,9 @@ function ChatPageContent() {
                 ...(model.name === "Profile Optimizer" && { 
                     profileData: profileOptimzerFormData 
                 }),
+                ...(model.name === "Proposal Builder" && { 
+                    proposalData: proposalBuilderFormData 
+                }),
             };
 
             const response = await fetch(`${API_BASE}/generate/generate`, {
@@ -664,6 +674,9 @@ function ChatPageContent() {
                 if (model.name === "Profile Optimizer") {
                     // For Profile Optimizer, set the proposal response
                     setProposalResponse(data.data.response);
+                } else if (model.name === "Proposal Builder") {
+                    // For Proposal Builder, set the generated proposal from response field
+                    setGeneratedProposal(data.data.response || "");
                 } else if (data.data.structuredResponse) {
                     // For models with features, populate feature outputs
                     const mapped: { [k: string]: string } = {};
@@ -942,7 +955,145 @@ function ChatPageContent() {
                                         {/* Generate button */}
                                         {Object.keys(featureOutputs).length === 0 ? (
                                             <div className="flex flex-col items-center gap-3 mb-8">
-                                                {model?.name === "Profile Optimizer" ? (
+                                                {model?.name === "Proposal Builder" ? (
+                                                    <div className="w-full max-w-4xl mx-auto">
+                                                        {!generatedProposal ? (
+                                                            <>
+                                                                {/* Proposal Builder Form - Horizontal Layout */}
+                                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                                                                    {/* Job Description */}
+                                                                    <div className="flex-1 flex flex-col">
+                                                                        <label className="text-sm font-medium text-foreground mb-2">Job Description</label>
+                                                                        <textarea
+                                                                            value={proposalBuilderFormData.jobDescription}
+                                                                            onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, jobDescription: e.target.value})}
+                                                                            placeholder="Paste job description..."
+                                                                            rows={3}
+                                                                            className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                                                        />
+                                                                    </div>
+
+                                                                    {/* Budget Section */}
+                                                                    <div className="flex flex-col gap-2 min-w-max">
+                                                                        <label className="text-sm font-medium text-foreground">Budget</label>
+                                                                        <div className="flex flex-col gap-2">
+                                                                            {/* Budget Type Dropdown */}
+                                                                            <select
+                                                                                value={proposalBuilderFormData.budgetType}
+                                                                                onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, budgetType: e.target.value})}
+                                                                                className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                            >
+                                                                                <option value="fixed">Fixed</option>
+                                                                                <option value="variable">Variable</option>
+                                                                            </select>
+
+                                                                            {/* Budget Amount Input */}
+                                                                            <div className="flex items-center gap-1">
+                                                                                <button
+                                                                                    onClick={() => setProposalBuilderFormData({...proposalBuilderFormData, budget: Math.max(0, proposalBuilderFormData.budget - 10)})}
+                                                                                    className="px-2 py-2 text-sm rounded-md border border-border bg-background text-foreground hover:bg-muted transition-colors"
+                                                                                >
+                                                                                    −
+                                                                                </button>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    value={proposalBuilderFormData.budget}
+                                                                                    onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, budget: Math.max(0, Number(e.target.value))})}
+                                                                                    className="w-20 px-3 py-2.5 text-sm rounded-md border border-border bg-background text-foreground text-center focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                                />
+                                                                                <button
+                                                                                    onClick={() => setProposalBuilderFormData({...proposalBuilderFormData, budget: proposalBuilderFormData.budget + 10})}
+                                                                                    className="px-2 py-2 text-sm rounded-md border border-border bg-background text-foreground hover:bg-muted transition-colors"
+                                                                                >
+                                                                                    +
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Generate Button */}
+                                                                <div className="flex justify-center mb-6">
+                                                                    <Button
+                                                                        onClick={() => handleSendMessage(JSON.stringify(proposalBuilderFormData))}
+                                                                        disabled={
+                                                                            sending ||
+                                                                            userCredits <= 0.01 ||
+                                                                            !proposalBuilderFormData.jobDescription
+                                                                        }
+                                                                    >
+                                                                        {sending ? "Generating..." : "Generate"}
+                                                                    </Button>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="w-full flex flex-col items-center gap-4">
+                                                                {/* Generated Proposal Section */}
+                                                                <div className="w-full max-w-4xl mx-auto">
+                                                                    <div className="bg-muted/30 border border-foreground/20 rounded-lg p-6">
+                                                                        <h3 className="text-lg font-semibold text-foreground mb-4">Proposal</h3>
+                                                                        <div className="max-w-none text-foreground">
+                                                                            {typeof generatedProposal === 'string' ? (
+                                                                                parseMarkdownResponse(generatedProposal)
+                                                                            ) : (
+                                                                                <div className="space-y-3">
+                                                                                    {generatedProposal && Object.entries(generatedProposal).map(([key, value]) => (
+                                                                                        <div key={key} className="flex flex-col">
+                                                                                            <label className="text-sm font-medium text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
+                                                                                            <div className="text-sm text-foreground mt-1 p-3 bg-background/50 rounded border border-border/50 whitespace-pre-wrap">
+                                                                                                {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="mt-4 flex gap-2 justify-end">
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                onClick={() => {
+                                                                                    // TODO: Implement save proposal functionality
+                                                                                    toast.success('Proposal saved');
+                                                                                }}
+                                                                                disabled={savingGig}
+                                                                            >
+                                                                                {savingGig ? 'Saving...' : 'Save Proposal'}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-[60%] flex flex-col sm:flex-row gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={postInput}
+                                                                        onChange={(e) => setPostInput(e.target.value)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                                e.preventDefault();
+                                                                                handlePostSend();
+                                                                            }
+                                                                        }}
+                                                                        placeholder="Type a follow-up or message..."
+                                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            setGeneratedProposal(null);
+                                                                            setProposalBuilderFormData({
+                                                                                jobDescription: "",
+                                                                                budgetType: "fixed",
+                                                                                budget: 0
+                                                                            });
+                                                                        }}
+                                                                        disabled={sending || userCredits <= 0.01}
+                                                                    >
+                                                                        {sending ? 'Regenerating...' : 'Regenerate'}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : model?.name === "Profile Optimizer" ? (
                                                     <div className="w-full">
                                                         {/* Show form only when no proposal response */}
                                                         {!proposalResponse ? (
