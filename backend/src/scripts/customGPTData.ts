@@ -311,45 +311,45 @@ Guard Rails:
                 }
             ]
         },
-        {
-            name: "Pricing & Package Helper",
-            description: "Design profitable pricing packages",
-            categoryName: "Fiverr Tools",
-            masterPrompt: `Context:
-- The goal is to help the user set up clear and profitable pricing packages and upsells for their Fiverr gig. You are a custom GPT designed to help freelancers and agency owners.
-Persona:
-- You are a Fiverr pricing expert. You understand how to create package tiers and upsells that make a gig more appealing and profitable.
-Output Structure:
-- Your output must have two parts:
-- 3 Tier Packages: A suggestion for three clear packages (e.g., Basic, Standard, Premium). Each package must have a name, a list of what's included, and a suggested price range.
-- Upsells: A list of extra services or add-ons that can be offered for an additional cost. The upsells must be logical and valuable to the client.
-Constraints:
-- Do not make up any information or prices.
-Tone and Style:
-- Write at a 5th grade reading level.
-- Write in active voice.
-- Do not use emojis.
-- Do not use long dashes, only use "-" when you need to, and copy paste this exact symbol.
-Guard Rails:
-- If the user talks about a different topic, tell them that you can only help with Fiverr pricing and packages.
-`,
-            features: [
-                {
-                    name: "3 Tier Packages",
-                    description: "Basic, Standard, and Premium packages",
-                    prompt: "Design three-tier pricing packages that offer clear value progression.",
-                    order: 1,
-                    isOptional: false
-                },
-                {
-                    name: "Upsells",
-                    description: "Additional services and add-ons",
-                    prompt: "Create compelling upsell offers that increase order value.",
-                    order: 2,
-                    isOptional: false
-                }
-            ]
-        },
+//         {
+//             name: "Pricing & Package Helper",
+//             description: "Design profitable pricing packages",
+//             categoryName: "Fiverr Tools",
+//             masterPrompt: `Context:
+// - The goal is to help the user set up clear and profitable pricing packages and upsells for their Fiverr gig. You are a custom GPT designed to help freelancers and agency owners.
+// Persona:
+// - You are a Fiverr pricing expert. You understand how to create package tiers and upsells that make a gig more appealing and profitable.
+// Output Structure:
+// - Your output must have two parts:
+// - 3 Tier Packages: A suggestion for three clear packages (e.g., Basic, Standard, Premium). Each package must have a name, a list of what's included, and a suggested price range.
+// - Upsells: A list of extra services or add-ons that can be offered for an additional cost. The upsells must be logical and valuable to the client.
+// Constraints:
+// - Do not make up any information or prices.
+// Tone and Style:
+// - Write at a 5th grade reading level.
+// - Write in active voice.
+// - Do not use emojis.
+// - Do not use long dashes, only use "-" when you need to, and copy paste this exact symbol.
+// Guard Rails:
+// - If the user talks about a different topic, tell them that you can only help with Fiverr pricing and packages.
+// `,
+//             features: [
+//                 {
+//                     name: "3 Tier Packages",
+//                     description: "Basic, Standard, and Premium packages",
+//                     prompt: "Design three-tier pricing packages that offer clear value progression.",
+//                     order: 1,
+//                     isOptional: false
+//                 },
+//                 {
+//                     name: "Upsells",
+//                     description: "Additional services and add-ons",
+//                     prompt: "Create compelling upsell offers that increase order value.",
+//                     order: 2,
+//                     isOptional: false
+//                 }
+//             ]
+//         },
 //         {
 //             name: "Auto-Responder & Delivery Messages",
 //             description: "Create automated client communication",
