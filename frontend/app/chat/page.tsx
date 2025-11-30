@@ -817,7 +817,7 @@ function ChatPageContent() {
                                                 </div>
                                             )}
                                         {/* Generate button */}
-                                        {Object.keys(featureOutputs).length === 0 && (
+                                        {Object.keys(featureOutputs).length === 0 ? (
                                             <div className="flex flex-col items-center gap-3 mb-8">
                                                 {model?.name === "Profile Optimizer" ? (
                                                     <div className="w-full flex flex-col sm:flex-row gap-2">
@@ -866,6 +866,30 @@ function ChatPageContent() {
                                                     </div>
                                                 )}
                                             </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-3 mb-8">
+                                                <div className="w-[60%] flex flex-col sm:flex-row gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={postInput}
+                                                        onChange={(e) => setPostInput(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                e.preventDefault();
+                                                                handlePostSend();
+                                                            }
+                                                        }}
+                                                        placeholder="Type a follow-up or message..."
+                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    />
+                                                    <Button
+                                                        onClick={handleRegenerate}
+                                                        disabled={sending || userCredits <= 0.01}
+                                                    >
+                                                        {sending ? 'Regenerating...' : 'Regenerate'}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -913,25 +937,27 @@ function ChatPageContent() {
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
+                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6 flex flex-col gap-6">
                             {/* Current response if available */}
                             {(featureOutputs[openFeature._id] || featureOutputs[openFeature.name]) && (
-                                <div className="mb-6">
+                                <div className="flex-1 flex flex-col min-h-0">
                                     <label className="block text-sm font-medium text-foreground mb-2">Current Response</label>
-                                    <div className="p-4 bg-muted/50 border border-border rounded-lg text-foreground whitespace-pre-wrap max-h-40 overflow-y-auto scrollbar-thin text-sm">
+                                    <div className="p-4 bg-muted/50 border border-border rounded-lg text-foreground whitespace-pre-wrap overflow-y-auto scrollbar-thin text-sm flex-1">
                                         {featureOutputs[openFeature._id] || featureOutputs[openFeature.name]}
                                     </div>
                                 </div>
                             )}
 
-                            <label className="block text-sm font-medium text-foreground mb-2">Feedback or Follow-up</label>
-                            <textarea
-                                value={modalInput}
-                                onChange={(e) => setModalInput(e.target.value)}
-                                placeholder={`Add feedback or ask for changes to ${openFeature.name}...`}
-                                className="w-full p-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                                rows={6}
-                            />
+                            <div className="flex flex-col gap-2">
+                                <label className="block text-sm font-medium text-foreground">Feedback or Follow-up</label>
+                                <input
+                                    type="text"
+                                    value={modalInput}
+                                    onChange={(e) => setModalInput(e.target.value)}
+                                    placeholder={`Add feedback or ask for changes to ${openFeature.name}...`}
+                                    className="w-full px-4 py-2.5 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
@@ -1060,36 +1086,6 @@ function ChatPageContent() {
                 </div>
             )}
 
-            {/* Bottom input + Regenerate button (only shows when AI has responded with feature outputs) */}
-            {Object.keys(featureOutputs).length > 0 ? (
-                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
-                    <div className="bg-muted/30  rounded-lg p-4">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="text"
-                                value={postInput}
-                                onChange={(e) => setPostInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handlePostSend();
-                                    }
-                                }}
-                                placeholder="Type a follow-up or message..."
-                                className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                            <Button
-                                onClick={handleRegenerate}
-                                disabled={sending || userCredits <= 0.01}
-                            >
-                                {sending ? 'Regenerating...' : 'Regenerate'}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                null
-            )}
         </div>
     );
 }
