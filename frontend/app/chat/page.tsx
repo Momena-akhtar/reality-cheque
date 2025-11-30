@@ -115,6 +115,7 @@ function ChatPageContent() {
     const [showHistory, setShowHistory] = useState(false);
     const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
     const [regeneratingFeature, setRegeneratingFeature] = useState(false);
+    const [generatingFeatureId, setGeneratingFeatureId] = useState<string | null>(null);
     const [featureOutputs, setFeatureOutputs] = useState<{ [key: string]: string }>({});
     const [editingGig, setEditingGig] = useState<{ messageId: string; gig: any } | null>(null);
     const [savingGig, setSavingGig] = useState(false);
@@ -416,6 +417,11 @@ function ChatPageContent() {
         if (!user || !model || regeneratingFeature) return;
 
         setRegeneratingFeature(true);
+        // Find the feature ID by name
+        const featureWithName = modelFeatures.find(f => f.name === featureName);
+        if (featureWithName) {
+            setGeneratingFeatureId(featureWithName._id);
+        }
         try {
             // Find the last assistant message with structured response
             const lastAssistantMessage = messages
@@ -478,8 +484,6 @@ function ChatPageContent() {
                     }));
                 }
 
-                toast.success('Feature regenerated successfully');
-
                 // Update user credits
                 if (data.data.cost) {
                     setUserCredits((prev) =>
@@ -498,11 +502,17 @@ function ChatPageContent() {
             );
         } finally {
             setRegeneratingFeature(false);
+            setGeneratingFeatureId(null);
         }
     };
 
-    const handleSendMessage = async (text: string) => {
+    const handleSendMessage = async (text: string, featureIdForGeneration?: string) => {
         if (!user || !model || sending) return;
+
+        // Track which feature is being generated
+        if (featureIdForGeneration) {
+            setGeneratingFeatureId(featureIdForGeneration);
+        }
 
         // Only add user message to UI if there's actual content
         let userMessage: Message | null = null;
@@ -602,6 +612,7 @@ function ChatPageContent() {
             }
         } finally {
             setSending(false);
+            setGeneratingFeatureId(null);
         }
     };
 
@@ -780,10 +791,17 @@ function ChatPageContent() {
                                                                                     {feature.name}
                                                                                 </h4>
                                                                                 <p className="text-xs text-primary-text-faded leading-relaxed">
-                                                                                    {(() => {
-                                                                                        const out = featureOutputs[feature._id] || featureOutputs[feature.name];
-                                                                                        return out ? (<span className="whitespace-pre-wrap">{cleanMarkdown(out)}</span>) : feature.description;
-                                                                                    })()}
+                                                                                    {generatingFeatureId === feature._id ? (
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                                                                                            <span>Working on it...</span>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        (() => {
+                                                                                            const out = featureOutputs[feature._id] || featureOutputs[feature.name];
+                                                                                            return out ? (<span className="whitespace-pre-wrap">{cleanMarkdown(out)}</span>) : feature.description;
+                                                                                        })()
+                                                                                    )}
                                                                                 </p>
                                                                             </div>
                                                                         </div>
@@ -802,9 +820,14 @@ function ChatPageContent() {
                                                                                 variant="outline"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
-                                                                                    handleSendMessage(featureInputs[feature._id] || "");
+                                                                                    const hasOutput = featureOutputs[feature._id] || featureOutputs[feature.name];
+                                                                                    if (hasOutput) {
+                                                                                        handleRegenerateFeature(feature.name, featureInputs[feature._id] || "");
+                                                                                    } else {
+                                                                                        handleSendMessage(featureInputs[feature._id] || "", feature._id);
+                                                                                    }
                                                                                 }}
-                                                                                disabled={sending || userCredits <= 0.01}
+                                                                                disabled={sending || regeneratingFeature || userCredits <= 0.01 || generatingFeatureId === feature._id}
                                                                             >
                                                                                 <Send className="h-4 w-4" />
                                                                             </Button>
@@ -911,7 +934,7 @@ function ChatPageContent() {
                 >
                     {/* Blurred Background */}
                     <div
-                        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                        className="absolute inset-0 bg-background/80"
                         onClick={() => setOpenFeature(null)}
                     />
 
