@@ -3,7 +3,7 @@
 import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
 import TypingIndicator from "../components/ui/typing-indicator";
-import FeatureSections from "../components/ui/feature-sections";
+// FeatureSections removed — feature outputs will appear inside the feature cards
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -80,6 +80,24 @@ const cleanMarkdown = (text: string): string => {
     );
 };
 
+// Normalize/format feature output (handles strings, arrays, and objects)
+const formatFeatureOutput = (val: any): string => {
+    if (val === null || val === undefined) return "";
+    if (typeof val === "string") return cleanMarkdown(val);
+    if (Array.isArray(val)) return val.map(v => (typeof v === 'string' ? cleanMarkdown(v) : JSON.stringify(v, null, 2))).join('\n\n');
+    if (typeof val === 'object') {
+        // If object of simple strings, join key: value
+        const entries = Object.entries(val);
+        const simple = entries.every(([, v]) => typeof v === 'string' || typeof v === 'number' || v === null);
+        if (simple) {
+            return entries.map(([k, v]) => `${k}: ${cleanMarkdown(String(v ?? ''))}`).join('\n\n');
+        }
+        // fallback to pretty JSON
+        return JSON.stringify(val, null, 2);
+    }
+    return String(val);
+}
+
 function ChatPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -97,9 +115,7 @@ function ChatPageContent() {
     const [showHistory, setShowHistory] = useState(false);
     const [modelFeatures, setModelFeatures] = useState<Feature[]>([]);
     const [regeneratingFeature, setRegeneratingFeature] = useState(false);
-    const [showAllFeatures, setShowAllFeatures] = useState(false);
-    const [followUpAnswers, setFollowUpAnswers] = useState<{ [messageId: string]: { [questionIndex: number]: string } }>({});
-    const [showFollowUpForm, setShowFollowUpForm] = useState<string | null>(null);
+    const [featureOutputs, setFeatureOutputs] = useState<{ [key: string]: string }>({});
     const [editingGig, setEditingGig] = useState<{ messageId: string; gig: any } | null>(null);
     const [savingGig, setSavingGig] = useState(false);
     const [userGigs, setUserGigs] = useState<any[]>([]);
@@ -184,8 +200,7 @@ function ChatPageContent() {
                             );
 
                             if (featuresResponse.ok) {
-                                const featuresData =
-                                    await featuresResponse.json();
+                                const featuresData = await featuresResponse.json();
                                 if (featuresData.success) {
                                     setModelFeatures(featuresData.data);
                                 }
@@ -297,13 +312,21 @@ function ChatPageContent() {
                                     content: msg.content,
                                     timestamp: new Date(msg.timestamp),
                                     tokenCount: msg.tokenCount,
-                                    structuredResponse: msg.structuredResponse,
+                                        structuredResponse: msg.structuredResponse,
                                     hasFeatures: msg.hasFeatures,
-                                    followUpQuestions: msg.followUpQuestions,
+                                        followUpQuestions: msg.followUpQuestions,
                                 })
                             )
                         );
                         setCurrentChatId(chatId);
+                        const lastAssistant = data.data.messages.slice().reverse().find((m: any) => m.role === 'assistant' && m.structuredResponse);
+                        if (lastAssistant && lastAssistant.structuredResponse) {
+                            const mapped: { [k: string]: string } = {};
+                            Object.entries(lastAssistant.structuredResponse).forEach(([k, v]: [string, any]) => {
+                                mapped[k] = formatFeatureOutput(v);
+                            });
+                            setFeatureOutputs(prev => ({ ...prev, ...mapped }));
+                        }
                     }
                 }
             } catch (error) {
@@ -341,10 +364,6 @@ function ChatPageContent() {
     if (!user) {
         return null;
     }
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
 
     const handleSelectChat = (chatId: string) => {
         router.push(`/chat?id=${botId}&chatId=${chatId}`);
@@ -394,7 +413,7 @@ function ChatPageContent() {
         featureName: string,
         feedback: string
     ) => {
-        if (!user || !model || !currentChatId || regeneratingFeature) return;
+        if (!user || !model || regeneratingFeature) return;
 
         setRegeneratingFeature(true);
         try {
@@ -417,7 +436,7 @@ function ChatPageContent() {
                 featureName,
                 userFeedback: feedback,
                 currentResponse: lastAssistantMessage.structuredResponse,
-                chatId: currentChatId,
+                ...(currentChatId && { chatId: currentChatId }),
             };
 
             const response = await fetch(
@@ -442,17 +461,24 @@ function ChatPageContent() {
             const data = await response.json();
 
             if (data.success) {
-                // Update the last assistant message with the new structured response
-                setMessages((prev) =>
-                    prev.map((msg) =>
-                        msg.id === lastAssistantMessage.id
-                            ? {
-                                  ...msg,
-                                  structuredResponse: data.data.updatedResponse,
-                              }
-                            : msg
-                    )
-                );
+                if (data.data.updatedResponse && typeof data.data.updatedResponse === 'object') {
+                    // If the response is an object with the feature as a key
+                    const updatedValue = data.data.updatedResponse[featureName];
+                    if (updatedValue) {
+                        setFeatureOutputs(prev => ({
+                            ...prev,
+                            [featureName]: formatFeatureOutput(updatedValue)
+                        }));
+                    }
+                } else if (typeof data.data.updatedResponse === 'string') {
+                    // If the response is directly a string
+                    setFeatureOutputs(prev => ({
+                        ...prev,
+                        [featureName]: formatFeatureOutput(data.data.updatedResponse)
+                    }));
+                }
+
+                toast.success('Feature regenerated successfully');
 
                 // Update user credits
                 if (data.data.cost) {
@@ -465,7 +491,7 @@ function ChatPageContent() {
             }
         } catch (error) {
             console.error("Error regenerating feature:", error);
-            setError(
+            toast.error(
                 error instanceof Error
                     ? error.message
                     : "Failed to regenerate feature"
@@ -538,6 +564,13 @@ function ChatPageContent() {
                 };
 
                 setMessages((prev) => [...prev, aiMessage]);
+                    if (data.data.structuredResponse) {
+                        const mapped: { [k: string]: string } = {};
+                        Object.entries(data.data.structuredResponse).forEach(([k, v]: [string, any]) => {
+                            mapped[k] = formatFeatureOutput(v);
+                        });
+                        setFeatureOutputs((prev) => ({ ...prev, ...mapped }));
+                    }
 
                 // Set chat ID for future messages
                 if (data.data.chatId) {
@@ -605,7 +638,7 @@ function ChatPageContent() {
             }
         }
 
-        const textToResend = lastUserMessage ? lastUserMessage.content : "";
+        const textToResend = lastUserMessage ? lastUserMessage.content : postInput;
         await handleSendMessage(textToResend);
     };
 
@@ -666,26 +699,23 @@ function ChatPageContent() {
             <div className="flex-1 overflow-auto">
                 <div className="min-h-full flex items-center justify-center py-6">
                     <AnimatePresence>
-                        {messages.length === 0 && currentChatId === null ? (
-                            <motion.div
-                                initial={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
-                            >
-                                {/* Main Container with Gradient Background */}
-                                <div className="relative max-w-6xl w-full ">
-                                    {/* Content Card */}
-                                    <div className="relative p-10">
-                                        {/* Model Name */}
+                        <motion.div
+                            initial={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="flex items-center justify-center h-full text-foreground flex-col gap-6 px-4"
+                        >
+                            {/* Main Container  */}
+                            <div className="relative max-w-6xl w-full ">
+                                {/* Content Card */}
+                                <div className="relative p-10">
+                                    {/* Model Name */}
                                         <h1 className="text-3xl font-bold text-center mb-3 relative">
                                                 {model.name}
                                         </h1>
-
                                         {/* Model Description */}
                                         <p className="text-base text-primary-text-faded text-center leading-relaxed mb-8">
                                             {model.description}
                                         </p>
-
                                         {/* Profile selector*/}
                                         <div className="flex flex-col items-center gap-3 mb-8">
                                             <div className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3">
@@ -750,7 +780,10 @@ function ChatPageContent() {
                                                                                     {feature.name}
                                                                                 </h4>
                                                                                 <p className="text-xs text-primary-text-faded leading-relaxed">
-                                                                                    {feature.description}
+                                                                                    {(() => {
+                                                                                        const out = featureOutputs[feature._id] || featureOutputs[feature.name];
+                                                                                        return out ? (<span className="whitespace-pre-wrap">{cleanMarkdown(out)}</span>) : feature.description;
+                                                                                    })()}
                                                                                 </p>
                                                                             </div>
                                                                         </div>
@@ -784,632 +817,63 @@ function ChatPageContent() {
                                                 </div>
                                             )}
                                         {/* Generate button */}
-                                        <div className="flex flex-col items-center gap-3 mb-8">
-                                            {model?.name === "Profile Optimizer" ? (
-                                                <div className="w-full flex flex-col sm:flex-row gap-2">
-                                                    <input
-                                                        type="url"
-                                                        value={upworkLink}
-                                                        onChange={(e) => setUpworkLink(e.target.value)}
-                                                        placeholder="Paste your Upwork profile link"
-                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                    />
+                                        {Object.keys(featureOutputs).length === 0 && (
+                                            <div className="flex flex-col items-center gap-3 mb-8">
+                                                {model?.name === "Profile Optimizer" ? (
+                                                    <div className="w-full flex flex-col sm:flex-row gap-2">
+                                                        <input
+                                                            type="url"
+                                                            value={upworkLink}
+                                                            onChange={(e) => setUpworkLink(e.target.value)}
+                                                            placeholder="Paste your Upwork profile link"
+                                                            className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                        />
+                                                        <Button
+                                                            onClick={() => handleSendMessage(upworkLink || "")}
+                                                            disabled={
+                                                                sending ||
+                                                                userCredits <= 0.01
+                                                            }
+                                                        >
+                                                            {sending ? "Analyzing..." : "Generate"}
+                                                        </Button>
+                                                    </div>
+                                                ) : (
                                                     <Button
-                                                        onClick={() => handleSendMessage(upworkLink || "")}
+                                                        onClick={() => handleSendMessage("")}
                                                         disabled={
                                                             sending ||
-                                                            userCredits <= 0.01
+                                                            userCredits <= 0.01 ||
+                                                            (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
                                                         }
                                                     >
-                                                        {sending ? "Analyzing..." : "Generate"}
+                                                        {sending ? "Generating..." : "Generate"}
                                                     </Button>
-                                                </div>
-                                            ) : (
-                                                <Button
-                                                    onClick={() => handleSendMessage("")}
-                                                    disabled={
-                                                        sending ||
-                                                        userCredits <= 0.01 ||
-                                                        (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
-                                                    }
-                                                >
-                                                    {sending ? "Generating..." : "Generate"}
-                                                </Button>
-                                            )}
-                                            {userCredits <= 0.01 && (
-                                                <div className="text-center text-xs text-red-500">
-                                                    Insufficient credits. Please upgrade your plan.
-                                                </div>
-                                            )}
-                                            {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
-                                                <div className="text-center text-xs text-amber-500">
-                                                    Please select at least one gig to provide context for auto-responder generation.
-                                                </div>
-                                            )}
-                                            {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
-                                                <div className="text-center text-xs text-amber-500">
-                                                    No gigs found. Please add some Fiverr gigs to your profile first.
-                                                </div>
-                                            )}
-                                        </div>
+                                                )}
+                                                {userCredits <= 0.01 && (
+                                                    <div className="text-center text-xs text-red-500">
+                                                        Insufficient credits. Please upgrade your plan.
+                                                    </div>
+                                                )}
+                                                {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
+                                                    <div className="text-center text-xs text-amber-500">
+                                                        Please select at least one gig to provide context for auto-responder generation.
+                                                    </div>
+                                                )}
+                                                {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
+                                                    <div className="text-center text-xs text-amber-500">
+                                                        No gigs found. Please add some Fiverr gigs to your profile first.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
-                        ) : (
-                            <div className="h-full overflow-y-auto scrollbar-hide px-4">
-                                {/* Small Model Info Card - only when chat has messages AND it's not a history conversation */}
-                                {currentChatId === null && (
-                                    <div className="max-w-5xl mx-auto pt-2 pb-1">
-                                        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md border border-border/30 w-fit">
-                                            <div className="h-5 w-5 bg-primary rounded-sm flex items-center justify-center">
-                                                <span className="text-primary-foreground font-bold text-xs">
-                                                    AI
-                                                </span>
-                                            </div>
-                                            <span className="text-xs font-medium text-foreground">
-                                                {model.name}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="max-w-5xl mx-auto space-y-4 py-2">
-                                    {messages.map((message) => (
-                                        <motion.div
-                                            key={message.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            transition={{
-                                                duration: 0.3,
-                                                delay:
-                                                    message.role === "assistant"
-                                                        ? 0.1
-                                                        : 0,
-                                            }}
-                                            className={`flex ${
-                                                message.role === "user"
-                                                    ? "justify-end"
-                                                    : "justify-start"
-                                            }`}
-                                        >
-                                            <div
-                                                className={`max-w-[85%] p-4 rounded-3xl border ${
-                                                    message.role === "user"
-                                                        ? "bg-primary text-primary-foreground border-primary/30"
-                                                        : "bg-muted border-border"
-                                                }`}
-                                            >
-                                                {message.role === "assistant" &&
-                                                message.hasFeatures &&
-                                                message.structuredResponse ? (
-                                                    <>
-                                                        <FeatureSections
-                                                            features={
-                                                                modelFeatures
-                                                            }
-                                                            structuredResponse={
-                                                                message.structuredResponse
-                                                            }
-                                                            onRegenerateFeature={
-                                                                handleRegenerateFeature
-                                                            }
-                                                            isRegenerating={
-                                                                regeneratingFeature
-                                                            }
-                                                        />
-
-                                                        {/* Follow-up Questions for Featured Responses */}
-                                                        {message.followUpQuestions &&
-                                                            message
-                                                                .followUpQuestions
-                                                                .length > 0 && (
-                                                                <div className="mt-6 pt-4 border-t border-border/30">
-                                                                    <div className="flex items-center justify-between mb-3">
-                                                                        <div className="text-sm font-medium text-muted-foreground">
-                                                                            Follow-up Questions:
-                                                                        </div>
-                                                                        <Button
-                                                                            onClick={() => setShowFollowUpForm(
-                                                                                showFollowUpForm === message.id ? null : message.id
-                                                                            )}
-                                                                            variant="outline"
-                                                                        >
-                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </Button>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        {message.followUpQuestions.map(
-                                                                            (
-                                                                                question,
-                                                                                index
-                                                                            ) => (
-                                                                                <div
-                                                                                    key={
-                                                                                        index
-                                                                                    }
-                                                                                    className="text-sm text-foreground"
-                                                                                >
-                                                                                    {index +
-                                                                                        1}
-                                                                                    .{" "}
-                                                                                    {question
-                                                                                        .replace(
-                                                                                            /\\n/g,
-                                                                                            "\n"
-                                                                                        )
-                                                                                        .trim()}
-                                                                                </div>
-                                                                            )
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                        
-                                                    </>
-                                                ) : message.role === "assistant" && 
-                                                  model?.name === "Auto-Responder & Delivery Messages" && 
-                                                  message.structuredResponse ? (
-                                                    <>
-                                                        {/* Auto-Responder Messages Card */}
-                                                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                                                            <div className="flex items-center gap-2 mb-4">
-                                                                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                                                                    <span className="text-white text-xs font-bold">AR</span>
-                                                                </div>
-                                                                <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                                                                    Auto-Responder Messages
-                                                                </h4>
-                                                            </div>
-                                                            
-                                                            <div className="space-y-4">
-                                                                {Object.entries(message.structuredResponse).map(([key, value]) => (
-                                                                    <div key={key} className="space-y-2">
-                                                                        <label className="block text-sm font-medium text-blue-700 dark:text-blue-300">
-                                                                            {key}
-                                                                        </label>
-                                                                        <div className="p-4 bg-background/50 border border-blue-200 dark:border-blue-700 rounded-lg">
-                                                                            <div className="whitespace-pre-wrap text-sm text-foreground">
-                                                                                {value}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Follow-up Questions for Auto-Responder */}
-                                                        {message.followUpQuestions &&
-                                                            message.followUpQuestions.length > 0 && (
-                                                                <div className="mt-6 pt-4 border-t border-border/30">
-                                                                    <div className="flex items-center justify-between mb-3">
-                                                                        <div className="text-sm font-medium text-muted-foreground">
-                                                                            Follow-up Questions:
-                                                                        </div>
-                                                                        <Button
-                                                                            onClick={() => setShowFollowUpForm(
-                                                                                showFollowUpForm === message.id ? null : message.id
-                                                                            )}
-                                                                        >
-                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </Button>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        {message.followUpQuestions.map(
-                                                                            (question, index) => (
-                                                                                <div
-                                                                                    key={index}
-                                                                                    className="text-sm text-foreground"
-                                                                                >
-                                                                                    {index + 1}. {question
-                                                                                        .replace(/\\n/g, "\n")
-                                                                                        .trim()}
-                                                                                </div>
-                                                                            )
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                    </>
-                                                ) : message.role === "assistant" && 
-                                                  model?.name === "Gig Builder" && 
-                                                  message.generatedGigs ? (
-                                                    <>
-                                                        {/* AI Generated Gig Card for Gig Builder */}
-                                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-                                                            <div className="flex items-center justify-between mb-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                                                                        <span className="text-white text-xs font-bold">AI</span>
-                                                                    </div>
-                                                                    <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                                                                        Generated Fiverr Gig
-                                                                    </h4>
-                                                                </div>
-                                                                {message.generatedGigs?.saved && (
-                                                                    <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
-                                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                        </svg>
-                                                                        Saved
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            
-                                                            <div className="space-y-4">
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-2">Title</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={editingGig?.messageId === message.id ? editingGig.gig.title : message.generatedGigs.title}
-                                                                        onChange={(e) => {
-                                                                            if (editingGig?.messageId === message.id) {
-                                                                                setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, title: e.target.value } } : null);
-                                                                            } else {
-                                                                                setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, title: e.target.value } });
-                                                                            }
-                                                                        }}
-                                                                        disabled={message.generatedGigs?.saved}
-                                                                        className={`w-full bg-background px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                                    />
-                                                                </div>
-                                                                
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-2">Description</label>
-                                                                    <textarea
-                                                                        value={editingGig?.messageId === message.id ? editingGig.gig.description : message.generatedGigs.description}
-                                                                        onChange={(e) => {
-                                                                            if (editingGig?.messageId === message.id) {
-                                                                                setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, description: e.target.value } } : null);
-                                                                            } else {
-                                                                                setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, description: e.target.value } });
-                                                                            }
-                                                                        }}
-                                                                        rows={4}
-                                                                        disabled={message.generatedGigs?.saved}
-                                                                        className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                                    />
-                                                                </div>
-                                                                
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-2">Price</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            value={editingGig?.messageId === message.id ? editingGig.gig.price : message.generatedGigs.price}
-                                                                            onChange={(e) => {
-                                                                                if (editingGig?.messageId === message.id) {
-                                                                                    setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, price: e.target.value } } : null);
-                                                                                } else {
-                                                                                    setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, price: e.target.value } });
-                                                                                }
-                                                                            }}
-                                                                            disabled={message.generatedGigs?.saved}
-                                                                            className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                                        />
-                                                                    </div>
-                                                                    
-                                                                    <div>
-                                                                        <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-2">Status</label>
-                                                                        <select
-                                                                            value={editingGig?.messageId === message.id ? editingGig.gig.status : message.generatedGigs.status}
-                                                                            onChange={(e) => {
-                                                                                if (editingGig?.messageId === message.id) {
-                                                                                    setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, status: e.target.value } } : null);
-                                                                                } else {
-                                                                                    setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, status: e.target.value } });
-                                                                                }
-                                                                            }}
-                                                                            disabled={message.generatedGigs?.saved}
-                                                                            className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                                        >
-                                                                            <option value="Active">Active</option>
-                                                                            <option value="Paused">Paused</option>
-                                                                            <option value="Inactive">Inactive</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                                
-                                                                <div>
-                                                                    <label className="block text-sm font-medium text-green-700 dark:text-green-300 mb-2">Tags</label>
-                                                                    <input
-                                                                        type="text"
-                                                                        value={editingGig?.messageId === message.id ? editingGig.gig.tags.join(', ') : message.generatedGigs.tags.join(', ')}
-                                                                        onChange={(e) => {
-                                                                            const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
-                                                                            if (editingGig?.messageId === message.id) {
-                                                                                setEditingGig(prev => prev ? { ...prev, gig: { ...prev.gig, tags: tagsArray } } : null);
-                                                                            } else {
-                                                                                setEditingGig({ messageId: message.id, gig: { ...message.generatedGigs, tags: tagsArray } });
-                                                                            }
-                                                                        }}
-                                                                        placeholder="tag1, tag2, tag3"
-                                                                        disabled={message.generatedGigs?.saved}
-                                                                        className={`w-full px-4 py-3 text-sm border border-green-300 dark:border-green-700 rounded-lg bg-background text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 ${message.generatedGigs?.saved ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                                    />
-                                                                </div>
-                                                                
-                                                                {!message.generatedGigs?.saved && (
-                                                                    <div className="flex gap-3 pt-4">
-                                                                        <Button
-                                                                            onClick={() => handleSaveGig(editingGig?.messageId === message.id ? editingGig.gig : message.generatedGigs)}
-                                                                            disabled={savingGig}
-                                                                        >
-                                                                            {savingGig ? 'Saving...' : 'Save to Profile'}
-                                                                        </Button>
-                                                                        <Button
-                                                                            onClick={() => setEditingGig(null)}
-                                                                            variant="outline">
-                                                                            Cancel
-                                                                        </Button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Follow-up Questions for Gig Builder */}
-                                                        {message.followUpQuestions &&
-                                                            message.followUpQuestions.length > 0 && (
-                                                                <div className="mt-6 pt-4 border-t border-border/30">
-                                                                    <div className="flex items-center justify-between mb-3">
-                                                                        <div className="text-sm font-medium text-muted-foreground">
-                                                                            Follow-up Questions:
-                                                                        </div>
-                                                                        <button
-                                                                            onClick={() => setShowFollowUpForm(
-                                                                                showFollowUpForm === message.id ? null : message.id
-                                                                            )}
-                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                                                                        >
-                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        {message.followUpQuestions.map(
-                                                                            (question, index) => (
-                                                                                <div
-                                                                                    key={index}
-                                                                                    className="text-sm text-foreground"
-                                                                                >
-                                                                                    {index + 1}. {question
-                                                                                        .replace(/\\n/g, "\n")
-                                                                                        .trim()}
-                                                                                </div>
-                                                                            )
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <div className="whitespace-pre-wrap">
-                                                            {message.role ===
-                                                            "assistant"
-                                                                ? cleanMarkdown(
-                                                                      message.content
-                                                                  )
-                                                                : message.content}
-                                                        </div>
-
-
-                                                        {/* Follow-up Questions for Non-Featured Responses */}
-                                                        {message.followUpQuestions &&
-                                                            message.followUpQuestions.length > 0 && (
-                                                                <div className="mt-6 pt-4 border-t border-border/30">
-                                                                    <div className="flex items-center justify-between mb-3">
-                                                                        <div className="text-sm font-medium text-muted-foreground">
-                                                                            Follow-up Questions:
-                                                                        </div>
-                                                                        <button
-                                                                            onClick={() => setShowFollowUpForm(
-                                                                                showFollowUpForm === message.id ? null : message.id
-                                                                            )}
-                                                                            className="text-xs px-3 py-1 cursor-pointer bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                                                                        >
-                                                                            {showFollowUpForm === message.id ? 'Hide Form' : 'Answer Questions'}
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        {message.followUpQuestions.map(
-                                                                            (question, index) => (
-                                                                                <div
-                                                                                    key={index}
-                                                                                    className="text-sm text-foreground"
-                                                                                >
-                                                                                    {index + 1}. {question
-                                                                                        .replace(/\\n/g, "\n")
-                                                                                        .trim()}
-                                                                                </div>
-                                                                            )
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                    {sending && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="flex justify-start"
-                                        >
-                                            <div className="bg-muted border border-border max-w-[80%] p-4 rounded-3xl">
-                                                <TypingIndicator />
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                    <div ref={messagesEndRef} />
-                                </div>
-                            </div>
-                        )}
                     </AnimatePresence>
                 </div>
             </div>
-
-            {/* Follow-up Questions Modal Overlay */}
-            {showFollowUpForm && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                >
-                    {/* Blurred Background */}
-                    <div 
-                        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-                        onClick={() => setShowFollowUpForm(null)}
-                    />
-                    
-                    {/* Modal Content */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-2xl h-[80vh] bg-background border border-border rounded-xl shadow-2xl flex flex-col"
-                    >
-
-                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30 flex-shrink-0">
-                            <h3 className="text-xl font-semibold text-foreground">
-                                Answer Follow-up Questions
-                            </h3>
-                            <button
-                                onClick={() => setShowFollowUpForm(null)}
-                                className="p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
-                            {(() => {
-                                const message = messages.find(m => m.id === showFollowUpForm);
-                                if (!message?.followUpQuestions) return null;
-                                
-                                return (
-                                    <div className="space-y-6">
-                                        {message.followUpQuestions.map((question, index) => (
-                                            <div key={index} className="space-y-3">
-                                                <label className="block text-sm font-medium text-foreground">
-                                                    {index + 1}. {question.replace(/\\n/g, "\n").trim()}
-                                                </label>
-                                                <textarea
-                                                    value={followUpAnswers[message.id]?.[index] || ""}
-                                                    onChange={(e) => {
-                                                        setFollowUpAnswers(prev => ({
-                                                            ...prev,
-                                                            [message.id]: {
-                                                                ...prev[message.id],
-                                                                [index]: e.target.value
-                                                            }
-                                                        }));
-                                                    }}
-                                                    placeholder="Type your answer here..."
-                                                    className="w-full p-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-all"
-                                                    rows={3}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
-                        </div>
-                        
-                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowFollowUpForm(null)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={async () => {
-                                    const message = messages.find(m => m.id === showFollowUpForm);
-                                    if (!message || !user || !model || !currentChatId) return;
-
-                                    try {
-                                        // Prepare the payload
-                                        const payload = {
-                                            modelId: model._id,
-                                            userAnswers: followUpAnswers[message.id] || {},
-                                            currentResponse: message.structuredResponse,
-                                            chatId: currentChatId,
-                                        };
-
-                                        const response = await fetch(
-                                            `${API_BASE}/generate/regenerate-from-answers`,
-                                            {
-                                                method: "POST",
-                                                headers: {
-                                                    "Content-Type": "application/json",
-                                                },
-                                                credentials: "include",
-                                                body: JSON.stringify(payload),
-                                            }
-                                        );
-
-                                        if (!response.ok) {
-                                            const errorData = await response.json();
-                                            throw new Error(
-                                                errorData.message || "Failed to regenerate response"
-                                            );
-                                        }
-
-                                        const data = await response.json();
-
-                                        if (data.success) {
-                                            // Update the message with the new structured response
-                                            setMessages((prev) =>
-                                                prev.map((msg) =>
-                                                    msg.id === message.id
-                                                        ? {
-                                                              ...msg,
-                                                              structuredResponse: data.data.updatedResponse,
-                                                          }
-                                                        : msg
-                                                )
-                                            );
-
-                                            // Update user credits
-                                            if (data.data.cost) {
-                                                setUserCredits((prev) =>
-                                                    Math.max(0, prev - data.data.cost)
-                                                );
-                                            }
-
-                                            // Clear the form answers
-                                            setFollowUpAnswers(prev => ({
-                                                ...prev,
-                                                [message.id]: {}
-                                            }));
-                                        } else {
-                                            throw new Error(data.message || "Failed to regenerate response");
-                                        }
-                                    } catch (error) {
-                                        console.error("Error regenerating response:", error);
-                                        setError(
-                                            error instanceof Error
-                                                ? error.message
-                                                : "Failed to regenerate response"
-                                        );
-                                    } finally {
-                                        setShowFollowUpForm(null);
-                                    }
-                                }}
-                            >
-                                Submit Answers
-                            </Button>
-                        </div>
-                    </motion.div>
-                </motion.div>
-            )}
-
-            {/* Feature Detail Modal (opens when a feature card is clicked) */}
+            {/* Feature Detail Modal*/}
             {openFeature && (
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -1450,11 +914,21 @@ function ChatPageContent() {
                         </div>
 
                         <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
-                            <label className="block text-sm font-medium text-foreground mb-2">Your prompt</label>
+                            {/* Current response if available */}
+                            {(featureOutputs[openFeature._id] || featureOutputs[openFeature.name]) && (
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-foreground mb-2">Current Response</label>
+                                    <div className="p-4 bg-muted/50 border border-border rounded-lg text-foreground whitespace-pre-wrap max-h-40 overflow-y-auto scrollbar-thin text-sm">
+                                        {featureOutputs[openFeature._id] || featureOutputs[openFeature.name]}
+                                    </div>
+                                </div>
+                            )}
+
+                            <label className="block text-sm font-medium text-foreground mb-2">Feedback or Follow-up</label>
                             <textarea
                                 value={modalInput}
                                 onChange={(e) => setModalInput(e.target.value)}
-                                placeholder={`Ask about ${openFeature.name}...`}
+                                placeholder={`Add feedback or ask for changes to ${openFeature.name}...`}
                                 className="w-full p-4 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                 rows={6}
                             />
@@ -1462,20 +936,34 @@ function ChatPageContent() {
 
                         <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
                             <Button variant="outline" onClick={() => setOpenFeature(null)}>Cancel</Button>
-                            <Button
-                                onClick={() => {
-                                    if (!openFeature) return;
-                                    const textToSend = modalInput || featureInputs[openFeature._id] || "";
-                                    handleSendMessage(textToSend);
-                                    // clear both modal and per-feature input
-                                    setFeatureInputs(prev => ({ ...prev, [openFeature._id]: "" }));
-                                    setModalInput("");
-                                    setOpenFeature(null);
-                                }}
-                                disabled={sending || userCredits <= 0.01}
-                            >
-                                {sending ? 'Sending...' : 'Send'}
-                            </Button>
+                            {(featureOutputs[openFeature._id] || featureOutputs[openFeature.name]) ? (
+                                <Button
+                                    onClick={() => {
+                                        if (!openFeature) return;
+                                        handleRegenerateFeature(openFeature.name, modalInput);
+                                        setModalInput("");
+                                        setOpenFeature(null);
+                                    }}
+                                    disabled={sending || regeneratingFeature || userCredits <= 0.01}
+                                >
+                                    {sending || regeneratingFeature ? 'Regenerating...' : 'Regenerate'}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => {
+                                        if (!openFeature) return;
+                                        const textToSend = modalInput || featureInputs[openFeature._id] || "";
+                                        handleSendMessage(textToSend);
+                                        // clear both modal and per-feature input
+                                        setFeatureInputs(prev => ({ ...prev, [openFeature._id]: "" }));
+                                        setModalInput("");
+                                        setOpenFeature(null);
+                                    }}
+                                    disabled={sending || userCredits <= 0.01}
+                                >
+                                    {sending ? 'Sending...' : 'Generate'}
+                                </Button>
+                            )}
                         </div>
                     </motion.div>
                 </motion.div>
@@ -1572,8 +1060,8 @@ function ChatPageContent() {
                 </div>
             )}
 
-            {/* Bottom input + Regenerate button (replaces Generate when AI has responded) */}
-            {messages.length > 0 && messages.some(m => m.role === 'assistant') ? (
+            {/* Bottom input + Regenerate button (only shows when AI has responded with feature outputs) */}
+            {Object.keys(featureOutputs).length > 0 ? (
                 <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
                     <div className="bg-muted/30  rounded-lg p-4">
                         <div className="flex items-center gap-2">
