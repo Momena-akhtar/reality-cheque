@@ -2,8 +2,6 @@
 
 import ChatHeader from "../components/ui/chat-header";
 import ChatHistorySidebar from "../components/ui/chat-history-sidebar";
-import TypingIndicator from "../components/ui/typing-indicator";
-// FeatureSections removed — feature outputs will appear inside the feature cards
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -98,6 +96,83 @@ const formatFeatureOutput = (val: any): string => {
     return String(val);
 }
 
+// Parse markdown response for Profile Optimizer
+const parseMarkdownResponse = (markdown: string): React.ReactNode => {
+    const lines = markdown.split('\n');
+    const elements: React.ReactNode[] = [];
+    let i = 0;
+    let listItems: string[] = [];
+
+    while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Flush pending list items
+        if (listItems.length > 0 && !trimmed.match(/^[-*+\d+.]\s/)) {
+            elements.push(
+                <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 mb-4 ml-2">
+                    {listItems.map((item, idx) => (
+                        <li key={idx} className="text-sm text-foreground">{item}</li>
+                    ))}
+                </ul>
+            );
+            listItems = [];
+        }
+
+        // Headings
+        if (trimmed.startsWith('######')) {
+            elements.push(<h6 key={`h6-${elements.length}`} className="text-sm font-semibold text-foreground mt-4 mb-2">{trimmed.replace(/^#+\s/, '')}</h6>);
+        } else if (trimmed.startsWith('#####')) {
+            elements.push(<h5 key={`h5-${elements.length}`} className="text-base font-semibold text-foreground mt-4 mb-2">{trimmed.replace(/^#+\s/, '')}</h5>);
+        } else if (trimmed.startsWith('####')) {
+            elements.push(<h4 key={`h4-${elements.length}`} className="text-lg font-semibold text-foreground mt-4 mb-2">{trimmed.replace(/^#+\s/, '')}</h4>);
+        } else if (trimmed.startsWith('###')) {
+            elements.push(<h3 key={`h3-${elements.length}`} className="text-xl font-bold text-foreground mt-5 mb-3">{trimmed.replace(/^#+\s/, '')}</h3>);
+        } else if (trimmed.startsWith('##')) {
+            elements.push(<h2 key={`h2-${elements.length}`} className="text-2xl font-bold text-foreground mt-6 mb-3">{trimmed.replace(/^#+\s/, '')}</h2>);
+        } else if (trimmed.startsWith('#')) {
+            elements.push(<h1 key={`h1-${elements.length}`} className="text-3xl font-bold text-foreground mt-6 mb-4">{trimmed.replace(/^#+\s/, '')}</h1>);
+        }
+        // Horizontal rule
+        else if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
+            elements.push(<hr key={`hr-${elements.length}`} className="my-6 border-border" />);
+        }
+        // Lists
+        else if (trimmed.match(/^[-*+]\s/)) {
+            listItems.push(trimmed.replace(/^[-*+]\s/, ''));
+        } else if (trimmed.match(/^\d+\.\s/)) {
+            listItems.push(trimmed.replace(/^\d+\.\s/, ''));
+        }
+        // Bold text (inline)
+        else if (trimmed) {
+            const processedLine = trimmed
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>');
+            elements.push(
+                <p key={`p-${elements.length}`} className="text-sm text-foreground leading-relaxed mb-3">
+                    <span dangerouslySetInnerHTML={{ __html: processedLine }} />
+                </p>
+            );
+        }
+
+        i++;
+    }
+
+    // Flush remaining list items
+    if (listItems.length > 0) {
+        elements.push(
+            <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-1 mb-4 ml-2">
+                {listItems.map((item, idx) => (
+                    <li key={idx} className="text-sm text-foreground">{item}</li>
+                ))}
+            </ul>
+        );
+    }
+
+    return <div className="space-y-0">{elements}</div>;
+}
+
 function ChatPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -123,7 +198,6 @@ function ChatPageContent() {
     const [selectedGigs, setSelectedGigs] = useState<any[]>([]);
     const [showGigSelector, setShowGigSelector] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [upworkLink, setUpworkLink] = useState<string>("");
     // Profile selector state (dropdown placed where Generate button used to be)
     const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
     // Per-feature input values (featureId -> text)
@@ -137,7 +211,6 @@ function ChatPageContent() {
         profileType: "general",
         area: "",
         title: "",
-        link: "",
         hourlyRate: "",
         description: ""
     });
@@ -914,19 +987,6 @@ function ChatPageContent() {
                                                                     className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                                 />
                                                             </div>
-
-                                                            {/* Row 2, Col 2: Upwork Link */}
-                                                            <div className="flex flex-col">
-                                                                <label className="text-sm font-medium text-foreground mb-2">Upwork Profile Link</label>
-                                                                <input
-                                                                    type="url"
-                                                                    value={profileOptimzerFormData.link}
-                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, link: e.target.value})}
-                                                                    placeholder="https://www.upwork.com/freelancers/..."
-                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                                />
-                                                            </div>
-
                                                             {/* Row 3, Col 1: Hourly Rate */}
                                                             <div className="flex flex-col">
                                                                 <label className="text-sm font-medium text-foreground mb-2">Hourly Rate ($)</label>
@@ -940,14 +1000,14 @@ function ChatPageContent() {
                                                             </div>
 
                                                             {/* Row 3, Col 2: Description */}
-                                                            <div className="flex flex-col">
+                                                            <div className="flex flex-col sm:col-span-2">
                                                                 <label className="text-sm font-medium text-foreground mb-2">Description</label>
-                                                                <input
-                                                                    type="text"
+                                                                <textarea
                                                                     value={profileOptimzerFormData.description}
                                                                     onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, description: e.target.value})}
                                                                     placeholder="Brief description of your services"
-                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                    rows={5}
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                                                 />
                                                             </div>
                                                         </div>
@@ -959,20 +1019,50 @@ function ChatPageContent() {
                                                                 disabled={
                                                                     sending ||
                                                                     userCredits <= 0.01 ||
-                                                                    !profileOptimzerFormData.title ||
-                                                                    !profileOptimzerFormData.link
-                                                                }
+                                                                    !profileOptimzerFormData.title                                                                }
                                                             >
                                                                 {sending ? "Analyzing..." : "Generate"}
                                                             </Button>
                                                         </div>
                                                             </>
                                                         ) : (
-                                                            <div className="w-full max-w-4xl mx-auto">
-                                                                <div className="bg-muted/30 border border-foreground/20 rounded-lg p-6">
-                                                                    <div className="prose prose-invert max-w-none text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                                                                        {proposalResponse}
+                                                            <div className="w-full flex flex-col items-center gap-4">
+                                                                <div className="w-full max-w-4xl mx-auto">
+                                                                    <div className="bg-muted/30 border border-foreground/20 rounded-lg p-6">
+                                                                        <div className="max-w-none text-foreground">
+                                                                            {parseMarkdownResponse(proposalResponse)}
+                                                                        </div>
                                                                     </div>
+                                                                </div>
+                                                                <div className="w-[60%] flex flex-col sm:flex-row gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={postInput}
+                                                                        onChange={(e) => setPostInput(e.target.value)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                                e.preventDefault();
+                                                                                handlePostSend();
+                                                                            }
+                                                                        }}
+                                                                        placeholder="Type a follow-up or message..."
+                                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <Button
+                                                                        onClick={() => {
+                                                                            setProposalResponse("");
+                                                                            setProfileOptimizerFormData({
+                                                                                profileType: "general",
+                                                                                area: "",
+                                                                                title: "",
+                                                                                hourlyRate: "",
+                                                                                description: ""
+                                                                            });
+                                                                        }}
+                                                                        disabled={sending || userCredits <= 0.01}
+                                                                    >
+                                                                        {sending ? 'Regenerating...' : 'Regenerate'}
+                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         )}
