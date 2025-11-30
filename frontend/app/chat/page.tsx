@@ -114,6 +114,7 @@ function ChatPageContent() {
     // Modal state for feature details
     const [openFeature, setOpenFeature] = useState<Feature | null>(null);
     const [modalInput, setModalInput] = useState<string>("");
+    const [postInput, setPostInput] = useState<string>("");
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -571,6 +572,43 @@ function ChatPageContent() {
         }
     };
 
+    // Send text from the post-response input bar
+    const handlePostSend = async () => {
+        if (!postInput || postInput.trim() === "") return;
+        try {
+            await handleSendMessage(postInput);
+            setPostInput("");
+        } catch (err) {
+            console.error("Error sending post input:", err);
+        }
+    };
+
+    // Regenerate by resending the last user message that preceded the last assistant reply
+    const handleRegenerate = async () => {
+        if (sending) return;
+
+        // find last assistant message index
+        const lastAssistantIndex = [...messages].reverse().findIndex(m => m.role === 'assistant');
+        if (lastAssistantIndex === -1) {
+            // no assistant message found, do nothing
+            return;
+        }
+
+        // convert reverse index to normal index
+        const idx = messages.length - 1 - lastAssistantIndex;
+        // find previous user message before that assistant message
+        let lastUserMessage: Message | undefined = undefined;
+        for (let i = idx - 1; i >= 0; i--) {
+            if (messages[i].role === 'user') {
+                lastUserMessage = messages[i];
+                break;
+            }
+        }
+
+        const textToResend = lastUserMessage ? lastUserMessage.content : "";
+        await handleSendMessage(textToResend);
+    };
+
     if (loading) {
         return (
             <div className="flex flex-col h-screen overflow-hidden">
@@ -814,7 +852,6 @@ function ChatPageContent() {
                                         </div>
                                     </div>
                                 )}
-
                                 <div className="max-w-5xl mx-auto space-y-4 py-2">
                                     {messages.map((message) => (
                                         <motion.div
@@ -1535,7 +1572,36 @@ function ChatPageContent() {
                 </div>
             )}
 
-            {/* Input bar removed as per requirements */}
+            {/* Bottom input + Regenerate button (replaces Generate when AI has responded) */}
+            {messages.length > 0 && messages.some(m => m.role === 'assistant') ? (
+                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
+                    <div className="bg-muted/30  rounded-lg p-4">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={postInput}
+                                onChange={(e) => setPostInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handlePostSend();
+                                    }
+                                }}
+                                placeholder="Type a follow-up or message..."
+                                className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <Button
+                                onClick={handleRegenerate}
+                                disabled={sending || userCredits <= 0.01}
+                            >
+                                {sending ? 'Regenerating...' : 'Regenerate'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                null
+            )}
         </div>
     );
 }
