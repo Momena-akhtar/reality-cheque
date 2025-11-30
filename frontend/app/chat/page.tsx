@@ -131,7 +131,17 @@ function ChatPageContent() {
     // Modal state for feature details
     const [openFeature, setOpenFeature] = useState<Feature | null>(null);
     const [modalInput, setModalInput] = useState<string>("");
-    const [postInput, setPostInput] = useState<string>("");
+    const [postInput, setPostInput] = useState<string>("");    
+    // Profile Optimizer form state
+    const [profileOptimzerFormData, setProfileOptimizerFormData] = useState({
+        profileType: "general",
+        area: "",
+        title: "",
+        link: "",
+        hourlyRate: "",
+        description: ""
+    });
+    const [proposalResponse, setProposalResponse] = useState<string>("");
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -541,7 +551,9 @@ function ChatPageContent() {
                 userId: user.id,
                 ...(currentChatId && { sessionId: currentChatId }),
                 ...(model.name === "Auto-Responder & Delivery Messages" && selectedGigs.length > 0 && { selectedGigs }),
-                ...(model.name === "Profile Optimizer" && upworkLink && { upworkLink }),
+                ...(model.name === "Profile Optimizer" && { 
+                    profileData: profileOptimzerFormData 
+                }),
             };
 
             const response = await fetch(`${API_BASE}/generate/generate`, {
@@ -574,13 +586,19 @@ function ChatPageContent() {
                 };
 
                 setMessages((prev) => [...prev, aiMessage]);
-                    if (data.data.structuredResponse) {
-                        const mapped: { [k: string]: string } = {};
-                        Object.entries(data.data.structuredResponse).forEach(([k, v]: [string, any]) => {
-                            mapped[k] = formatFeatureOutput(v);
-                        });
-                        setFeatureOutputs((prev) => ({ ...prev, ...mapped }));
-                    }
+
+                // Handle response based on model type
+                if (model.name === "Profile Optimizer") {
+                    // For Profile Optimizer, set the proposal response
+                    setProposalResponse(data.data.response);
+                } else if (data.data.structuredResponse) {
+                    // For models with features, populate feature outputs
+                    const mapped: { [k: string]: string } = {};
+                    Object.entries(data.data.structuredResponse).forEach(([k, v]: [string, any]) => {
+                        mapped[k] = formatFeatureOutput(v);
+                    });
+                    setFeatureOutputs((prev) => ({ ...prev, ...mapped }));
+                }
 
                 // Set chat ID for future messages
                 if (data.data.chatId) {
@@ -852,23 +870,112 @@ function ChatPageContent() {
                                         {Object.keys(featureOutputs).length === 0 ? (
                                             <div className="flex flex-col items-center gap-3 mb-8">
                                                 {model?.name === "Profile Optimizer" ? (
-                                                    <div className="w-full flex flex-col sm:flex-row gap-2">
-                                                        <input
-                                                            type="url"
-                                                            value={upworkLink}
-                                                            onChange={(e) => setUpworkLink(e.target.value)}
-                                                            placeholder="Paste your Upwork profile link"
-                                                            className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                        />
-                                                        <Button
-                                                            onClick={() => handleSendMessage(upworkLink || "")}
-                                                            disabled={
-                                                                sending ||
-                                                                userCredits <= 0.01
-                                                            }
-                                                        >
-                                                            {sending ? "Analyzing..." : "Generate"}
-                                                        </Button>
+                                                    <div className="w-full">
+                                                        {/* Show form only when no proposal response */}
+                                                        {!proposalResponse ? (
+                                                            <>
+                                                                {/* Profile Optimizer Form - 2 columns, 3 rows */}
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 w-full max-w-2xl mx-auto">
+                                                            {/* Row 1, Col 1: Profile Type */}
+                                                            <div className="flex flex-col">
+                                                                <label className="text-sm font-medium text-foreground mb-2">Profile Type</label>
+                                                                <select
+                                                                    value={profileOptimzerFormData.profileType}
+                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, profileType: e.target.value})}
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                >
+                                                                    <option value="general">General</option>
+                                                                    <option value="specialized">Specialized</option>
+                                                                </select>
+                                                            </div>
+
+                                                            {/* Row 1, Col 2: Area (conditional, only for Specialized) */}
+                                                            {profileOptimzerFormData.profileType === "specialized" && (
+                                                                <div className="flex flex-col">
+                                                                    <label className="text-sm font-medium text-foreground mb-2">Area of Specialization</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={profileOptimzerFormData.area}
+                                                                        onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, area: e.target.value})}
+                                                                        placeholder="e.g., Web Development"
+                                                                        className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Row 2, Col 1: Title */}
+                                                            <div className="flex flex-col">
+                                                                <label className="text-sm font-medium text-foreground mb-2">Profile Title</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={profileOptimzerFormData.title}
+                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, title: e.target.value})}
+                                                                    placeholder="Your professional title"
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </div>
+
+                                                            {/* Row 2, Col 2: Upwork Link */}
+                                                            <div className="flex flex-col">
+                                                                <label className="text-sm font-medium text-foreground mb-2">Upwork Profile Link</label>
+                                                                <input
+                                                                    type="url"
+                                                                    value={profileOptimzerFormData.link}
+                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, link: e.target.value})}
+                                                                    placeholder="https://www.upwork.com/freelancers/..."
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </div>
+
+                                                            {/* Row 3, Col 1: Hourly Rate */}
+                                                            <div className="flex flex-col">
+                                                                <label className="text-sm font-medium text-foreground mb-2">Hourly Rate ($)</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={profileOptimzerFormData.hourlyRate}
+                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, hourlyRate: e.target.value})}
+                                                                    placeholder="e.g., 50"
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </div>
+
+                                                            {/* Row 3, Col 2: Description */}
+                                                            <div className="flex flex-col">
+                                                                <label className="text-sm font-medium text-foreground mb-2">Description</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={profileOptimzerFormData.description}
+                                                                    onChange={(e) => setProfileOptimizerFormData({...profileOptimzerFormData, description: e.target.value})}
+                                                                    placeholder="Brief description of your services"
+                                                                    className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Generate Button */}
+                                                        <div className="flex justify-center">
+                                                            <Button
+                                                                onClick={() => handleSendMessage(JSON.stringify(profileOptimzerFormData))}
+                                                                disabled={
+                                                                    sending ||
+                                                                    userCredits <= 0.01 ||
+                                                                    !profileOptimzerFormData.title ||
+                                                                    !profileOptimzerFormData.link
+                                                                }
+                                                            >
+                                                                {sending ? "Analyzing..." : "Generate"}
+                                                            </Button>
+                                                        </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="w-full max-w-4xl mx-auto">
+                                                                <div className="bg-muted/30 border border-foreground/20 rounded-lg p-6">
+                                                                    <div className="prose prose-invert max-w-none text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                                                                        {proposalResponse}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <Button
