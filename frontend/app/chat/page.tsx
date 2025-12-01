@@ -864,7 +864,7 @@ function ChatPageContent() {
                                                     onChange={(e) => setSelectedProfile(e.target.value || null)}
                                                     className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
-                                                    <option value="">Default profile</option>
+                                                    <option value="">{user?.agencyName || "Default profile"}</option>
                                                 </select>
                                             </div>
 
