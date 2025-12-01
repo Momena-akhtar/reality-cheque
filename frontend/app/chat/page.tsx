@@ -198,6 +198,7 @@ function ChatPageContent() {
     const [selectedGigs, setSelectedGigs] = useState<any[]>([]);
     const [showGigSelector, setShowGigSelector] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [budget, setBudget] = useState(50);
     // Profile selector state (dropdown placed where Generate button used to be)
     const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
     // Per-feature input values (featureId -> text)
@@ -222,6 +223,10 @@ function ChatPageContent() {
         budget: 0
     });
     const [generatedProposal, setGeneratedProposal] = useState<{ [key: string]: string } | string | null>(null);
+    const [isProposalUnsaved, setIsProposalUnsaved] = useState(false);
+    const [savedProposals, setSavedProposals] = useState<Array<{ id: string; title: string; content: string; savedAt: string }>>([]);
+    const [selectedSavedProposal, setSelectedSavedProposal] = useState<{ id: string; title: string; content: string; savedAt: string } | null>(null);
+    const [showProposalsDropdown, setShowProposalsDropdown] = useState(false);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -677,6 +682,7 @@ function ChatPageContent() {
                 } else if (model.name === "Proposal Builder") {
                     // For Proposal Builder, set the generated proposal from response field
                     setGeneratedProposal(data.data.response || "");
+                    setIsProposalUnsaved(true);
                 } else if (data.data.structuredResponse) {
                     // For models with features, populate feature outputs
                     const mapped: { [k: string]: string } = {};
@@ -800,6 +806,44 @@ function ChatPageContent() {
                     modelFeatures={modelFeatures}
                 />
             </div>
+             {/* Saved Proposals Dropdown -(Only for Proposal Builder) */}
+            {model?.name === "Proposal Builder" && (
+                <div className="absolute top-20 right-4 z-50">
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowProposalsDropdown(!showProposalsDropdown)}
+                            className="px-4 py-2 text-sm rounded-md cursor-pointer border-2 border-border bg-background text-foreground hover:bg-background/80 transition-colors"
+                        >
+                            {user?.agencyName || "Agency"} - Proposals {savedProposals.length > 0 && `(${savedProposals.length})`}
+                        </button>
+                        {showProposalsDropdown && (
+                            <div className="absolute right-0 mt-2 w-full bg-background border border-border rounded-lg shadow-lg">
+                                <div className="max-h-96 overflow-y-auto">
+                                    {savedProposals.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-sm text-foreground/80">
+                                            No Proposals Yet
+                                        </div>
+                                    ) : (
+                                        savedProposals.map((proposal) => (
+                                            <button
+                                                key={proposal.id}
+                                                onClick={() => {
+                                                    setSelectedSavedProposal(proposal);
+                                                    setShowProposalsDropdown(false);
+                                                }}
+                                                className="w-full text-left cursor-pointer px-4 py-3 hover:bg-muted/50 border-b border-border/30 transition-colors"
+                                            >
+                                                <div className="text-sm font-medium text-foreground truncate">{proposal.title}</div>
+                                                <div className="text-xs text-muted-foreground mt-1">{proposal.savedAt}</div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Chat History Sidebar */}
             <ChatHistorySidebar
@@ -954,64 +998,66 @@ function ChatPageContent() {
                                             )}
                                         {/* Generate button */}
                                         {Object.keys(featureOutputs).length === 0 ? (
-                                            <div className="flex flex-col items-center gap-3 mb-8">
+                                            <div className="flex flex-col items-center gap-3 mb-8 ">
                                                 {model?.name === "Proposal Builder" ? (
-                                                    <div className="w-full max-w-4xl mx-auto">
-                                                        {!generatedProposal ? (
+                                                    <div className="w-full mx-auto">
+                                                       {!generatedProposal ? (
                                                             <>
-                                                                {/* Proposal Builder Form - Horizontal Layout */}
-                                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                                                                {/* Proposal Builder Form */}
+                                                                <div className="flex gap-4 mb-6">
                                                                     {/* Job Description */}
-                                                                    <div className="flex-1 flex flex-col">
+                                                                    <div className="flex flex-col">
                                                                         <label className="text-sm font-medium text-foreground mb-2">Job Description</label>
                                                                         <textarea
                                                                             value={proposalBuilderFormData.jobDescription}
                                                                             onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, jobDescription: e.target.value})}
                                                                             placeholder="Paste job description..."
                                                                             rows={3}
-                                                                            className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                                                            className="px-4 py-4 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                                                                         />
                                                                     </div>
 
                                                                     {/* Budget Section */}
-                                                                    <div className="flex flex-col gap-2 min-w-max">
+                                                                    <div className="flex-2 flex flex-col gap-3">
                                                                         <label className="text-sm font-medium text-foreground">Budget</label>
-                                                                        <div className="flex flex-col gap-2">
-                                                                            {/* Budget Type Dropdown */}
-                                                                            <select
-                                                                                value={proposalBuilderFormData.budgetType}
-                                                                                onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, budgetType: e.target.value})}
-                                                                                className="px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                                            >
-                                                                                <option value="fixed">Fixed</option>
-                                                                                <option value="variable">Variable</option>
-                                                                            </select>
-
-                                                                            {/* Budget Amount Input */}
-                                                                            <div className="flex items-center gap-1">
-                                                                                <button
-                                                                                    onClick={() => setProposalBuilderFormData({...proposalBuilderFormData, budget: Math.max(0, proposalBuilderFormData.budget - 10)})}
-                                                                                    className="px-2 py-2 text-sm rounded-md border border-border bg-background text-foreground hover:bg-muted transition-colors"
+                                                                            <div className="flex justify-between items-center gap-4">
+                                                                                <label className="text-xs text-foreground/80 mb-1.5 block">Select your pricing</label>
+                                                                                <select
+                                                                                    value={proposalBuilderFormData.budgetType}
+                                                                                    onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, budgetType: e.target.value})}
+                                                                                    className=" px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                                                 >
-                                                                                    −
+                                                                                    <option value="fixed">Fixed</option>
+                                                                                    <option value="variable">Variable</option>
+                                                                                </select>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-sm ">$</span>
+                                                                                <div className="flex-1 flex items-center border border-border rounded-md bg-background focus-within:ring-2 focus-within:ring-blue-500">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setBudget(Math.max(0, budget - 1))}
+                                                                                    className="px-3 py-2.5 text-sm  transition-colors"
+                                                                                >
+                                                                                    &lt;
                                                                                 </button>
                                                                                 <input
                                                                                     type="number"
-                                                                                    value={proposalBuilderFormData.budget}
-                                                                                    onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, budget: Math.max(0, Number(e.target.value))})}
-                                                                                    className="w-20 px-3 py-2.5 text-sm rounded-md border border-border bg-background text-foreground text-center focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                                    value={budget}
+                                                                                    onChange={(e) => setBudget(Math.max(0, Number(e.target.value)))}
+                                                                                    className="flex-1 px-3 py-2.5 text-sm text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                                                 />
                                                                                 <button
-                                                                                    onClick={() => setProposalBuilderFormData({...proposalBuilderFormData, budget: proposalBuilderFormData.budget + 10})}
-                                                                                    className="px-2 py-2 text-sm rounded-md border border-border bg-background text-foreground hover:bg-muted transition-colors"
+                                                                                    type="button"
+                                                                                    onClick={() => setBudget(budget + 1)}
+                                                                                    className="px-3 py-2.5 text-sm transition-colors"
                                                                                 >
-                                                                                    +
+                                                                                    &gt;
                                                                                 </button>
-                                                                            </div>
+                                                                                </div>
+                                                                            </div>                                                                    
                                                                         </div>
-                                                                    </div>
                                                                 </div>
-
                                                                 {/* Generate Button */}
                                                                 <div className="flex justify-center mb-6">
                                                                     <Button
@@ -1049,20 +1095,30 @@ function ChatPageContent() {
                                                                             )}
                                                                         </div>
                                                                         <div className="mt-4 flex gap-2 justify-end">
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                onClick={() => {
-                                                                                    // TODO: Implement save proposal functionality
-                                                                                    toast.success('Proposal saved');
-                                                                                }}
-                                                                                disabled={savingGig}
-                                                                            >
-                                                                                {savingGig ? 'Saving...' : 'Save Proposal'}
-                                                                            </Button>
+                                                                            {isProposalUnsaved && (
+                                                                                <Button
+                                                                                    variant="outline"
+                                                                                    onClick={() => {
+                                                                                        const proposalTitle = `Proposal - ${new Date().toLocaleDateString()}`;
+                                                                                        const newProposal = {
+                                                                                            id: Date.now().toString(),
+                                                                                            title: proposalTitle,
+                                                                                            content: typeof generatedProposal === 'string' ? generatedProposal : JSON.stringify(generatedProposal),
+                                                                                            savedAt: new Date().toLocaleString()
+                                                                                        };
+                                                                                        setSavedProposals(prev => [...prev, newProposal]);
+                                                                                        setIsProposalUnsaved(false);
+                                                                                        toast.success('Proposal saved');
+                                                                                    }}
+                                                                                    disabled={savingGig}
+                                                                                >
+                                                                                    {savingGig ? 'Saving...' : 'Save Proposal'}
+                                                                                </Button>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div className="w-[60%] flex flex-col sm:flex-row gap-2">
+                                                                <div className="w-[80%] flex flex-col sm:flex-row gap-2">
                                                                     <input
                                                                         type="text"
                                                                         value={postInput}
@@ -1079,6 +1135,7 @@ function ChatPageContent() {
                                                                     <Button
                                                                         onClick={() => {
                                                                             setGeneratedProposal(null);
+                                                                            setIsProposalUnsaved(false);
                                                                             setProposalBuilderFormData({
                                                                                 jobDescription: "",
                                                                                 budgetType: "fixed",
@@ -1370,6 +1427,59 @@ function ChatPageContent() {
                                     {sending ? 'Sending...' : 'Generate'}
                                 </Button>
                             )}
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Saved Proposal Modal */}
+            {selectedSavedProposal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') setSelectedSavedProposal(null);
+                    }}
+                    tabIndex={-1}
+                >
+                    {/* Blurred Background */}
+                    <div
+                        className="absolute inset-0 bg-background/80"
+                        onClick={() => setSelectedSavedProposal(null)}
+                    />
+
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-4xl bg-background border border-border rounded-xl shadow-2xl flex flex-col max-h-[80vh]"
+                    >
+                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30 flex-shrink-0">
+                            <div>
+                                <h3 className="text-xl font-semibold text-foreground">{selectedSavedProposal.title}</h3>
+                                <p className="text-sm text-muted-foreground mt-1">Saved: {selectedSavedProposal.savedAt}</p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedSavedProposal(null)}
+                                className="p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
+                            <div className="max-w-none text-foreground">
+                                {parseMarkdownResponse(selectedSavedProposal.content)}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
+                            <Button variant="outline" onClick={() => setSelectedSavedProposal(null)}>Close</Button>
                         </div>
                     </motion.div>
                 </motion.div>
