@@ -227,6 +227,12 @@ function ChatPageContent() {
     const [savedProposals, setSavedProposals] = useState<Array<{ id: string; title: string; content: string; savedAt: string }>>([]);
     const [selectedSavedProposal, setSelectedSavedProposal] = useState<{ id: string; title: string; content: string; savedAt: string } | null>(null);
     const [showProposalsDropdown, setShowProposalsDropdown] = useState(false);
+    const [gigBuilderTiers, setGigBuilderTiers] = useState<{
+        tier1: { title: string; pricing: string; description: string; deliverables: string[] };
+        tier2: { title: string; pricing: string; description: string; deliverables: string[] };
+        tier3: { title: string; pricing: string; description: string; deliverables: string[] };
+        faqs: string;
+    } | null>(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
@@ -683,6 +689,11 @@ function ChatPageContent() {
                     // For Proposal Builder, set the generated proposal from response field
                     setGeneratedProposal(data.data.response || "");
                     setIsProposalUnsaved(true);
+                } else if (model.name === "Gig Builder") {
+                    // For Gig Builder, set the tier data from structured response
+                    if (data.data.structuredResponse) {
+                        setGigBuilderTiers(data.data.structuredResponse);
+                    }
                 } else if (data.data.structuredResponse) {
                     // For models with features, populate feature outputs
                     const mapped: { [k: string]: string } = {};
@@ -910,8 +921,195 @@ function ChatPageContent() {
                                             )}
                                         </div>
 
-                                        {/* Features Cards if model has features */}
+                                        {/* Features Cards - Special handling for Gig Builder */}
                                         {modelFeatures.length > 0 && (
+                                            model?.name === "Gig Builder" ? (
+                                                <div className="mb-8 w-full">
+                                                    {/* Gig Builder Layout */}
+                                                    <div className="space-y-6">
+                                                        {/* Row 1: Title and Description */}
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                            {/* Title Feature Card */}
+                                                            <div
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => {
+                                                                    const titleFeature = modelFeatures.find(f => f.name === "Title");
+                                                                    if (titleFeature) {
+                                                                        setOpenFeature(titleFeature);
+                                                                        setModalInput(featureInputs[titleFeature._id] || "");
+                                                                    }
+                                                                }}
+                                                                className="bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 cursor-pointer hover:border-foreground/40"
+                                                            >
+                                                                <div className="flex flex-col gap-5">
+                                                                    <div>
+                                                                        <h4 className="text-sm font-medium text-foreground mb-1">Title</h4>
+                                                                        <p className="text-xs text-primary-text-faded leading-relaxed whitespace-pre-wrap">{gigBuilderTiers?.tier1?.title || "Generate a gig title..."}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="Ask about the title..."
+                                                                            value={featureInputs["title"] || ""}
+                                                                            onChange={(e) => setFeatureInputs(prev => ({ ...prev, ["title"]: e.target.value }))}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                        />
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleRegenerateFeature("Title", featureInputs["title"] || "");
+                                                                            }}
+                                                                            disabled={sending || regeneratingFeature || userCredits <= 0.01}
+                                                                        >
+                                                                            <Send className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Description Feature Card */}
+                                                            <div
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => {
+                                                                    const descFeature = modelFeatures.find(f => f.name === "Description");
+                                                                    if (descFeature) {
+                                                                        setOpenFeature(descFeature);
+                                                                        setModalInput(featureInputs[descFeature._id] || "");
+                                                                    }
+                                                                }}
+                                                                className="bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 cursor-pointer hover:border-foreground/40"
+                                                            >
+                                                                <div className="flex flex-col gap-5">
+                                                                    <div>
+                                                                        <h4 className="text-sm font-medium text-foreground mb-1">Description</h4>
+                                                                        <p className="text-xs text-primary-text-faded leading-relaxed whitespace-pre-wrap">{gigBuilderTiers?.tier2?.description || "Generate a gig description..."}</p>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="Ask about the description..."
+                                                                            value={featureInputs["description"] || ""}
+                                                                            onChange={(e) => setFeatureInputs(prev => ({ ...prev, ["description"]: e.target.value }))}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                        />
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleRegenerateFeature("Description", featureInputs["description"] || "");
+                                                                            }}
+                                                                            disabled={sending || regeneratingFeature || userCredits <= 0.01}
+                                                                        >
+                                                                            <Send className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Three Tier Cards */}
+                                                        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                            {["tier1", "tier2", "tier3"].map((tierKey, tierIndex) => {
+                                                                const tierName = tierKey as "tier1" | "tier2" | "tier3";
+                                                                const tierData = gigBuilderTiers?.[tierName];
+                                                                const tierLabels = { tier1: "Basic", tier2: "Standard", tier3: "Premium" };
+                                                                const tierLabel = tierLabels[tierName];
+                                                                const tabs = ["Basic", "Standard", "Premium"];
+
+                                                                return (
+                                                                    <div key={tierKey} className="bg-muted/30 border border-foreground/20 rounded-lg overflow-hidden">
+                                                                        {/* Tabs */}
+                                                                        <div className="flex border-b border-foreground/20">
+                                                                            {tabs.map((tab) => (
+                                                                                <div key={tab} className={`flex-1 px-3 py-2 text-xs font-medium text-center cursor-default ${tab === tierLabel ? "bg-primary/15 text-primary border-b-2 border-primary" : "bg-background/50 text-muted-foreground"}`}>
+                                                                                    {tab}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+
+                                                                        {/* Tier Content */}
+                                                                        <div className="p-4 space-y-3">
+                                                                            {/* Title and Pricing */}
+                                                                            <div>
+                                                                                <div className="flex items-center justify-between gap-2 mb-2">
+                                                                                    <h5 className="text-sm font-medium text-foreground truncate flex-1">{tierData?.title || `${tierLabel} Gig`}</h5>
+                                                                                    <span className="text-sm font-semibold text-primary whitespace-nowrap">${tierData?.pricing || (tierIndex === 0 ? "29" : tierIndex === 1 ? "59" : "99")}</span>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Description (1 line) */}
+                                                                            <div>
+                                                                                <p className="text-xs text-primary-text-faded line-clamp-1">{tierData?.description || "Description here..."}</p>
+                                                                            </div>
+
+                                                                            {/* Deliverables */}
+                                                                            <div>
+                                                                                <p className="text-xs font-medium text-foreground mb-2">Deliverables:</p>
+                                                                                <ul className="space-y-1">
+                                                                                    {(tierData?.deliverables || ["Deliverable 1", "Deliverable 2", "Deliverable 3"]).map((deliverable, idx) => (
+                                                                                        <li key={idx} className="text-xs text-primary-text-faded flex items-start gap-2">
+                                                                                            <span className="text-primary mt-1">•</span>
+                                                                                            <span>{deliverable}</span>
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+
+                                                        {/* Row 3: FAQs */}
+                                                        <div className="flex justify-center">
+                                                            <div
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => {
+                                                                    const faqsFeature = modelFeatures.find(f => f.name === "FAQ & Requirements");
+                                                                    if (faqsFeature) {
+                                                                        setOpenFeature(faqsFeature);
+                                                                        setModalInput(featureInputs[faqsFeature._id] || "");
+                                                                    }
+                                                                }}
+                                                                className="w-1/2 bg-muted/30 border border-foreground/20 rounded-lg px-5 py-8 transition-all duration-200 cursor-pointer hover:border-foreground/40"
+                                                            >
+                                                            <div className="flex flex-col gap-5">
+                                                                <div>
+                                                                    <h4 className="text-sm font-medium text-foreground mb-1">FAQs</h4>
+                                                                    <p className="text-xs text-primary-text-faded leading-relaxed whitespace-pre-wrap">{gigBuilderTiers?.faqs || "Generate FAQs..."}</p>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Ask about FAQs..."
+                                                                        value={featureInputs["faqs"] || ""}
+                                                                        onChange={(e) => setFeatureInputs(prev => ({ ...prev, ["faqs"]: e.target.value }))}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                                    />
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleRegenerateFeature("FAQ & Requirements", featureInputs["faqs"] || "");
+                                                                        }}
+                                                                        disabled={sending || regeneratingFeature || userCredits <= 0.01}
+                                                                    >
+                                                                        <Send className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
                                                 <div className="mb-4 relative">
                                                     {/* Loading overlay for global regeneration */}
                                                     {sending && !generatingFeatureId && (
@@ -995,11 +1193,22 @@ function ChatPageContent() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )}
+                                            )
+                                        )}
                                         {/* Generate button */}
-                                        {Object.keys(featureOutputs).length === 0 ? (
+                                        {Object.keys(featureOutputs).length === 0 && !gigBuilderTiers ? (
                                             <div className="flex flex-col items-center gap-3 mb-8 ">
-                                                {model?.name === "Proposal Builder" ? (
+                                                {model?.name === "Gig Builder" ? (
+                                                    <Button
+                                                        onClick={() => handleSendMessage("")}
+                                                        disabled={
+                                                            sending ||
+                                                            userCredits <= 0.01
+                                                        }
+                                                    >
+                                                        {sending ? "Generating..." : "Generate"}
+                                                    </Button>
+                                                ) : model?.name === "Proposal Builder" ? (
                                                     <div className="w-full mx-auto">
                                                        {!generatedProposal ? (
                                                             <>
