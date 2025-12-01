@@ -194,9 +194,7 @@ function ChatPageContent() {
     const [featureOutputs, setFeatureOutputs] = useState<{ [key: string]: string }>({});
     const [editingGig, setEditingGig] = useState<{ messageId: string; gig: any } | null>(null);
     const [savingGig, setSavingGig] = useState(false);
-    const [userGigs, setUserGigs] = useState<any[]>([]);
-    const [selectedGigs, setSelectedGigs] = useState<any[]>([]);
-    const [showGigSelector, setShowGigSelector] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [budget, setBudget] = useState(50);
     // Profile selector state (dropdown placed where Generate button used to be)
@@ -353,30 +351,7 @@ function ChatPageContent() {
         fetchCredits();
     }, [user, API_BASE]);
 
-    // for Auto-Responder model
-    useEffect(() => {
-        const fetchUserGigs = async () => {
-            if (!user || !model || model.name !== "Auto-Responder & Delivery Messages") return;
 
-            try {
-                const response = await fetch(`${API_BASE}/user/${user.id}/gigs`, {
-                    credentials: "include",
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Fetched user gigs:', data);
-                    setUserGigs(data || []);
-                } else {
-                    console.error('Failed to fetch gigs:', response.status, response.statusText);
-                }
-            } catch (error) {
-                console.error("Error fetching user gigs:", error);
-            }
-        };
-
-        fetchUserGigs();
-    }, [user, model, API_BASE]);
 
     // Load chat history if chatId is provided in URL
     useEffect(() => {
@@ -629,11 +604,6 @@ function ChatPageContent() {
 
         setSending(true);
 
-        // Auto-hide gig selector when generate button is clicked
-        if (model?.name === "Auto-Responder & Delivery Messages") {
-            setShowGigSelector(false);
-        }
-
         try {
             // Prepare request payload
             const payload = {
@@ -641,7 +611,6 @@ function ChatPageContent() {
                 userInput: text,
                 userId: user.id,
                 ...(currentChatId && { sessionId: currentChatId }),
-                ...(model.name === "Auto-Responder & Delivery Messages" && selectedGigs.length > 0 && { selectedGigs }),
                 ...(model.name === "Profile Optimizer" && { 
                     profileData: profileOptimzerFormData 
                 }),
@@ -896,11 +865,6 @@ function ChatPageContent() {
                                                     className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
                                                     <option value="">Default profile</option>
-                                                    {userGigs && userGigs.length > 0 && userGigs.map((g: any, idx: number) => (
-                                                        <option key={idx} value={g.id ?? g.title ?? `gig-${idx}`}>
-                                                            {g.title || `Gig ${idx + 1}`}
-                                                        </option>
-                                                    ))}
                                                 </select>
                                             </div>
 
@@ -909,16 +873,7 @@ function ChatPageContent() {
                                                     Insufficient credits. Please upgrade your plan.
                                                 </div>
                                             )}
-                                            {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
-                                                <div className="text-center text-xs text-amber-500">
-                                                    Please select at least one gig to provide context for auto-responder generation.
-                                                </div>
-                                            )}
-                                            {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
-                                                <div className="text-center text-xs text-amber-500">
-                                                    No gigs found. Please add some Fiverr gigs to your profile first.
-                                                </div>
-                                            )}
+
                                         </div>
 
                                         {/* Features Cards - Special handling for Gig Builder */}
@@ -1493,8 +1448,7 @@ function ChatPageContent() {
                                                         onClick={() => handleSendMessage("")}
                                                         disabled={
                                                             sending ||
-                                                            userCredits <= 0.01 ||
-                                                            (model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0)
+                                                            userCredits <= 0.01
                                                         }
                                                     >
                                                         {sending ? "Generating..." : "Generate"}
@@ -1505,16 +1459,7 @@ function ChatPageContent() {
                                                         Insufficient credits. Please upgrade your plan.
                                                     </div>
                                                 )}
-                                                {model?.name === "Auto-Responder & Delivery Messages" && selectedGigs.length === 0 && userGigs.length > 0 && (
-                                                    <div className="text-center text-xs text-amber-500">
-                                                        Please select at least one gig to provide context for auto-responder generation.
-                                                    </div>
-                                                )}
-                                                {model?.name === "Auto-Responder & Delivery Messages" && userGigs.length === 0 && (
-                                                    <div className="text-center text-xs text-amber-500">
-                                                        No gigs found. Please add some Fiverr gigs to your profile first.
-                                                    </div>
-                                                )}
+
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center gap-3 mb-8">
@@ -1698,96 +1643,7 @@ function ChatPageContent() {
                 </motion.div>
             )}
 
-            {/* Gig Selector for Auto-Responder Model */}
-            {model?.name === "Auto-Responder & Delivery Messages" && (
-                <div className="flex-none px-4 max-w-4xl mx-auto w-full mb-4">
-                    <div className="bg-muted/30 border border-border/30 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                                <h3 className="text-sm font-medium text-foreground">Select Gigs for Context</h3>
-                            </div>
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowGigSelector(!showGigSelector)}
-                            >
-                                {showGigSelector ? 'Hide' : 'Select Gigs'}
-                            </Button>
-                        </div>
-                        
-                        {showGigSelector && (
-                            <div className="space-y-3">
-                                <div className="text-xs text-muted-foreground">
-                                    Select the gigs you want to use as context for generating auto-responder messages:
-                                </div>
-                                {userGigs.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <div className="text-sm mb-2">No gigs found</div>
-                                        <div className="text-xs">You need to create some Fiverr gigs first to use this feature.</div>
-                                        <div className="text-xs mt-1">Go to your profile settings to add gigs.</div>
-                                    </div>
-                                ) : (
-                                    <div className="grid gap-2 max-h-40 overflow-y-auto scrollbar-thin">
-                                        {userGigs.map((gig, index) => (
-                                        <label key={index} className="flex items-start gap-3 p-3 bg-background/50 border border-border/20 rounded-lg cursor-pointer hover:bg-background/80 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedGigs.some(selected => selected.title === gig.title)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedGigs(prev => [...prev, gig]);
-                                                    } else {
-                                                        setSelectedGigs(prev => prev.filter(selected => selected.title !== gig.title));
-                                                    }
-                                                }}
-                                                className="mt-1 w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium text-foreground truncate">
-                                                    {gig.title}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                                    {gig.description}
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                                                        {gig.price}
-                                                    </span>
-                                                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-                                                        {gig.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </label>
-                                        ))}
-                                    </div>
-                                )}
-                                
-                                {selectedGigs.length > 0 && (
-                                    <div className="pt-3 border-t border-border/30">
-                                        <div className="text-xs text-muted-foreground mb-2">
-                                            Selected {selectedGigs.length} gig{selectedGigs.length !== 1 ? 's' : ''}:
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedGigs.map((gig, index) => (
-                                                <div key={index} className="flex border border-border items-center gap-2 px-3 py-1 bg-primary/10 text-foreground rounded-full text-xs">
-                                                    <span className="truncate max-w-32">{gig.title}</span>
-                                                    <button
-                                                        onClick={() => setSelectedGigs(prev => prev.filter((_, i) => i !== index))}
-                                                        className="text-foreground cursor-pointer hover:text-primary/70 transition-colors"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+
 
         </div>
     );
