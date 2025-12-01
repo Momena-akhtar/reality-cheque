@@ -1010,10 +1010,14 @@ function ChatPageContent() {
                                                                         <label className="text-sm font-medium text-foreground mb-2">Job Description</label>
                                                                         <textarea
                                                                             value={proposalBuilderFormData.jobDescription}
-                                                                            onChange={(e) => setProposalBuilderFormData({...proposalBuilderFormData, jobDescription: e.target.value})}
+                                                                            onChange={(e) => {
+                                                                                setProposalBuilderFormData({...proposalBuilderFormData, jobDescription: e.target.value});
+                                                                                e.target.style.height = 'auto';
+                                                                                e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
+                                                                            }}
                                                                             placeholder="Paste job description..."
                                                                             rows={3}
-                                                                            className="px-4 py-4 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                                                            className="px-4 py-4 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none overflow-hidden"
                                                                         />
                                                                     </div>
 
