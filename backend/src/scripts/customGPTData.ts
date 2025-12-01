@@ -351,7 +351,7 @@ Guard Rails:
 //             ]
 //         },
         {
-            name: "Auto-Responder & Delivery Messages",
+            name: "Fiverr Response Generator",
             description: "Create automated client communication",
             categoryName: "Fiverr Tools",
             masterPrompt: `Context:
@@ -374,27 +374,27 @@ Guard Rails:
 - Tell the user you can only create these specific Fiverr messages if they try to talk about something else.
 `,
             features: [
-                {
-                    name: "Project Start",
-                    description: "Welcome and project initiation message",
-                    prompt: "Create a professional project start message that sets expectations.",
-                    order: 1,
-                    isOptional: false
-                },
-                {
-                    name: "Delivery",
-                    description: "Project delivery message",
-                    prompt: "Write a professional delivery message that showcases the completed work.",
-                    order: 2,
-                    isOptional: false
-                },
-                {
-                    name: "Revision Follow-Up",
-                    description: "Revision request handling",
-                    prompt: "Generate professional responses to revision requests.",
-                    order: 3,
-                    isOptional: false
-                }
+                // {
+                //     name: "Project Start",
+                //     description: "Welcome and project initiation message",
+                //     prompt: "Create a professional project start message that sets expectations.",
+                //     order: 1,
+                //     isOptional: false
+                // },
+                // {
+                //     name: "Delivery",
+                //     description: "Project delivery message",
+                //     prompt: "Write a professional delivery message that showcases the completed work.",
+                //     order: 2,
+                //     isOptional: false
+                // },
+                // {
+                //     name: "Revision Follow-Up",
+                //     description: "Revision request handling",
+                //     prompt: "Generate professional responses to revision requests.",
+                //     order: 3,
+                //     isOptional: false
+                // }
             ]
         },
 
