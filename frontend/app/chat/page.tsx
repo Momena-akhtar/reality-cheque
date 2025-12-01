@@ -232,6 +232,19 @@ function ChatPageContent() {
         faqs: string;
     } | null>(null);
 
+    // Fiverr Response Generator state
+    const [selectedClient, setSelectedClient] = useState<string>("Client 1");
+    const [clientsList] = useState<string[]>(["Client 1", "Client 2", "Client 3"]);
+    const [clientMessages, setClientMessages] = useState<{ [key: string]: Array<{ role: "client" | "you"; message: string; timestamp: Date }> }>({
+        "Client 1": [],
+        "Client 2": [],
+        "Client 3": []
+    });
+    const [clientMessageInput, setClientMessageInput] = useState<string>("");
+    const [generatedResponse, setGeneratedResponse] = useState<string>("");
+    const [showClientHistory, setShowClientHistory] = useState(false);
+    const [selectedHistoryClient, setSelectedHistoryClient] = useState<string | null>(null);
+
     const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
     useEffect(() => {
         if (!authLoading && !user) {
@@ -651,7 +664,31 @@ function ChatPageContent() {
                 setMessages((prev) => [...prev, aiMessage]);
 
                 // Handle response based on model type
-                if (model.name === "Profile Optimizer") {
+                if (model.name === "Fiverr Response Generator") {
+                    // For Fiverr Response Generator, add to client history and populate response field
+                    const clientMsg = {
+                        role: "client" as const,
+                        message: text,
+                        timestamp: new Date()
+                    };
+                    const responseMsg = {
+                        role: "you" as const,
+                        message: data.data.response,
+                        timestamp: new Date()
+                    };
+                    
+                    setClientMessages(prev => ({
+                        ...prev,
+                        [selectedClient]: [
+                            ...prev[selectedClient],
+                            clientMsg,
+                            responseMsg
+                        ]
+                    }));
+                    
+                    setGeneratedResponse(data.data.response);
+                    setClientMessageInput("");
+                } else if (model.name === "Profile Optimizer") {
                     // For Profile Optimizer, set the proposal response
                     setProposalResponse(data.data.response);
                 } else if (model.name === "Proposal Builder") {
@@ -825,6 +862,47 @@ function ChatPageContent() {
                 </div>
             )}
 
+            {/* Message History Dropdown - (Only for Fiverr Response Generator) */}
+            {model?.name === "Fiverr Response Generator" && (
+                <div className="absolute top-20 right-4 z-50">
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowClientHistory(!showClientHistory)}
+                            className="px-4 py-2 text-sm rounded-md cursor-pointer border-2 border-border bg-background text-foreground hover:bg-background/80 transition-colors"
+                        >
+                            Message history
+                        </button>
+                        {showClientHistory && (
+                            <div className="absolute right-0 mt-2 w-56 bg-background border border-border rounded-lg shadow-lg">
+                                <div className="max-h-96 overflow-y-auto">
+                                    {clientsList.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-sm text-foreground/80">
+                                            No clients yet
+                                        </div>
+                                    ) : (
+                                        clientsList.map((client) => (
+                                            <button
+                                                key={client}
+                                                onClick={() => {
+                                                    setSelectedHistoryClient(client);
+                                                    setShowClientHistory(false);
+                                                }}
+                                                className="w-full text-left cursor-pointer px-4 py-3 hover:bg-muted/50 border-b border-border/30 transition-colors"
+                                            >
+                                                <div className="text-sm font-medium text-foreground">{client}</div>
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    {clientMessages[client]?.length || 0} messages
+                                                </div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Chat History Sidebar */}
             <ChatHistorySidebar
                 isOpen={showHistory}
@@ -857,16 +935,43 @@ function ChatPageContent() {
                                         </p>
                                         {/* Profile selector*/}
                                         <div className="flex flex-col items-center gap-3 mb-8">
-                                            <div className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3">
-                                                <label className="text-sm text-muted-foreground w-full sm:w-auto">Select profile:</label>
-                                                <select
-                                                    value={selectedProfile ?? ""}
-                                                    onChange={(e) => setSelectedProfile(e.target.value || null)}
-                                                    className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                                >
-                                                    <option value="">{user?.agencyName || "Default profile"}</option>
-                                                </select>
-                                            </div>
+                                            {model?.name === "Fiverr Response Generator" ? (
+                                                <div className="w-full max-w-2xl flex flex-col sm:flex-row items-center gap-3">
+                                                    <div className="flex-1 flex items-center gap-2">
+                                                        <label className="text-sm text-muted-foreground whitespace-nowrap">Profile:</label>
+                                                        <select
+                                                            value={selectedProfile ?? ""}
+                                                            onChange={(e) => setSelectedProfile(e.target.value || null)}
+                                                            className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                        >
+                                                            <option value="">{user?.agencyName || "Default profile"}</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex-1 flex items-center gap-2">
+                                                        <label className="text-sm text-muted-foreground whitespace-nowrap">Client:</label>
+                                                        <select
+                                                            value={selectedClient}
+                                                            onChange={(e) => setSelectedClient(e.target.value)}
+                                                            className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                        >
+                                                            {clientsList.map((client) => (
+                                                                <option key={client} value={client}>{client}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="w-full max-w-lg flex flex-col sm:flex-row items-center gap-3">
+                                                    <label className="text-sm text-muted-foreground w-full sm:w-auto">Select profile:</label>
+                                                    <select
+                                                        value={selectedProfile ?? ""}
+                                                        onChange={(e) => setSelectedProfile(e.target.value || null)}
+                                                        className="flex-1 px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    >
+                                                        <option value="">{user?.agencyName || "Default profile"}</option>
+                                                    </select>
+                                                </div>
+                                            )}
 
                                             {userCredits <= 0.01 && (
                                                 <div className="text-center text-xs text-red-500">
@@ -875,6 +980,37 @@ function ChatPageContent() {
                                             )}
 
                                         </div>
+
+                                        {/* Fiverr Response Generator Form */}
+                                        {model?.name === "Fiverr Response Generator" && (
+                                            <div className="mb-8 w-full max-w-2xl mx-auto">
+                                                <div className="space-y-4">
+                                                    {/* Client's Message Input */}
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-sm font-medium text-foreground">Client's message:</label>
+                                                        <textarea
+                                                            value={clientMessageInput}
+                                                            onChange={(e) => setClientMessageInput(e.target.value)}
+                                                            placeholder="Enter the message from your client..."
+                                                            className="w-full px-4 py-2.5 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                                                            rows={3}
+                                                        />
+                                                    </div>
+
+                                                    {/* Generated Response */}
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-sm font-medium text-foreground">Message to respond with:</label>
+                                                        <textarea
+                                                            value={generatedResponse}
+                                                            readOnly
+                                                            placeholder="AI will populate this..."
+                                                            className="w-full px-4 py-2.5 text-sm rounded-md border border-border bg-muted/30 text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+                                                            rows={3}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Features Cards - Special handling for Gig Builder */}
                                         {modelFeatures.length > 0 && (
@@ -1448,7 +1584,8 @@ function ChatPageContent() {
                                                         onClick={() => handleSendMessage("")}
                                                         disabled={
                                                             sending ||
-                                                            userCredits <= 0.01
+                                                            userCredits <= 0.01 ||
+                                                            (model?.name === "Fiverr Response Generator" && !clientMessageInput.trim())
                                                         }
                                                     >
                                                         {sending ? "Generating..." : "Generate"}
@@ -1638,6 +1775,103 @@ function ChatPageContent() {
 
                         <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30 flex-shrink-0">
                             <Button variant="outline" onClick={() => setSelectedSavedProposal(null)}>Close</Button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Client Message History Modal */}
+            {selectedHistoryClient && clientMessages[selectedHistoryClient] && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') setSelectedHistoryClient(null);
+                    }}
+                    tabIndex={-1}
+                >
+                    {/* Blurred Background */}
+                    <div
+                        className="absolute inset-0 bg-background/80"
+                        onClick={() => setSelectedHistoryClient(null)}
+                    />
+
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-2xl bg-background border border-border rounded-xl shadow-2xl flex flex-col max-h-[80vh]"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30 flex-shrink-0">
+                            <h3 className="text-xl font-semibold text-foreground">Messages with {selectedHistoryClient}</h3>
+                            <button
+                                onClick={() => setSelectedHistoryClient(null)}
+                                className="p-2 text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Messages Thread */}
+                        <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-4">
+                            {clientMessages[selectedHistoryClient].length === 0 ? (
+                                <div className="text-center text-muted-foreground py-8">
+                                    No messages yet
+                                </div>
+                            ) : (
+                                clientMessages[selectedHistoryClient].map((msg, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`flex ${msg.role === "client" ? "justify-start" : "justify-end"}`}
+                                    >
+                                        <div
+                                            className={`max-w-xs px-4 py-2 rounded-lg ${
+                                                msg.role === "client"
+                                                    ? "bg-muted text-foreground"
+                                                    : "bg-primary text-primary-foreground"
+                                            }`}
+                                        >
+                                            <p className="text-sm">{msg.message}</p>
+                                            <p className="text-xs mt-1 opacity-70">
+                                                {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Input Footer */}
+                        <div className="border-t border-border bg-muted/30 p-4 flex-shrink-0">
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder={`Enter ${selectedHistoryClient}'s message...`}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey && e.currentTarget.value.trim()) {
+                                            const newMessage = e.currentTarget.value;
+                                            setClientMessages(prev => ({
+                                                ...prev,
+                                                [selectedHistoryClient]: [
+                                                    ...prev[selectedHistoryClient],
+                                                    { role: "client", message: newMessage, timestamp: new Date() }
+                                                ]
+                                            }));
+                                            e.currentTarget.value = "";
+                                        }
+                                    }}
+                                    className="flex-1 px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors">
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>
