@@ -1004,8 +1004,17 @@ function ChatPageContent() {
                                                             value={generatedResponse}
                                                             readOnly
                                                             placeholder="AI will populate this..."
-                                                            className="w-full px-4 py-2.5 text-sm rounded-md border border-border bg-muted/30 text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
+                                                            onChange={(e) => {
+                                                                e.target.style.height = 'auto';
+                                                                e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
+                                                            }}
+                                                            onInput={(e) => {
+                                                                e.currentTarget.style.height = 'auto';
+                                                                e.currentTarget.style.height = Math.min(e.currentTarget.scrollHeight, 400) + 'px';
+                                                            }}
+                                                            className="w-full px-4 py-2.5 text-sm rounded-md border border-border bg-muted/30 text-foreground placeholder:text-muted-foreground focus:outline-none resize-none overflow-hidden scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none]"
                                                             rows={3}
+                                                            style={{ overflowY: 'hidden' }}
                                                         />
                                                     </div>
                                                 </div>
