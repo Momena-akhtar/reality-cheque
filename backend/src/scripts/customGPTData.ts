@@ -288,13 +288,13 @@ Guard Rails:
                     order: 1,
                     isOptional: false
                 },
-                {
-                    name: "Tags",
-                    description: "Optimized tags for visibility",
-                    prompt: "Suggest relevant tags that will improve gig visibility in search results.",
-                    order: 2,
-                    isOptional: false
-                },
+                // {
+                //     name: "Tags",
+                //     description: "Optimized tags for visibility",
+                //     prompt: "Suggest relevant tags that will improve gig visibility in search results.",
+                //     order: 2,
+                //     isOptional: false
+                // },
                 {
                     name: "Description",
                     description: "Detailed gig description",
